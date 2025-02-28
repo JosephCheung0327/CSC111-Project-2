@@ -6,7 +6,7 @@ class User:
     """
     Representation invariants:
     - name != ""
-    - 1 >= romantic_degree >= 0
+    - romantic_degree >= 0
     - social_degree >= 0
     """
     name: str
