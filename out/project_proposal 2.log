@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.8.7)  3 MAR 2025 15:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.8.7)  3 MAR 2025 16:32
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -187,7 +187,22 @@ LaTeX Font Info:    ... okay on input line 10.
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 20--24
+Underfull \hbox (badness 10000) in paragraph at lines 20--44
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 20--44
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 20--44
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 20--44
 
  []
 
@@ -197,24 +212,26 @@ Underfull \hbox (badness 10000) in paragraph at lines 20--24
 (/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[05] CSC111/csc111/a
 ssignments/project2/out/project_proposal 2.aux) ) 
 Here is how much of TeX's memory you used:
- 1814 strings out of 476025
- 29511 string characters out of 5790018
- 1854388 words of memory out of 5000000
- 22301 multiletter control sequences out of 15000+600000
- 516601 words of font info for 47 fonts, out of 8000000 for 9000
+ 1819 strings out of 476025
+ 29562 string characters out of 5790018
+ 1858388 words of memory out of 5000000
+ 22304 multiletter control sequences out of 15000+600000
+ 517077 words of font info for 49 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,6n,62p,705b,208s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,6n,62p,686b,208s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf
--dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2023/texmf-
-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2023/texmf-di
-st/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2023/texmf-dist
-/fonts/type1/public/amsfonts/cm/cmr17.pfb>
+-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/local/texlive/2023/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/local/texlive/2023/texmf-d
+ist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/2023/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/texlive/2023/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/texlive/2023/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmtt10.pfb>
 Output written on "/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[0
-5] CSC111/csc111/assignments/project2/out/project_proposal 2.pdf" (1 page, 5887
+5] CSC111/csc111/assignments/project2/out/project_proposal 2.pdf" (1 page, 8427
 8 bytes).
 PDF statistics:
- 28 PDF objects out of 1000 (max. 8388607)
- 16 compressed objects within 1 object stream
+ 38 PDF objects out of 1000 (max. 8388607)
+ 22 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
