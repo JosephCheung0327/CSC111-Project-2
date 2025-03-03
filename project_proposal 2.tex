@@ -17,11 +17,14 @@ test
 
 \section*{Computational Plan}
 
-byebye
+After users are matched through the system, they can be represented as a graph. Network graphs will be used to visualize the connections between all users. There will be two graphs, one targeted at people looking for romantic relationships and one for friendships. Each node represents one user, and each edge represents a match between two users. The size of each node is directly proportional to its degree, i.e., a user with more friends will appear as a larger node in the graph. To distinguish between current and past relationships, the edges for current couples and friends will be in red, while the edges for ex-couples and ex-friends will be in blue.
+\\
+\\
+These two network graphs are created from the list of users and the matches between them if any. We will use plotly to generate these interactive graphs, where we can zoom in and out of the graph, and view the information of a selected user.
 
 \section*{References}
 
-(Joseph et al, 2025)
+(Joseph et al., 2025)
 
 % NOTE: LaTeX does have a built-in way of generating references automatically,
 % but it's a bit tricky to use so we STRONGLY recommend writing your references
