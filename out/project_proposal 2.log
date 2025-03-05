@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.8.7)  5 MAR 2025 00:24
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.8.7)  5 MAR 2025 04:21
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -340,27 +340,27 @@ ssignments/project2/out/project_proposal 2.out)
 \openout3 = `"project_proposal 2.out"'.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 18--35
+Underfull \hbox (badness 10000) in paragraph at lines 18--36
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 18--35
+Underfull \hbox (badness 10000) in paragraph at lines 18--36
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 18--35
+Underfull \hbox (badness 10000) in paragraph at lines 18--36
 
  []
 
-LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 4
-9.
+LaTeX Font Info:    Trying to load font information for T1+cmtt on input line 5
+0.
 (/usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd
 File: t1cmtt.fd 2022/07/10 v2.5l Standard LaTeX font definitions
 )
-./project_proposal 2.tex:59: Undefined control sequence.
-l.59 ...atching user in the \texttt{result} \textt
+./project_proposal 2.tex:60: Undefined control sequence.
+l.60 ...atching user in the \texttt{result} \textt
                                                   {list} (i.e., \texttt{resu...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -369,27 +369,27 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 39--79
+Underfull \hbox (badness 10000) in paragraph at lines 40--80
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 39--79
+Underfull \hbox (badness 10000) in paragraph at lines 40--80
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 39--79
+Underfull \hbox (badness 10000) in paragraph at lines 40--80
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 39--79
+Underfull \hbox (badness 10000) in paragraph at lines 40--80
 
  []
 
 
-Overfull \hbox (4.79085pt too wide) in paragraph at lines 39--79
+Overfull \hbox (4.79085pt too wide) in paragraph at lines 40--80
 \T1/cmr/m/n/10 These two net-work graphs are cre-ated from \T1/cmtt/m/n/10 user
 _list \T1/cmr/m/n/10 (for gen-er-at-ing all the nodes on the graphs), \T1/cmtt/
 m/n/10 romantic_matches\T1/cmr/m/n/10 ,
@@ -423,7 +423,7 @@ l/texlive/2023/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></usr/local/
 texlive/2023/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb>
 Output written on "/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[0
 5] CSC111/csc111/assignments/project2/out/project_proposal 2.pdf" (2 pages, 147
-338 bytes).
+625 bytes).
 PDF statistics:
  63 PDF objects out of 1000 (max. 8388607)
  42 compressed objects within 1 object stream
