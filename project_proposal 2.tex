@@ -28,19 +28,19 @@ Each user ranks their priorities for different attributes (e.g., common interest
 \\
 According to their priorities, a binary decision tree is built using these ranked attributes as decision nodes.
 For example, if a user prioritizes hobbies the most, then hobbies will be at the first level of the tree.
-The root of the tree is “ ”, and each node could be either: \texttt{Yes} (match), or \texttt{No} (mismatch).
-The tree systematically goes to potential matches (\texttt{Yes} path) based on the highest-priority attribute first through moving down the tree.
-Each node will be added to a list \texttt{result} accordingly.
-\\
-\\
-If there is more than one node with common attributes, go from the leftmost node. (For example, if A and B share the same attributes, A goes first.)
+Then, the most important attribute is at the root of the tree, and the least important attribute is at the bottom of the tree.
+The root of the tree is “ ”, and each node could be either: \texttt{Yes} (match), or \texttt{No} (mismatch), except the leafs where nodes are representing users.
+The program will systematically traverse through the tree (taking the \texttt{Yes} path).
+After reaching a leaf, the user will be added to \texttt{result}, which is a list of potential matches in order.
+If there is more than one leaf with common attributes, start from the leftmost node.
+(For example, if user A and user B share the same attributes, user A will be added to \texttt{result} first.)
 After the first all-\texttt{Yes} path, the second priority would be given to the path where the last level is \texttt{No}
 (which means the least important attribute is mismatched, but other higher-priority attributes are matched).
-The final full list, including all users, is generated and ordered according to ranking based on compatibility.
+The final full list \texttt{result}, including all users, is generated and ordered according to ranking based on compatibility.
+\\
+\\
 The user will be first shown with the first matching user in the \texttt{result} \textt{list} (i.e., \texttt{result[0]}).
 If the user “refreshes” the page, then the next matching user (\texttt{result[1]}) will be suggested, and so on.
-\\
-\\
 If the user successfully matches with another user, they will be stored in \texttt{romantic\_matches} and/or \texttt{friend\_matches},
 which are lists of sets, with the data type of \texttt{list[set[User]]}.
 Each set contains two users, which are instances of the \texttt{User} class.
