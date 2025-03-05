@@ -24,11 +24,11 @@ This is a challenge that is faced by most of our group members since we are new 
 \\
 To address this problem, we wanted to introduce a new application called \textbf{Destiny}.
 It is designed to make socializing easier and more interesting, enriching students’ university lives.
-This is not just another “dating app” but a platform where students can seek both friends and potential romantic partners. By offering a wide pool of potential matches, the application helps users connect effortlessly - whether you are looking for a study partner, a coffee companion, or even a date. 
+This is not just another “dating app” but a platform where students can seek both friends and potential romantic partners. By offering a wide pool of potential matches, the application helps users connect effortlessly - whether you are looking for a study partner, a coffee companion, or even a date.
 \\
 \\
 With a user-friendly interface, students can create profiles showcasing their interests, personality traits, and preferred connections.
-The algorithm helps suggest matches based on shared hobbies and values, making it easier to meet like-minded people while reducing the insecurity of approaching someone out of fear of rejection. To ensure more compatible connections, the application provides a personalized environment where students can select their preferred qualities. 
+The algorithm helps suggest matches based on shared hobbies and values, making it easier to meet like-minded people while reducing the insecurity of approaching someone out of fear of rejection. To ensure more compatible connections, the application provides a personalized environment where students can select their preferred qualities.
 \\
 \\
 \textbf{By encouraging friendships and romantic bonds, we aim to create a welcoming platform where students can develop personally, and build meaningful, enduring relationships.}
@@ -37,6 +37,11 @@ Four of our group members are international students themselves, and thus, we un
 
 \section*{Computational Plan}
 
+Ideally, we should collect data from current UofT students to build a realistic database of actual users.
+However, due to time constraints and privacy concerns, we will generate a synthetic dataset of 200 users for this project.
+These users will have different attributes and preferences, and we will use the Faker Python library for generating data.
+\\
+\\
 We are implementing a Binary Tree to match users to generate a list of matches based on the users’ preference for attributes.
 Before using the app, each user is asked to choose whether they are looking for: friends, potential romantic partners, or both.
 Two trees can be generated based on the user’s answer: one for matching friends, and one for matching potential romantic partners.
