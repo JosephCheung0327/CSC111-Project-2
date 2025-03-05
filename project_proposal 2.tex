@@ -29,7 +29,7 @@ Each user ranks their priorities for different attributes (e.g., common interest
 According to their priorities, a binary decision tree is built using these ranked attributes as decision nodes.
 For example, if a user prioritizes hobbies the most, then hobbies will be at the first level of the tree.
 Then, the most important attribute is at the root of the tree, and the least important attribute is at the bottom of the tree.
-The root of the tree is “ ”, and each node could be either: \texttt{Yes} (match), or \texttt{No} (mismatch), except the leafs where nodes are representing users.
+The root of the tree is “ ”, and each node could be either: \texttt{Yes} (match), or \texttt{No} (mismatch), except the leaves where nodes represent users.
 The program will systematically traverse through the tree (taking the \texttt{Yes} path).
 After reaching a leaf, the user will be added to \texttt{result}, which is a list of potential matches in order.
 If there is more than one leaf with common attributes, start from the leftmost node.
