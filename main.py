@@ -27,3 +27,5 @@ class User:
         self.social_ex = social_ex
         self.romantic_degree = romantic_degree
         self.social_degree = social_degree
+
+# TEST VS CODE
