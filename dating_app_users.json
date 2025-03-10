@@ -219,27 +219,6 @@
         "Enjoys Watching Movies": false
     },
     {
-        "Name": "Jessica Smith",
-        "Age": 18,
-        "Gender": "F",
-        "Pronouns": "She/Her",
-        "Ethnicity": "Mixed",
-        "Interests": [
-            "playing instruments"
-        ],
-        "MBTI": "ENTP",
-        "Communication Type": "phonecall",
-        "Political Interests": "Conservative",
-        "Religion": "Other",
-        "Major": "Accounting",
-        "Year": "1",
-        "Language": "Spanish",
-        "Dating Goal": "meeting new friends",
-        "Likes Pets": false,
-        "Likes Outdoor Activities": true,
-        "Enjoys Watching Movies": false
-    },
-    {
         "Name": "Nancy Love",
         "Age": 26,
         "Gender": "F",
@@ -392,28 +371,6 @@
         "Likes Pets": true,
         "Likes Outdoor Activities": false,
         "Enjoys Watching Movies": false
-    },
-    {
-        "Name": "Daniel Riggs",
-        "Age": 29,
-        "Gender": "M",
-        "Pronouns": "He/Him",
-        "Ethnicity": "White",
-        "Interests": [
-            "running",
-            "reading"
-        ],
-        "MBTI": "INFP",
-        "Communication Type": "phonecall",
-        "Political Interests": "Conservative",
-        "Religion": "Jewish",
-        "Major": "Computer Science",
-        "Year": "2",
-        "Language": "Korean",
-        "Dating Goal": "long-term relationship",
-        "Likes Pets": true,
-        "Likes Outdoor Activities": true,
-        "Enjoys Watching Movies": true
     },
     {
         "Name": "Richard Hamilton",
@@ -2486,7 +2443,7 @@
         "Enjoys Watching Movies": false
     },
     {
-        "Name": "Barbara Gonzalez",
+        "Name": "Barbara Lam",
         "Age": 29,
         "Gender": "M",
         "Pronouns": "He/Him",
@@ -2575,7 +2532,7 @@
         "Enjoys Watching Movies": true
     },
     {
-        "Name": "Peter Nelson Jr.",
+        "Name": "Patricia Wong",
         "Age": 23,
         "Gender": "F",
         "Pronouns": "She/Her",
@@ -2597,7 +2554,7 @@
         "Enjoys Watching Movies": true
     },
     {
-        "Name": "Jessica Clark",
+        "Name": "Jessica Han",
         "Age": 20,
         "Gender": "M",
         "Pronouns": "He/Him",
@@ -3481,29 +3438,6 @@
         "Enjoys Watching Movies": true
     },
     {
-        "Name": "David Gonzalez",
-        "Age": 23,
-        "Gender": "F",
-        "Pronouns": "She/Her",
-        "Ethnicity": "White",
-        "Interests": [
-            "reading",
-            "dancing",
-            "playing instruments"
-        ],
-        "MBTI": "ISFP",
-        "Communication Type": "texting",
-        "Political Interests": "Conservative",
-        "Religion": "Protestant",
-        "Major": "Actuarial Science",
-        "Year": "1",
-        "Language": "French",
-        "Dating Goal": "meeting new friends",
-        "Likes Pets": true,
-        "Likes Outdoor Activities": false,
-        "Enjoys Watching Movies": false
-    },
-    {
         "Name": "Mandy Carroll",
         "Age": 29,
         "Gender": "F",
@@ -3946,7 +3880,7 @@
         "Enjoys Watching Movies": true
     },
     {
-        "Name": "Jessica Webb",
+        "Name": "Peter Parker",
         "Age": 21,
         "Gender": "M",
         "Pronouns": "He/Him",
@@ -4385,26 +4319,88 @@
         "Enjoys Watching Movies": true
     },
     {
-        "Name": "Elizabeth Mccormick",
-        "Age": 28,
+        "Name": "Charlotte Wong",
+        "Age": 18,
         "Gender": "F",
         "Pronouns": "She/Her",
-        "Ethnicity": "White",
+        "Ethnicity": "Asian",
         "Interests": [
-            "reading",
             "dancing",
             "singing"
         ],
         "MBTI": "ISTP",
-        "Communication Type": "texting",
+        "Communication Type": "phonecall",
         "Political Interests": "Liberal",
-        "Religion": "Orthodox",
-        "Major": "Actuarial Science",
-        "Year": "3",
-        "Language": "Korean",
+        "Religion": "Agnosticism",
+        "Major": "Computer Science",
+        "Year": "1",
+        "Language": "Cantonese",
         "Dating Goal": "long-term relationship",
         "Likes Pets": false,
+        "Likes Outdoor Activities": true,
+        "Enjoys Watching Movies": true
+    },
+    {
+        "Name": "Joseph Cheung",
+        "Age": 18,
+        "Gender": "M",
+        "Pronouns": "He/Him",
+        "Ethnicity": "Asian",
+        "Interests": [
+            "coding"
+        ],
+        "MBTI": "ISTP",
+        "Communication Type": "texting",
+        "Political Interests": "Conservative",
+        "Religion": "Protestant",
+        "Major": "Computer Science",
+        "Year": "1",
+        "Language": "Cantonese",
+        "Dating Goal": "long-term relationship",
+        "Likes Pets": true,
         "Likes Outdoor Activities": false,
         "Enjoys Watching Movies": true
+    },
+    {
+        "Name": "Janice Lam",
+        "Age": 18,
+        "Gender": "F",
+        "Pronouns": "She/Her",
+        "Ethnicity": "Mixed",
+        "Interests": [
+            "playing instruments"
+        ],
+        "MBTI": "ENTP",
+        "Communication Type": "phonecall",
+        "Political Interests": "Conservative",
+        "Religion": "Other",
+        "Major": "Computer Science",
+        "Year": "1",
+        "Language": "Cantonese",
+        "Dating Goal": "meeting new friends",
+        "Likes Pets": false,
+        "Likes Outdoor Activities": true,
+        "Enjoys Watching Movies": false
+    },
+    {
+        "Name": "Winston Liang",
+        "Age": 18,
+        "Gender": "M",
+        "Pronouns": "He/Him",
+        "Ethnicity": "Asian",
+        "Interests": [
+            "doing math"
+        ],
+        "MBTI": "ISFP",
+        "Communication Type": "texting",
+        "Political Interests": "Conservative",
+        "Religion": "Protestant",
+        "Major": "Computer Science",
+        "Year": "1",
+        "Language": "Cantonese",
+        "Dating Goal": "meeting new friends",
+        "Likes Pets": true,
+        "Likes Outdoor Activities": false,
+        "Enjoys Watching Movies": false
     }
 ]

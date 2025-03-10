@@ -6,6 +6,8 @@ import json
 import os
 
 
+allUsers = []
+
 class User:
     """
     Representation invariants:
@@ -87,18 +89,40 @@ class DatingApp:
     def get_social_current(self, user: User) -> Optional[User]:
         return user.social_current
 
+class Tree:
+    def __init__(self):
+        pass
+
+
+
+class Graph:
+    def __init__(self):
+        self.graph = {}
+    
+    
+    
+    
+    
+
+
+
+
+class DecisionTree:
+    pass
+    
 
 
 # Initialize Faker
 fake = Faker()
+Faker.seed(1234)
 
 # Predefined attribute choices
-interests = ["reading", "dancing", "singing", "playing instruments", "running", "coding"]
+interests = ["reading", "dancing", "singing", "playing instruments", "running", "coding", "doing math"]
 mbti_types = ["I", "E"], ["S", "N"], ["T", "F"], ["P", "J"]
 communication_types = ["texting", "phonecall"]
 political_interests = ["Liberal", "Conservative"]
-religions = ["Protestant", "Orthodox", "Catholic", "Buddhism", "Hinduism", "Taoism", "Jewish", "Other"]
-majors = ["Computer Science", "Accounting", "Actuarial Science", "Psychology", "Biochemistry"]
+religions = ["Protestant", "Orthodox", "Catholic", "Buddhism", "Hinduism", "Taoism", "Jewish", "Agnosticism", "Other"]
+majors = ["Computer Science", "Accounting", "Actuarial Science", "Psychology", "Biochemistry", "Mathematics", "Statistics", "Economics", "Literature", "History"]
 years = ["1", "2", "3", "4", "5", "Master"]
 languages = ["English", "Cantonese", "Mandarin", "French", "Spanish", "Japanese", "Korean", "Others"]
 dating_goals = ["meeting new friends", "short-term relationship", "long-term relationship", "situationship"]
@@ -128,13 +152,103 @@ for _ in range(200):
     }
     users.append(user)
 
+# Add fixed users     
+fixed_users = [
+    {
+        "Name": "Charlotte Wong",
+        "Age": 18,
+        "Gender": "F",
+        "Pronouns": "She/Her",
+        "Ethnicity": "Asian",
+        "Interests": [
+            "dancing",
+            "singing"
+        ],
+        "MBTI": "ISTP",
+        "Communication Type": "phonecall",
+        "Political Interests": "Liberal",
+        "Religion": "Agnosticism",
+        "Major": "Computer Science",
+        "Year": "1",
+        "Language": "Cantonese",
+        "Dating Goal": "long-term relationship",
+        "Likes Pets": False,
+        "Likes Outdoor Activities": True,
+        "Enjoys Watching Movies": True
+    },
+    {
+        "Name": "Joseph Cheung",
+        "Age": 18,
+        "Gender": "M",
+        "Pronouns": "He/Him",
+        "Ethnicity": "Asian",
+        "Interests": [
+            "coding"
+        ],
+        "MBTI": "ISTP",
+        "Communication Type": "texting",
+        "Political Interests": "Conservative",
+        "Religion": "Protestant",
+        "Major": "Computer Science",
+        "Year": "1",
+        "Language": "Cantonese",
+        "Dating Goal": "long-term relationship",
+        "Likes Pets": True,
+        "Likes Outdoor Activities": False,
+        "Enjoys Watching Movies": True
+    },
+    {
+        "Name": "Janice Lam",
+        "Age": 18,
+        "Gender": "F",
+        "Pronouns": "She/Her",
+        "Ethnicity": "Mixed",
+        "Interests": [
+            "playing instruments"
+        ],
+        "MBTI": "ENTP",
+        "Communication Type": "phonecall",
+        "Political Interests": "Conservative",
+        "Religion": "Other",
+        "Major": "Computer Science",
+        "Year": "1",
+        "Language": "Cantonese",
+        "Dating Goal": "meeting new friends",
+        "Likes Pets": False,
+        "Likes Outdoor Activities": True,
+        "Enjoys Watching Movies": False
+    },
+    {
+        "Name": "Winston Liang",
+        "Age": 18,
+        "Gender": "M",
+        "Pronouns": "He/Him",
+        "Ethnicity": "Asian",
+        "Interests": [
+            "doing math"
+        ],
+        "MBTI": "ISFP",
+        "Communication Type": "texting",
+        "Political Interests": "Conservative",
+        "Religion": "Protestant",
+        "Major": "Computer Science",
+        "Year": "1",
+        "Language": "Cantonese",
+        "Dating Goal": "meeting new friends",
+        "Likes Pets": True,
+        "Likes Outdoor Activities": False,
+        "Enjoys Watching Movies": False
+    }
+]
+users.extend(fixed_users)
+
 output_dir = "/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[05] CSC111/csc111/assignments/project2/" 
 
 # Ensure the directory exists
 os.makedirs(output_dir, exist_ok=True)
 
 # Define the full output path
-output_path = os.path.join(output_dir, "dating_app_users.json")
+output_path = os.path.join(output_dir, "new_data.json")
 
 # Save to JSON file
 with open(output_path, "w", encoding="utf-8") as f:
