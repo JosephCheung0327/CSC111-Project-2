@@ -1,0 +1,65 @@
+[
+    {
+      "Name": "Jason",
+      "Age": 23,
+      "Gender": "M",
+      "Pronouns": "he/him",
+      "Ethnicity": "Asian",
+      "Interests": ["reading", "coding"],
+      "MBTI": "INTJ",
+      "Communication type": "texting",
+      "Political interests": "Liberal",
+      "Religion": "None",
+      "Major": "Computer science",
+      "Year": 3,
+      "Language": ["English", "Mandarin"],
+      "Dating goal": "long-term relationship",
+      "Questions": {
+        "Do you like pets?": true,
+        "Do you like outdoor activities?": false,
+        "Do you enjoy watching movies?": true
+      }
+    },
+    {
+      "Name": "Marf",
+      "Age": 21,
+      "Gender": "F",
+      "Pronouns": "she/her",
+      "Ethnicity": "Caucasian",
+      "Interests": ["dancing", "singing"],
+      "MBTI": "ENFP",
+      "Communication type": "phonecall",
+      "Political interests": "Conservative",
+      "Religion": "Catholic",
+      "Major": "Psychology",
+      "Year": 2,
+      "Language": ["English", "French"],
+      "Dating goal": "meeting new friends",
+      "Questions": {
+        "Do you like pets?": true,
+        "Do you like outdoor activities?": true,
+        "Do you enjoy watching movies?": true
+      }
+    },
+      {
+        "Name": "Tracy",
+        "Age": 18,
+        "Gender": "F",
+        "Pronouns": "she/her",
+        "Ethnicity": "Caucasian",
+        "Interests": ["reading", "shopping"],
+        "MBTI": "ESFJ",
+        "Communication type": "phonecall",
+        "Political interests": "Conservative",
+        "Religion": "Catholic",
+        "Major": "Accounting",
+        "Year": 1,
+        "Language": ["English", "Cantonese"],
+        "Dating goal": "meeting new friends",
+        "Questions": {
+          "Do you like pets?": false,
+          "Do you like outdoor activities?": true,
+          "Do you enjoy watching movies?": false
+        }
+    }
+]
