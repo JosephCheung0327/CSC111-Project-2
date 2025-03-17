@@ -1,12 +1,76 @@
 from __future__ import annotations
 from typing import Optional
 from faker import Faker
+import plotly.graph_objects as go
+import networkx as nx
 import random
 import json
 import os
 
 
 user_list = []
+
+
+def generate_users_with_class(seed: int = 1234):
+    fake = Faker()
+    Faker.seed(seed)
+    user_list = []
+    
+    interests = ["Reading", "Dancing", "Singing", "Playing instruments", "Running", "Coding", "Doing math"]
+    mbti_types = ["I", "E"], ["S", "N"], ["T", "F"], ["P", "J"]
+    communication_types = ["Texting", "Phonecall"]
+    political_interests = ["Liberal", "Conservative"]
+    religions = ["Protestant", "Orthodox", "Catholic", "Buddhism", "Hinduism", "Taoism", "Jewish", "Agnosticism", "Other"]
+    majors = ["Computer Science", "Accounting", "Actuarial Science", "Psychology", "Biochemistry", "Mathematics", "Statistics", "Economics", 
+    "Literature", "History", "Political Science", "Music", "Physics", "Chemistry", "Cognitive Science", "Philosophy", "Others"]
+    years = ["1", "2", "3", "4", "5", "Master"]
+    languages = ["English", "Cantonese", "Mandarin", "French", "Spanish", "Japanese", "Korean", "Others"]
+    dating_goals = ["Meeting new friends", "Short-term relationship", "Long-term relationship", "Situationship"]
+
+    for _ in range(200):
+        gender = random.choice(["M", "F"])
+        user = User(
+            name=fake.name(),
+            age=random.randint(18, 30),
+            gender=gender,
+            pronouns="He/Him" if gender == "M" else "She/Her",
+            ethnicity=random.choice(["Asian", "Black", "Hispanic", "White", "Mixed", "Other"]),
+            interests=random.sample(interests, k=random.randint(1, 3)),
+            mbti="".join(random.choice(pair) for pair in mbti_types),
+            communication_type=random.choice(communication_types),
+            political_interests=random.choice(political_interests),
+            religion=random.choice(religions),
+            major=random.choice(majors),
+            year=random.choice(years),
+            language=random.choice(languages),
+            dating_goal=random.choice(dating_goals),
+            likes_pets=random.choice([True, False]),
+            likes_outdoor_activities=random.choice([True, False]),
+            enjoys_watching_movies=random.choice([True, False]),
+            topmatch = [],
+            match = [],
+            social_current = []
+        )
+        user_list.append(user)
+
+    
+    # Assign top matches for each user (Simulation)
+    for user in user_list:
+        user.topmatch = random.sample([u for u in user_list if u != user], 25)
+    for user in user_list:
+        user.match = [match for match in user.topmatch if user in match.topmatch]
+    for user in user_list:
+        user.social_current = [match for match in user.topmatch if user in match.topmatch]
+
+    for user in user_list:
+        user.update_social_degree()
+
+    return user_list
+
+
+
+
+
 
 class User:
     """
@@ -18,21 +82,65 @@ class User:
     name: str
     romantic_current: Optional[User]
     romantic_ex: list[User]
-    social_current: Optional[User]
+    social_current: list[User]
     social_ex: list[User]
     romantic_degree: int
     social_degree: int
 
-    def __init__(self, name: str, romantic_current: Optional[User] = None, romantic_ex: list[User] = [],
-                 social_current: Optional[User] = None, social_ex: list[User] = [], romantic_degree: int = 0,
+    def __init__(self, name: str,  age, gender, pronouns, ethnicity, interests, mbti, communication_type, 
+                 political_interests, religion, major, year, language, dating_goal, 
+                 likes_pets, likes_outdoor_activities, enjoys_watching_movies, topmatch, match,
+                 romantic_current: Optional[User] = None, romantic_ex: list[User] = [],
+                 social_current: Optional[list[User]] = None, social_ex: list[User] = [], romantic_degree: int = 0,
                  social_degree: int = 0):
         self.name = name
+        self.age = age
+        self.gender = gender
+        self.pronouns = pronouns
+        
+        self.ethnicity = ethnicity
+        self.interests = interests
+        self.mbti = mbti
+        self.communication_type = communication_type
+        self.political_interests = political_interests
+        self.religion = religion
+        self.major = major
+        self.year = year
+        self.language = language
+        self.dating_goal = dating_goal
+        self.likes_pets = likes_pets
+        self.likes_outdoor_activities = likes_outdoor_activities
+        self.enjoys_watching_movies = enjoys_watching_movies
+        
+        # self.characteristic = charactersituc (dataclass)
+
+        # @dataclass: characteristic
+        #     self.ethnicity: 
+        
+        #one sec we comment ur code to run the file
+        self.topmatch = topmatch
+        self.match = []
         self.romantic_current = romantic_current
         self.romantic_ex = romantic_ex
         self.social_current = social_current
         self.social_ex = social_ex
         self.romantic_degree = romantic_degree
         self.social_degree = social_degree
+
+    def __repr__(self):
+        return f"User({self.name}, {self.age}, {self.gender}, {self.mbti})"
+    
+    def update_social_degree(self):
+        self.social_degree = len(self.social_current)
+
+
+
+class Graph:
+    def __init__(self):
+        self.graph = {}
+        
+        
+
 
 
 class DatingApp:
@@ -88,19 +196,22 @@ class DatingApp:
 
     def get_social_current(self, user: User) -> Optional[User]:
         return user.social_current
-
-class Tree:
-    def __init__(self):
-        pass
-
-
-
-class Graph:
-    def __init__(self):
-        self.graph = {}
-    
     
 
+
+
+class Treeforfriends:
+    _root: Optional[Any]
+    _subtrees: list[Tree]
+
+    def __init__(self, root: Optional[Any], subtrees: list[Tree]) -> None:
+        self._root = root
+        self._subtrees = subtrees
+        
+
+class Treeforpartners:
+    pass
+    
 class DecisionTree:
     pass
     
@@ -145,95 +256,99 @@ def generate_users(seed: int = 1234) -> None:
         }
         user_list.append(user)
 
-    # Add 4 fixed users     
+
+def add_fixed_users(users: list[dict]) -> None:
     fixed_users = [
-        {
-            "Name": "Charlotte Wong",
-            "Age": 18,
-            "Gender": "F",
-            "Pronouns": "She/Her",
-            "Ethnicity": "Asian",
-            "Interests": [
-                "Dancing",
-                "Singing"
-            ],
-            "MBTI": "ISTP",
-            "Communication Type": "Phonecall",
-            "Political Interests": "Liberal",
-            "Religion": "Agnosticism",
-            "Major": "Computer Science",
-            "Year": "1",
-            "Language": "Cantonese",
-            "Dating Goal": "Long-term relationship",
-            "Likes Pets": False,
-            "Likes Outdoor Activities": True,
-            "Enjoys Watching Movies": True
-        },
-        {
-            "Name": "Joseph Cheung",
-            "Age": 18,
-            "Gender": "M",
-            "Pronouns": "He/Him",
-            "Ethnicity": "Asian",
-            "Interests": [
-                "Coding"
-            ],
-            "MBTI": "ISTP",
-            "Communication Type": "Texting",
-            "Political Interests": "Conservative",
-            "Religion": "Protestant",
-            "Major": "Computer Science",
-            "Year": "1",
-            "Language": "Cantonese",
-            "Dating Goal": "Long-term relationship",
-            "Likes Pets": True,
-            "Likes Outdoor Activities": False,
-            "Enjoys Watching Movies": True
-        },
-        {
-            "Name": "Janice Lam",
-            "Age": 18,
-            "Gender": "F",
-            "Pronouns": "She/Her",
-            "Ethnicity": "Mixed",
-            "Interests": [
-                "Playing instruments"
-            ],
-            "MBTI": "ENTP",
-            "Communication Type": "Phonecall",
-            "Political Interests": "Conservative",
-            "Religion": "Other",
-            "Major": "Computer Science",
-            "Year": "1",
-            "Language": "Cantonese",
-            "Dating Goal": "Meeting new friends",
-            "Likes Pets": False,
-            "Likes Outdoor Activities": True,
-            "Enjoys Watching Movies": False
-        },
-        {
-            "Name": "Winston Liang",
-            "Age": 18,
-            "Gender": "M",
-            "Pronouns": "He/Him",
-            "Ethnicity": "Asian",
-            "Interests": [
-                "Doing math"
-            ],
-            "MBTI": "ISFP",
-            "Communication Type": "Texting",
-            "Political Interests": "Conservative",
-            "Religion": "Protestant",
-            "Major": "Computer Science",
-            "Year": "1",
-            "Language": "Cantonese",
-            "Dating Goal": "Meeting new friends",
-            "Likes Pets": True,
-            "Likes Outdoor Activities": False,
-            "Enjoys Watching Movies": False
-        }
+        User(
+            name="Charlotte Wong",
+            age=18,
+            gender="F",
+            pronouns="She/Her",
+            ethnicity="Asian",
+            interests=["Dancing", "Singing"],
+            mbti="ISTP",
+            communication_type="Phonecall",
+            political_interests="Liberal",
+            religion="Agnosticism",
+            major="Computer Science",
+            year="1",
+            language="Cantonese",
+            dating_goal="Long-term relationship",
+            likes_pets=False,
+            likes_outdoor_activities=True,
+            enjoys_watching_movies=True,
+            topmatch = [],
+            match = [],
+            social_current = []
+        ),
+        User(
+            name="Joseph Cheung",
+            age=18,
+            gender="M",
+            pronouns="He/Him",
+            ethnicity="Asian",
+            interests=["Coding"],
+            mbti="ISTP",
+            communication_type="Texting",
+            political_interests="Conservative",
+            religion="Protestant",
+            major="Computer Science",
+            year="1",
+            language="Cantonese",
+            dating_goal="Long-term relationship",
+            likes_pets=True,
+            likes_outdoor_activities=False,
+            enjoys_watching_movies=True,
+            topmatch = [],
+            match = [],
+            social_current = []
+        ),
+        User(
+            name="Janice Lam",
+            age=18,
+            gender="F",
+            pronouns="She/her",
+            ethnicity="Mixed",
+            interests=["Playing instruments"],
+            mbti="ENTP",
+            communication_type="Phonecall",
+            political_interests="Conservative",
+            religion="Other",
+            major="Computer Science",
+            year="1",
+            language="Cantonese",
+            dating_goal="Meeting new friends",
+            likes_pets=False,
+            likes_outdoor_activities=True,
+            enjoys_watching_movies=False,
+            topmatch = [],
+            match = [],
+            social_current = []
+        ),
+         User(
+            name="Winston Liang",
+            age=18,
+            gender="M",
+            pronouns="He/him",
+            ethnicity="Asian",
+            interests=["Doing math"],
+            mbti="ISFP",
+            communication_type="Texting",
+            political_interests="Conservative",
+            religion="Protestant",
+            major="Computer Science",
+            year="1",
+            language="Cantonese",
+            dating_goal="Meeting new friends",
+            likes_pets=True,
+            likes_outdoor_activities=False,
+            enjoys_watching_movies=False,
+            topmatch = [],
+            match = [],
+            social_current = []
+        )
     ]
-    user_list.extend(fixed_users)
+    users.extend(fixed_users)
         
 
 def add_user():
@@ -298,9 +413,29 @@ def add_user():
     while dating_goal.capitalize() not in ["Meeting new friends", "Short-term relationship", "Long-term relationship", "Situationship"]:
         dating_goal = input("Invalid input. Enter Dating Goal (Meeting new friends, Short-term relationship, Long-term relationship, Situationship): ").capitalize()
     
-    likes_pets = input("Likes Pets (True/False): ").lower() == 'true'
-    likes_outdoor_activities = input("Likes Outdoor Activities (True/False): ").lower() == 'true'
-    enjoys_watching_movies = input("Enjoys Watching Movies (True/False): ").lower() == 'true'
+    while True:
+            likes_pets = input("Likes Pets (True/False): ").lower()
+            if likes_pets in ['true', 'false']:
+                likes_pets = likes_pets == 'true'
+                break
+            else:
+                print("Invalid input. Please enter 'True' or 'False'.")
+        
+    while True:
+        likes_outdoor_activities = input("Likes Outdoor Activities (True/False): ").lower()
+        if likes_outdoor_activities in ['true', 'false']:
+            likes_outdoor_activities = likes_outdoor_activities == 'true'
+            break
+        else:
+            print("Invalid input. Please enter 'True' or 'False'.")
+    
+    while True:
+        enjoys_watching_movies = input("Enjoys Watching Movies (True/False): ").lower()
+        if enjoys_watching_movies in ['true', 'false']:
+            enjoys_watching_movies = enjoys_watching_movies == 'true'
+            break
+        else:
+            print("Invalid input. Please enter 'True' or 'False'.")
 
 
     user = {
@@ -322,9 +457,26 @@ def add_user():
         "Likes Outdoor Activities": likes_outdoor_activities,
         "Enjoys Watching Movies": enjoys_watching_movies,
     }
-
-    users.append(user)
+    
+    user_list.append(user)
     print("User added successfully!")
+
+def add_priority():
+    attributes = {"Ethnicity": 1, "Interests": 2, "MBTI": 3, "Communication Type": 4, "Political Interests": 5, \
+    "Religion": 6, "Major": 7, "Year": 8, "Language": 9, "Likes Pets": 10, "Likes Outdoor Activities": 11,\
+    "Enjoys Watching Movies": 12}
+
+    print("Please rank the following criteria in order of importance (from most to least important):")
+    for key, value in attributes.items():
+        print(f"({value}) {key.replace('_', ' ').title()}")
+
+    ranking = input("Enter the numbers in order (e.g., 3 1 4 2 5 6 7 8 10 11 9 12): ").split()
+
+    #based on ranking, create decision tree (helper function)
+    
+
+
+    
 
 
 def generate_json(users: list[dict]) -> None:
@@ -340,6 +492,83 @@ def generate_json(users: list[dict]) -> None:
     print(f"Dataset saved as {output_path}")
 
 
+def plot_user_connections(users: list[User]) -> None:
+    # Create a graph using NetworkX
+    G = nx.Graph()
+
+    # Add nodes and edges based on social_current connections
+    for user in users:
+        G.add_node(user.name, size=user.social_degree)
+        for friend in user.social_current:
+            G.add_edge(user.name, friend.name)
+
+    # Get positions for the nodes in the graph
+    pos = nx.spring_layout(G)
+
+    # Create the Plotly graph
+    edge_x = []
+    edge_y = []
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        edge_x.append(x0)
+        edge_x.append(x1)
+        edge_x.append(None)
+        edge_y.append(y0)
+        edge_y.append(y1)
+        edge_y.append(None)
+
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=0.5, color="#888"),
+        hoverinfo="none",
+        mode="lines")
+
+    node_x = []
+    node_y = []
+    node_size = []
+    node_text = []
+    hover_text = []
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+        node_size.append(G.nodes[node]["size"] * 3)
+        node_text.append(node if G.nodes[node]["size"] > 5 else "")
+        hover_text.append(node)
+
+    node_trace = go.Scatter(
+        x=node_x, y=node_y,
+        mode="markers+text",
+        text=node_text,
+        textposition="top center",
+        textfont=dict(size=10),
+        hoverinfo="text",
+        hovertext=hover_text,
+        marker=dict(
+            showscale=False,
+            color="gray",
+            size=node_size,
+            line_width=2))
+
+    fig = go.Figure(data=[edge_trace, node_trace],
+                    layout=go.Layout(
+                        title="User Connections",
+                        titlefont_size=16,
+                        showlegend=False,
+                        hovermode="closest",
+                        margin=dict(b=20, l=5, r=5, t=40),
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+                    )
+
+    # Show the graph
+    fig.show()
+
+    print("graph shown")
+
+
 if __name__ == "__main__":
-    generate_users(1234)
-    generate_json(user_list)
+    user_list = generate_users_with_class(1234)
+    add_fixed_users(user_list)
+    plot_user_connections(user_list)
