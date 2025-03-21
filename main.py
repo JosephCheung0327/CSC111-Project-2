@@ -1,9 +1,6 @@
 from __future__ import annotations
 from typing import Optional
 from faker import Faker
-import plotly.graph_objects as go
-import networkx as nx
-from dash import Dash, dcc, html, Input, Output, State, callback_context
 import random
 import json
 import os
@@ -11,7 +8,7 @@ import os
 import graph
 
 
-def generate_users_with_class(seed: int = 1234):
+def generate_users_with_class(seed: int = 1234) -> list[User]:
     fake = Faker()
     Faker.seed(seed)
     user_list = []
@@ -34,6 +31,7 @@ def generate_users_with_class(seed: int = 1234):
             age=random.randint(18, 30),
             gender=gender,
             pronouns="He/Him" if gender == "M" else "She/Her",
+            characteristics=Characteristics(
             ethnicity=random.choice(["Asian", "Black", "Hispanic", "White", "Mixed", "Other"]),
             interests=random.sample(interests, k=random.randint(1, 3)),
             mbti="".join(random.choice(pair) for pair in mbti_types),
@@ -43,10 +41,10 @@ def generate_users_with_class(seed: int = 1234):
             major=random.choice(majors),
             year=random.choice(years),
             language=random.choice(languages),
-            dating_goal=random.choice(dating_goals),
             likes_pets=random.choice([True, False]),
             likes_outdoor_activities=random.choice([True, False]),
-            enjoys_watching_movies=random.choice([True, False]),
+            enjoys_watching_movies=random.choice([True, False])),
+            dating_goal=random.choice(dating_goals),
             topmatch = [],
             match = [],
             social_current = []
@@ -67,9 +65,24 @@ def generate_users_with_class(seed: int = 1234):
 
     return user_list
 
-
-
-
+class Characteristics:
+    """Class representing user characteristics that influence a user's preference."""
+    def __init__(self, ethnicity: str, interests: list[str], mbti: str, communication_type: str,
+                 political_interests: str, religion: str, major: str, year: str, language: str,
+                 likes_pets: bool, likes_outdoor_activities: bool, enjoys_watching_movies: bool):
+        self.ethnicity = ethnicity
+        self.interests = interests
+        self.mbti = mbti
+        self.communication_type = communication_type
+        self.political_interests = political_interests
+        self.religion = religion
+        self.major = major
+        self.year = year
+        self.language = language
+        self.likes_pets = likes_pets
+        self.likes_outdoor_activities = likes_outdoor_activities
+        self.enjoys_watching_movies = enjoys_watching_movies 
+    
 
 
 class User:
@@ -87,9 +100,7 @@ class User:
     romantic_degree: int
     social_degree: int
 
-    def __init__(self, name: str,  age, gender, pronouns, ethnicity, interests, mbti, communication_type, 
-                 political_interests, religion, major, year, language, dating_goal, 
-                 likes_pets, likes_outdoor_activities, enjoys_watching_movies, topmatch, match,
+    def __init__(self, name: str,  age, gender, pronouns, dating_goal, characteristics: Characteristics, topmatch, match,
                  romantic_current: Optional[User] = None, romantic_ex: list[User] = [],
                  social_current: Optional[list[User]] = None, social_ex: list[User] = [], romantic_degree: int = 0,
                  social_degree: int = 0):
@@ -97,27 +108,10 @@ class User:
         self.age = age
         self.gender = gender
         self.pronouns = pronouns
-        
-        self.ethnicity = ethnicity
-        self.interests = interests
-        self.mbti = mbti
-        self.communication_type = communication_type
-        self.political_interests = political_interests
-        self.religion = religion
-        self.major = major
-        self.year = year
-        self.language = language
+        self.characteristics = characteristics
         self.dating_goal = dating_goal
-        self.likes_pets = likes_pets
-        self.likes_outdoor_activities = likes_outdoor_activities
-        self.enjoys_watching_movies = enjoys_watching_movies
+      
         
-        # self.characteristic = charactersituc (dataclass)
-
-        # @dataclass: characteristic
-        #     self.ethnicity: 
-        
-        #one sec we comment ur code to run the file
         self.topmatch = topmatch
         self.match = []
         self.romantic_current = romantic_current
@@ -189,63 +183,10 @@ class DatingApp:
         return user.social_current
     
 
-
-
-class Treeforfriends:
-    _root: Optional[Any]
-    _subtrees: list[Tree]
-
-    def __init__(self, root: Optional[Any], subtrees: list[Tree]) -> None:
-        self._root = root
-        self._subtrees = subtrees
-        
-
-class Treeforpartners:
-    pass
     
 class DecisionTree:
     pass
     
-
-# def generate_users(seed: int = 1234) -> None:
-#     fake = Faker()
-#     Faker.seed(seed)
-
-#     # Predefined attribute choices
-#     interests = ["Reading", "Dancing", "Singing", "Playing instruments", "Running", "Coding", "Doing math"]
-#     mbti_types = ["I", "E"], ["S", "N"], ["T", "F"], ["P", "J"]
-#     communication_types = ["Texting", "Phonecall"]
-#     political_interests = ["Liberal", "Conservative"]
-#     religions = ["Protestant", "Orthodox", "Catholic", "Buddhism", "Hinduism", "Taoism", "Jewish", "Agnosticism", "Other"]
-#     majors = ["Computer Science", "Accounting", "Actuarial Science", "Psychology", "Biochemistry", "Mathematics", "Statistics", "Economics", 
-#     "Literature", "History", "Political Science", "Music", "Physics", "Chemistry", "Cognitive Science", "Philosophy", "Others"]
-#     years = ["1", "2", "3", "4", "5", "Master"]
-#     languages = ["English", "Cantonese", "Mandarin", "French", "Spanish", "Japanese", "Korean", "Others"]
-#     dating_goals = ["Meeting new friends", "Short-term relationship", "Long-term relationship", "Situationship"]
-
-#     # Generate 200 users
-#     for _ in range(200):
-#         gender = random.choice(["M", "F"])
-#         user = {
-#             "Name": fake.name(),
-#             "Age": random.randint(18, 30),
-#             "Gender": gender,
-#             "Pronouns": "He/Him" if gender == "M" else "She/Her",
-#             "Ethnicity": random.choice(["Asian", "Black", "Hispanic", "White", "Mixed", "Other"]),
-#             "Interests": random.sample(interests, k=random.randint(1, 3)),
-#             "MBTI": "".join(random.choice(pair) for pair in mbti_types),
-#             "Communication Type": random.choice(communication_types),
-#             "Political Interests": random.choice(political_interests),
-#             "Religion": random.choice(religions),
-#             "Major": random.choice(majors),
-#             "Year": random.choice(years),
-#             "Language": random.choice(languages),
-#             "Dating Goal": random.choice(dating_goals),
-#             "Likes Pets": random.choice([True, False]),
-#             "Likes Outdoor Activities": random.choice([True, False]),
-#             "Enjoys Watching Movies": random.choice([True, False]),
-#         }
-#         user_list.append(user)
 
 
 def add_fixed_users(users: list[dict]) -> None:
@@ -255,6 +196,7 @@ def add_fixed_users(users: list[dict]) -> None:
             age=18,
             gender="F",
             pronouns="She/Her",
+            characteristics=Characteristics(
             ethnicity="Asian",
             interests=["Dancing", "Singing"],
             mbti="ISTP",
@@ -264,10 +206,10 @@ def add_fixed_users(users: list[dict]) -> None:
             major="Computer Science",
             year="1",
             language="Cantonese",
-            dating_goal="Long-term relationship",
             likes_pets=False,
             likes_outdoor_activities=True,
-            enjoys_watching_movies=True,
+            enjoys_watching_movies=True),
+            dating_goal="Long-term relationship",
             topmatch = [],
             match = [],
             social_current = []
@@ -277,6 +219,7 @@ def add_fixed_users(users: list[dict]) -> None:
             age=18,
             gender="M",
             pronouns="He/Him",
+            characteristics=Characteristics(
             ethnicity="Asian",
             interests=["Coding"],
             mbti="ISTP",
@@ -286,10 +229,10 @@ def add_fixed_users(users: list[dict]) -> None:
             major="Computer Science",
             year="1",
             language="Cantonese",
-            dating_goal="Long-term relationship",
             likes_pets=True,
             likes_outdoor_activities=False,
-            enjoys_watching_movies=True,
+            enjoys_watching_movies=True),
+            dating_goal="Long-term relationship",
             topmatch = [],
             match = [],
             social_current = []
@@ -299,6 +242,7 @@ def add_fixed_users(users: list[dict]) -> None:
             age=18,
             gender="F",
             pronouns="She/her",
+            characteristics=Characteristics(
             ethnicity="Mixed",
             interests=["Playing instruments"],
             mbti="ENTP",
@@ -308,10 +252,10 @@ def add_fixed_users(users: list[dict]) -> None:
             major="Computer Science",
             year="1",
             language="Cantonese",
-            dating_goal="Meeting new friends",
             likes_pets=False,
             likes_outdoor_activities=True,
-            enjoys_watching_movies=False,
+            enjoys_watching_movies=False),
+            dating_goal="Meeting new friends",
             topmatch = [],
             match = [],
             social_current = []
@@ -321,6 +265,7 @@ def add_fixed_users(users: list[dict]) -> None:
             age=18,
             gender="M",
             pronouns="He/him",
+            characteristics=Characteristics(
             ethnicity="Asian",
             interests=["Doing math"],
             mbti="ISFP",
@@ -330,10 +275,10 @@ def add_fixed_users(users: list[dict]) -> None:
             major="Computer Science",
             year="1",
             language="Cantonese",
-            dating_goal="Meeting new friends",
             likes_pets=True,
             likes_outdoor_activities=False,
-            enjoys_watching_movies=False,
+            enjoys_watching_movies=False),
+            dating_goal="Meeting new friends",
             topmatch = [],
             match = [],
             social_current = []
@@ -449,25 +394,28 @@ def add_user(users: list[dict]) -> None:
             print("Invalid input. Please enter 'True' or 'False'.")
 
 
-    user = {
-        "Name": name,
-        "Age": age,
-        "Gender": gender,
-        "Pronouns": pronouns,
-        "Ethnicity": ethnicity,
-        "Interests": interests,
-        "MBTI": mbti,
-        "Communication Type": communication_type,
-        "Political Interests": political_interests,
-        "Religion": religion,
-        "Major": major,
-        "Year": year,
-        "Language": language,
-        "Dating Goal": dating_goal,
-        "Likes Pets": likes_pets,
-        "Likes Outdoor Activities": likes_outdoor_activities,
-        "Enjoys Watching Movies": enjoys_watching_movies,
-    }
+    user = User(
+            name=name,
+            age=age,
+            gender=gender, 
+            pronouns=pronouns,
+            characteristics=Characteristics(
+            ethnicity=ethnicity,
+            interests=interests,
+            mbti=mbti,
+            communication_type=communication_type,
+            political_interests=political_interests,
+            religion=religion,
+            major=major,
+            year=year,
+            language=language,
+            likes_pets=likes_pets,
+            likes_outdoor_activities=likes_outdoor_activities,
+            enjoys_watching_movies=enjoys_watching_movies),
+            dating_goal=dating_goal,
+            topmatch = [],
+            match = [],
+            social_current = [])
     
     users.append(user)
     print("User added successfully!")
@@ -486,18 +434,8 @@ def add_priority():
     #based on ranking, create decision tree (helper function)
     
 
-# def generate_json(users: list[dict]) -> None:
-#     # Set output directory of the generated JSON file
-#     output_dir = os.path.dirname(os.path.abspath(__file__))
-#     filename = "new_data.json"
-#     output_path = os.path.join(output_dir, filename)
-
-#     # Save list of users to JSON file
-#     with open(output_path, "w", encoding="utf-8") as f:
-#         json.dump(users, f, indent=4)
-
-#     print(f"Dataset saved as {output_path}")
-
 
 if __name__ == "__main__":
-    graph.app.run_server(debug=True)
+    users = generate_users_with_class(1234)
+    add_user(users)
+    # graph.app.run_server(debug=True)

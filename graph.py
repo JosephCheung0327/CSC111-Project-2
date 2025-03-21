@@ -161,33 +161,51 @@ app.layout = html.Div([
     dcc.Input(id = "search-input", type = "text", placeholder = "Enter user name"),
     html.Button("Search", id = "search-button"),
     html.Button("Reset", id = "reset-button"),
+    html.Div(id = "clicked-node-output"),  # Add an output area to display clicked node
     dcc.Graph(id = "user-graph", figure = initial_fig)
 ])
 
 @app.callback(
-    Output("user-graph", "figure"),
-    [Input("search-button", "n_clicks"), Input("reset-button", "n_clicks")],
-    State("search-input", "value")
+    [Output("user-graph", "figure"), Output("clicked-node-output", "children")],
+    [Input("search-button", "n_clicks"), 
+     Input("reset-button", "n_clicks"),
+     Input("user-graph", "clickData")],  # Add clickData as an input
+    [State("search-input", "value")]
 )
-def update_graph(search_clicks, reset_clicks, search_name):
+def update_graph(search_clicks, reset_clicks, click_data, search_name):
     ctx = callback_context
-
+    
     if not ctx.triggered:
-        return initial_fig
+        return initial_fig, ""
 
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-
+    prop_type = ctx.triggered[0]['prop_id'].split('.')[1] if '.' in ctx.triggered[0]['prop_id'] else None
+    
+    clicked_node = ""
+    
+    # Handle reset button click
     if button_id == "reset-button":
-        # Reset by creating a new figure with the initial node positions
-        reset_fig, _ = plot_user_connections(initial_user_list, positions = node_positions)
-        return reset_fig
-
-    if button_id == "search-button" and search_name:
-        # Create a new figure with the search highlighting
+        reset_fig, _ = plot_user_connections(initial_user_list, positions=node_positions)
+        return reset_fig, ""
+    
+    # Handle search button click
+    elif button_id == "search-button" and search_name:
         search_fig, _ = plot_user_connections(initial_user_list, search_name, node_positions)
-        return search_fig
-
-    return initial_fig
+        return search_fig, f"Searched for: {search_name}"
+    
+    # Handle node click
+    elif button_id == "user-graph" and prop_type == "clickData" and click_data:
+        # Extract the node name from the click data
+        try:
+            clicked_node = click_data['points'][0]['hovertext']
+            click_fig, _ = plot_user_connections(initial_user_list, clicked_node, node_positions)
+            return click_fig, f"Clicked on: {clicked_node}"
+        except (KeyError, IndexError):
+            # If the click wasn't on a node with hover text
+            return initial_fig, "Click missed or was on a non-node element"
+    
+    # Default return
+    return initial_fig, clicked_node
 
 def generate_user_graph():
     app.run_server(debug=True)
