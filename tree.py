@@ -61,14 +61,26 @@ def add_priority(Characteristics):
         return add_priority(Characteristics)
         
 def data_wrangling():
-    heading = add_priority()
+    heading = add_priority(main.Characteristics())
+
+    potential_users = filter_user_by_dating_goal(users_list, users_list[-1])
+
     data = {"name":[]}
+
     for person in potential_users:
-        data["name"] += person
+        data["name"].append(person.name)
+        
     for attribute in heading:
         answer = []
         for person in potential_users:
-        if main.users[-1].
+            current_user_value = getattr(users_list[-1].characteristics, attribute)
+            potential_user_value = getattr(person.characteristics, attribute)
+
+            if current_user_value == potential_user_value:
+                answer.append(1)
+            else:
+                answer.append(0)
+        data[attribute] = answer
 
 
 class Tree:
@@ -80,9 +92,33 @@ class Tree:
         self._root = root
         self._subtrees = subtrees
 
+
+    def run_preference_tree(self) -> list[User]:
+        """Run the preference tree and return a list of 10 users that will display to the target user."""
+        
+        # base  case ()(return the leave of the tree):
+        if self.is_empty():
+          return []
+
+        else: 
+          for subtree in
+
+        
+        
+        
+  
+
   
   
-def build_preference_tree(listofusers:list[User]) -> Tree:
+def build_preference_tree(file:str) -> Tree:
     tree = Tree('', [])
+
+    with open(file) as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader) #skip the header row
+    
+    for row in reader: 
+        
+
 
   

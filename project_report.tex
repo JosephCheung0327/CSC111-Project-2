@@ -1,0 +1,100 @@
+\documentclass[fontsize=11pt]{article}
+\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{hyperref}
+\urlstyle{same}
+
+\title{CSC111 Project 2 Proposal: \\ \textbf{“Destiny” - Find Your Next Soulmate Here}}
+\author{Hsin Kuang (Joseph) Cheung \\ Tsz Kan Charlotte Wong \\ Yan Lam \\ Chun Yin Liang}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Problem Description and Research Question}
+
+The University of Toronto is a community with a diverse student population, with lots of international students (University of Toronto, 2024).
+As we enter early adulthood, the struggle between isolation and intimacy becomes significant.
+Many students feel lonely and stressed when making new connections and managing their academic burden, especially those from abroad who experience homesickness.
+\textbf{How can students in UofT meet new people and build a supportive circle beyond lectures with less effort?
+This is a challenge that is faced by most of our group members since we are new to the city.}
+\\
+\\
+To address this problem, we wanted to introduce a new application called \textbf{Destiny}.
+It is designed to make socializing easier and more interesting, enriching students’ university lives.
+This is not just another “dating app” but a platform where students can seek both friends and potential romantic partners. By offering a wide pool of potential matches, the application helps users connect effortlessly - whether you are looking for a study partner, a coffee companion, or even a date.
+\\
+\\
+With a user-friendly interface, students can create profiles showcasing their interests, personality traits, and preferred connections.
+The algorithm helps suggest matches based on shared hobbies and values, making it easier to meet like-minded people while reducing the insecurity of approaching someone out of fear of rejection. To ensure more compatible connections, the application provides a personalized environment where students can select their preferred qualities.
+\\
+\\
+\textbf{By encouraging friendships and romantic bonds, we aim to create a welcoming platform where students can develop personally, and build meaningful, enduring relationships.}
+Four of our group members are international students themselves, and thus, we understand firsthand the importance of a strong supportive network, either as friends or something more, in enhancing mental health and student engagement throughout university life.
+
+
+\section*{Computational Plan}
+
+Ideally, we should collect data from current UofT students to build a realistic database of actual users.
+However, due to time constraints and privacy concerns, we will generate a synthetic dataset of 200 users for this project.
+These users will have different attributes and preferences, and we will use the Faker Python library for generating data.
+\\
+\\
+We are implementing a Binary Tree to match users to generate a list of matches based on the users’ preference for attributes.
+Before using the app, each user is asked to choose whether they are looking for: friends, potential romantic partners, or both.
+Two trees can be generated based on the user’s answer: one for matching friends, and one for matching potential romantic partners.
+Then, the user is asked to enter their answer for each attribute.
+Each user ranks their priorities for different attributes (e.g., common interests, program of study, personality traits).
+\\
+\\
+According to their priorities, a binary decision tree is built using these ranked attributes as decision nodes.
+For example, if a user prioritizes hobbies the most, then hobbies will be at the first level of the tree.
+Then, the most important attribute is at the root of the tree, and the least important attribute is at the bottom of the tree.
+The root of the tree is “ ”, and each node could be either: \texttt{Yes} (match), or \texttt{No} (mismatch), except the leaves where nodes represent users.
+The program will systematically traverse through the tree (taking the \texttt{Yes} path).
+After reaching a leaf, the user will be added to \texttt{result}, which is a list of potential matches in order.
+If there is more than one leaf with common attributes, start from the leftmost node.
+(For example, if user A and user B share the same attributes, user A will be added to \texttt{result} first.)
+After the first all-\texttt{Yes} path, the second priority would be given to the path where the last level is \texttt{No}
+(which means the least important attribute is mismatched, but other higher-priority attributes are matched).
+The final full list \texttt{result}, including all users, is generated and ordered according to ranking based on compatibility.
+\\
+\\
+The user will be first shown with the first matching user in the \texttt{result} \textt{list} (i.e., \texttt{result[0]}).
+If the user “refreshes” the page, then the next matching user (\texttt{result[1]}) will be suggested, and so on.
+If the user successfully matches with another user, they will be stored in \texttt{romantic\_matches} and/or \texttt{friend\_matches},
+which are lists of sets, with the data type of \texttt{list[set[User]]}.
+Each set contains two users, which are instances of the \texttt{User} class.
+Also, \texttt{user\_list} is a list of all users in the system, with the data type of \texttt{list[User]}.
+\\
+\\
+After users are matched through the system, they can be represented as a graph.
+Network graphs will be used to visualize the connections between all users.
+There will be two graphs, one targeted at people looking for romantic relationships and one for friendships.
+Each node represents one user, and each edge represents a match between two users.
+The size of each node is directly proportional to its degree, i.e., a user with more friends will appear as a larger node in the graph.
+To distinguish between current and past relationships, the edges for current couples and friends will be in red, while the edges for ex-couples and ex-friends will be in blue.
+\\
+\\
+These two network graphs are created from \texttt{user\_list} (for generating all the nodes on the graphs),
+\texttt{romantic\_matches}, and \texttt{friend\_matches} (for generating the edges, and showing their connections).
+We will generate these interactive graphs using plotly, an interactive graphing Python library (Plotly, 2025).
+Then, as the developers of the application, we can zoom in and out of the graph, and view the detailed information of different users in our system.
+
+\section*{References}
+
+Plotly. (2025). \textit{Plotly}.
+\url{https://plotly.com/python/}
+\\
+University of Toronto. (2024). \textit{Quick facts}.
+\url{https://www.utoronto.ca/about-u-of-t/quick-facts}
+
+
+% NOTE: LaTeX does have a built-in way of generating references automatically,
+% but it's a bit tricky to use so we STRONGLY recommend writing your references
+% manually, using a standard academic format like APA or MLA.
+% (E.g., https://owl.purdue.edu/owl/research_and_citation/apa_style/apa_formatting_and_style_guide/general_format.html)
+
+\end{document}
