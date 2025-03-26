@@ -176,8 +176,9 @@ class User:
 
 
 class DatingApp:
-    """
-
+    """A class for managing user connections
+    Instance Attributes:
+    - users: a list of User. 
 
     Representation invariants:
     - users != []
@@ -188,6 +189,11 @@ class DatingApp:
         self.users = users
 
     def match(self, user1: User, user2: User) -> None:
+        """Match user1 with user2 as romantic relationship.
+        Preconditions:
+        - (user1 not in user2.romantic_current and user2 not in user1.romantic_current) 
+        or (user1 in user2.romantic_current and user2 in user1.romantic_current)
+        """
         if user1 not in user2.romantic_current and user2 not in user1.romantic_current:
             user1.romantic_current.append(user2)
             user2.romantic_current.append(user1)
@@ -203,6 +209,8 @@ class DatingApp:
             user2.romantic_current.remove(user2)
             user1.romantic_ex.append(user2)
             user2.romantic_ex.append(user1)
+            user1.romantic_degree -= 1
+            user2.romantic_degree -= 1
         else:
             print(f"Unmatch failed. {user1} and {user2} are not couples.")
 

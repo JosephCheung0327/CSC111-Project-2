@@ -174,6 +174,13 @@ def run_preference_tree(self, user: user_network.User) -> list[user_network.User
         recommendation_list = []
         t = build_preference_tree('data.csv')
         result = t.show_result()
+        
+        if self._root != "" and isinstance(self._root, str):
+            recommendation_list.append(self._root)
+        elif self._root == "":
+            for subtree in self._subtrees:
+                if subtree._root == 1:
+                    
 
 
 
