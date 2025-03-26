@@ -16,6 +16,11 @@ def generate_users_with_class(list_size: int, topmatch_simulation_size: int, see
     - seed is not None
     - isinstance(seed, int) == True
     
+    
+    >>> user_list_generated = generate_users_with_class(2, 1, 1234)
+    >>> user_list_generated[0].match == user_list_generated[1].match 
+    True
+    # Since there are only two users generated, and each of them has a topmatch (the other person), they are matched.
     """
     fake = Faker()
     Faker.seed(seed)
@@ -58,7 +63,6 @@ def generate_users_with_class(list_size: int, topmatch_simulation_size: int, see
             social_current = []
         )
         user_list.append(user)
-
     
     # Assign top matches for each user (Simulation)
     for user in user_list:
@@ -74,7 +78,23 @@ def generate_users_with_class(list_size: int, topmatch_simulation_size: int, see
     return user_list
 
 class Characteristics:
-    """Class representing user characteristics that influence a user's preference."""
+    """Class representing user characteristics that influence a user's preference.
+        Instance Attributes:
+        - ethnicity: The user's ethnicity.
+        - interests: A list of the user's hobbies or interests.
+        - mbti: The user's Myers-Briggs personality type (e.g., INFP, ESTJ).
+        - communication_type: The user's preferred communication style (e.g., text, call, in-person).
+        - political_interests: The user's political views or level of political engagement.
+        - religion: The user's religious belief.
+        - major: The user's academic major (e.g., Computer Science, Psychology).
+        - year: The user's academic year (e.g., First Year, Second Year, Junior, Senior).
+        - language: The primary language the user speaks.
+        - likes_pets: Whether the user likes pets or not.
+        - likes_outdoor_activities: Whether the user enjoys outdoor activities (e.g., hiking, sports).
+        - enjoys_watching_movies: Whether the user enjoys watching movies or shows.
+    """
+    
+
     def __init__(self, ethnicity: str, interests: list[str], mbti: str, communication_type: str,
                  political_interests: str, religion: str, major: str, year: str, language: str,
                  likes_pets: bool, likes_outdoor_activities: bool, enjoys_watching_movies: bool):
@@ -94,7 +114,25 @@ class Characteristics:
 
 
 class User:
-    """
+    """Represents a user in the dating app. 
+
+    Instance Attributes:
+    - name: the name of the user.
+    - age: the age of the user.
+    - gender: the gender of the user.
+    - pronouns: the pronouns of the user.
+    - dating_goal: Whether the user is planning to just "Meeting new friends", having
+        "Short-term relationship", "Long-term relationship", or "Situationship".
+    - characteristics: the features of the user, as provided by the user.
+    - topmatch: a list of users that the user is interested in.
+    - match: a list of users that the user are interested in and they also are interested in the user.
+    - romantic_current: the user's current romantic partner.
+    - romantic_ex: a list of user's ex-partners.
+    - social_current: a list of the user's friends.
+    - social_ex: a list of the unfriended users of user.
+    - romantic_degree: the number of romantic relationship the user is currently experiencing (0 or 1, we assume).
+    - social_degree: the number of friends the user has. 
+
     Representation invariants:
     - name != ""
     - romantic_degree >= 0
@@ -136,8 +174,11 @@ class User:
         self.social_degree = len(self.social_current)
 
 
+
 class DatingApp:
     """
+
+
     Representation invariants:
     - users != []
     """
@@ -167,18 +208,24 @@ class DatingApp:
 
 
     def socialize(self, user1: User, user2: User) -> None:
-        user1.social_current.append(user2)
-        user2.social_current.append(user1)
-        user1.social_degree += 1
-        user2.social_degree += 1
+        if user1 not in user2.romantic_current and user2 not in user1.romantic_current:
+            user1.social_current.append(user2)
+            user2.social_current.append(user1)
+            user1.social_degree += 1
+            user2.social_degree += 1
+        else:
+            print(f"Friend add failed. {user1} and {user2} are already friends.")
 
     def unsocialize(self, user1: User, user2: User) -> None:
-        user1.social_current.remove(user2)
-        user2.social_current.remove(user2)
-        user1.social_degree -= 1
-        user2.social_degree -= 1
-        user1.social_ex.append(user2)
-        user2.social_ex.append(user1)
+        if user1 in user2.romantic_current and user2 in user1.romantic_current:
+            user1.social_current.remove(user2)
+            user2.social_current.remove(user2)
+            user1.social_degree -= 1
+            user2.social_degree -= 1
+            user1.social_ex.append(user2)
+            user2.social_ex.append(user1)
+        else:
+            print(f"Unfriend failed. {user1} and {user2} are not friends.")
 
     def get_romantic_degree(self, user: User) -> int:
         return user.romantic_degree
@@ -191,6 +238,7 @@ class DatingApp:
 
     def get_social_current(self, user: User) -> Optional[User]:
         return user.social_current
+    
     
 
     

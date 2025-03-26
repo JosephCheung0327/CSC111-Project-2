@@ -1,26 +1,33 @@
+from __future__ import annotations
+
 import user_network
 
-from typing import List, Optional
+from typing import List, Optional, Any
 import pandas as pd
 import csv
 import json
+from python_ta.contracts import check_contracts
+
+
 
 users_list = user_network.users
 
-char1 = user_network.Characteristics(
-    ethnicity="Asian",
-    interests=["coding", "data science", "movies"],
-    mbti="INTJ",
-    communication_type="Direct",
-    political_interests="Moderate",
-    religion="None",
-    major="Computer Science",
-    year="3rd",
-    language="English, Cantonese",
-    likes_pets=True,
-    likes_outdoor_activities=True,
-    enjoys_watching_movies=True
-)
+char1 = users_list[-1].characteristics
+
+# char1 = user_network.Characteristics(
+#     ethnicity="Asian",
+#     interests=["coding", "data science", "movies"],
+#     mbti="INTJ",
+#     communication_type="Direct",
+#     political_interests="Moderate",
+#     religion="None",
+#     major="Computer Science",
+#     year="3rd",
+#     language="English, Cantonese",
+#     likes_pets=True,
+#     likes_outdoor_activities=True,
+#     enjoys_watching_movies=True
+# )
 
 
 
@@ -91,7 +98,7 @@ def data_wrangling():
 
     df.to_csv(csv_file_path, index = False)
 
-    print(f'CSV file &quot;{csv_file_path}&quot; has been created successfully.')
+    print(f'CSV file "{csv_file_path}" has been created successfully.')
 
 
 class Tree:
@@ -117,7 +124,17 @@ class Tree:
             self._subtrees.append(Tree(first, []))
             self._subtrees[-1].insert_sequence(rest)
 
-#    
+    def __str__(self, level=0) -> str:
+        """Return a string representation of the tree."""
+        result = "  " * level + str(self._root) + "\n"
+        for subtree in self._subtrees:
+            result += subtree.__str__(level + 1)
+        return result
+
+
+    # def show_result(self) -> Any:
+        
+
 
 
     # def run_preference_tree(self) -> list[User]:
@@ -137,18 +154,27 @@ class Tree:
 
 @check_contracts
 def build_preference_tree(file:str) -> Tree:
-tree = Tree('', [])
+    tree = Tree('', [])
 
-with open(file) as csv_file:
-    reader = csv.reader(csv_file)
-    next(reader) #skip the header row
+    with open(file) as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader) #skip the header row
 
-for row in reader: 
-        characteristics = str(row[0])
-        match = [int(item) for item in row[1:]]
-        match.append(characteristics)
-        tree.insert_sequence(match)
-    
+        for row in reader: 
+                characteristics = str(row[0])
+                match = [int(item) for item in row[1:]]
+                match.append(characteristics)
+                tree.insert_sequence(match)
+    print(tree)
+    return tree
+
+@check_contracts
+def run_preference_tree(self, user: user_network.User) -> list[user_network.User]:
+        """Run the decision tree and return a list of 10 users that will display to the target user."""
+        recommendation_list = []
+        t = build_preference_tree('data.csv')
+        result = t.show_result()
+
 
 
 

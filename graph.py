@@ -129,8 +129,8 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
         # Zoom to show searched user and connections
         if actual_search_name and actual_search_name in G.nodes:
             relevant_positions = [pos[actual_search_name]]
-        for neighbor in G.neighbors(actual_search_name):
-            relevant_positions.append(pos[neighbor])
+            for neighbor in G.neighbors(actual_search_name):
+                relevant_positions.append(pos[neighbor])
             
             x_coords = [p[0] for p in relevant_positions]
             y_coords = [p[1] for p in relevant_positions]
@@ -157,13 +157,34 @@ initial_user_list = generate_users_with_class(200, 25, 1234)
 add_fixed_users(initial_user_list)
 initial_fig, node_positions = plot_user_connections(initial_user_list)
 
+# Updated layout with centered elements and better styling
 app.layout = html.Div([
-    dcc.Input(id = "search-input", type = "text", placeholder = "Enter user name"),
-    html.Button("Search", id = "search-button"),
-    html.Button("Reset", id = "reset-button"),
-    html.Div(id = "clicked-node-output"),  # Add an output area to display clicked node
+    # Top controls div with search input and buttons
+    html.Div([
+        dcc.Input(id = "search-input", type = "text", placeholder = "Enter user name",
+                 style = {'margin': '10px', 'padding': '8px', 'borderRadius': '4px'}),
+        html.Button("Search", id = "search-button",
+                   style = {'margin': '10px', 'padding': '8px', 'backgroundColor': '#4CAF50', 'color': 'white', 'border': 'none', 'borderRadius': '4px'}),
+        html.Button("Reset", id = "reset-button",
+                   style = {'margin': '10px', 'padding': '8px', 'backgroundColor': '#f44336', 'color': 'white', 'border': 'none', 'borderRadius': '4px'}),
+    ], style = {'display': 'flex', 'justifyContent': 'center', 'marginBottom': '10px'}),
+    
+    # Centered clicked node output with styling
+    html.Div(
+        id = "clicked-node-output",  
+        style = {
+            'textAlign': 'center',
+            'fontSize': '18px',
+            'fontWeight': 'bold',
+            'padding': '10px',
+            'margin': '10px 0',
+            'color': '#2C3E50'
+        }
+    ),
+    
+    # Graph component
     dcc.Graph(id = "user-graph", figure = initial_fig)
-])
+], style = {'fontFamily': 'Arial, sans-serif'})
 
 @app.callback(
     [Output("user-graph", "figure"), Output("clicked-node-output", "children")],
@@ -185,13 +206,28 @@ def update_graph(search_clicks, reset_clicks, click_data, search_name):
     
     # Handle reset button click
     if button_id == "reset-button":
-        reset_fig, _ = plot_user_connections(initial_user_list, positions=node_positions)
+        reset_fig, _ = plot_user_connections(initial_user_list, positions = node_positions)
         return reset_fig, ""
     
     # Handle search button click
     elif button_id == "search-button" and search_name:
         search_fig, _ = plot_user_connections(initial_user_list, search_name, node_positions)
-        return search_fig, f"Searched for: {search_name}"
+        
+        # Get the network stats if found
+        selected_user = next((u for u in initial_user_list if u.name.lower() == search_name.lower()), None)
+        if selected_user:
+            friend_count = selected_user.social_degree
+            return search_fig, html.Div([
+                "Searched for: ",
+                html.Span(search_name, style = {'color': '#4CAF50'}),
+                html.Div(f"Number of friends: {friend_count}", style = {'marginTop': '5px', 'fontSize': '16px'})
+            ])
+        else:
+            return search_fig, html.Div([
+                "Searched for: ",
+                html.Span(search_name, style = {'color': '#4CAF50'}),
+                html.Div("User not found", style = {'marginTop': '5px', 'fontSize': '16px', 'color': '#999'})
+            ])
     
     # Handle node click
     elif button_id == "user-graph" and prop_type == "clickData" and click_data:
@@ -199,7 +235,22 @@ def update_graph(search_clicks, reset_clicks, click_data, search_name):
         try:
             clicked_node = click_data['points'][0]['hovertext']
             click_fig, _ = plot_user_connections(initial_user_list, clicked_node, node_positions)
-            return click_fig, f"Clicked on: {clicked_node}"
+            
+            # Find the clicked user in our list to get their friend count
+            selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
+            friend_count = selected_user.social_degree if selected_user else "Unknown"
+            
+            # Return a styled message with friend count
+            return click_fig, html.Div([
+                html.Div([
+                    "Clicked on: ",
+                    html.Span(clicked_node, style = {'color': '#3498DB'})
+                ]),
+                html.Div([
+                    "Number of friends: ",
+                    html.Span(f"{friend_count}", style = {'fontWeight': 'bold'})
+                ], style = {'marginTop': '5px', 'fontSize': '16px'})
+            ])
         except (KeyError, IndexError):
             # If the click wasn't on a node with hover text
             return initial_fig, "Click missed or was on a non-node element"
@@ -208,4 +259,4 @@ def update_graph(search_clicks, reset_clicks, click_data, search_name):
     return initial_fig, clicked_node
 
 def generate_user_graph():
-    app.run_server(debug=True)
+    app.run_server(debug = True)
