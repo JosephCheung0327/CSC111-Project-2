@@ -5,10 +5,18 @@ import random
 import json
 import os
 
-import graph
 
 
-def generate_users_with_class(seed: int = 1234) -> list[User]:
+def generate_users_with_class(list_size: int, topmatch_simulation_size: int, seed: int = 1234) -> list[User]:
+    """Return a list of list_size number of users with randomly generated attributes, and randomly simulate 
+    top_match_simulation_size number of users in the topmatch list (users that a user is interested in). 
+    If both users have each other in their  topmatch list mutually, they are added to their self.match list as user.
+    
+    Preconditions:
+    - seed is not None
+    - isinstance(seed, int) == True
+    
+    """
     fake = Faker()
     Faker.seed(seed)
     user_list = []
@@ -24,7 +32,7 @@ def generate_users_with_class(seed: int = 1234) -> list[User]:
     languages = ["English", "Cantonese", "Mandarin", "French", "Spanish", "Japanese", "Korean", "Others"]
     dating_goals = ["Meeting new friends", "Short-term relationship", "Long-term relationship", "Situationship"]
 
-    for _ in range(200):
+    for _ in range(list_size):
         gender = random.choice(["M", "F"])
         user = User(
             name=fake.name(),
@@ -54,7 +62,7 @@ def generate_users_with_class(seed: int = 1234) -> list[User]:
     
     # Assign top matches for each user (Simulation)
     for user in user_list:
-        user.topmatch = random.sample([u for u in user_list if u != user], 25)
+        user.topmatch = random.sample([u for u in user_list if u != user], topmatch_simulation_size)
     for user in user_list:
         user.match = [match for match in user.topmatch if user in match.topmatch]
     for user in user_list:
@@ -139,36 +147,38 @@ class DatingApp:
         self.users = users
 
     def match(self, user1: User, user2: User) -> None:
-        user1.romantic_current = user2
-        user2.romantic_current = user1
-        user1.romantic_degree += 1
-        user2.romantic_degree += 1
-        user1.romantic_ex.append(user2)
-        user2.romantic_ex.append(user1)
+        if user1 not in user2.romantic_current and user2 not in user1.romantic_current:
+            user1.romantic_current.append(user2)
+            user2.romantic_current.append(user1)
+            user1.romantic_degree += 1
+            user2.romantic_degree += 1
+        else:
+            print(f"Matching failed. {user1} and {user2} are already couples.")
+
 
     def unmatch(self, user1: User, user2: User) -> None:
-        user1.romantic_current = None
-        user2.romantic_current = None
-        user1.romantic_degree -= 1
-        user2.romantic_degree -= 1
-        user1.romantic_ex.remove(user2)
-        user2.romantic_ex.remove(user1)
+        if user1 in user2.romantic_current and user2 in user1.romantic_current:
+            user1.romantic_current.remove(user2)
+            user2.romantic_current.remove(user2)
+            user1.romantic_ex.append(user2)
+            user2.romantic_ex.append(user1)
+        else:
+            print(f"Unmatch failed. {user1} and {user2} are not couples.")
+
 
     def socialize(self, user1: User, user2: User) -> None:
-        user1.social_current = user2
-        user2.social_current = user1
+        user1.social_current.append(user2)
+        user2.social_current.append(user1)
         user1.social_degree += 1
         user2.social_degree += 1
-        user1.social_ex.append(user2)
-        user2.social_ex.append(user1)
 
     def unsocialize(self, user1: User, user2: User) -> None:
-        user1.social_current = None
-        user2.social_current = None
+        user1.social_current.remove(user2)
+        user2.social_current.remove(user2)
         user1.social_degree -= 1
         user2.social_degree -= 1
-        user1.social_ex.remove(user2)
-        user2.social_ex.remove(user1)
+        user1.social_ex.append(user2)
+        user2.social_ex.append(user1)
 
     def get_romantic_degree(self, user: User) -> int:
         return user.romantic_degree
@@ -435,7 +445,9 @@ def add_priority():
     
 
 
+
+users = generate_users_with_class(200, 25, 1234)
+
 if __name__ == "__main__":
-    users = generate_users_with_class(1234)
-    add_user(users)
-    # graph.app.run_server(debug=True)
+    import graph
+    graph.app.run_server(debug=True)

@@ -1,10 +1,13 @@
-import main
-from main import User, Characteristics
+import user_network
+
+from typing import List, Optional
+import pandas as pd
+import csv
 import json
 
-users_list = main.users
+users_list = user_network.users
 
-char1 = Characteristics(
+char1 = user_network.Characteristics(
     ethnicity="Asian",
     interests=["coding", "data science", "movies"],
     mbti="INTJ",
@@ -23,14 +26,14 @@ char1 = Characteristics(
 
 
 
-def filter_user_by_dating_goal (users:List[User],user:User)-> list[User]:
+def filter_user_by_dating_goal (users:List[user_network.User],user:user_network.User)-> list[user_network.User]:
     """Filters users who have the same dating goal as the given user, excluding themselves"""
 
     return [u for u in users if u.dating_goal == user.dating_goal and u!= user]
         
 
 
-def add_priority(Characteristics):
+def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
     priority_dict = {}
     rank = 1
     for attribute in vars(Characteristics):
@@ -38,7 +41,7 @@ def add_priority(Characteristics):
         rank += 1
     print("Please rank the following criteria in order of importance (from most to least important):")
     
-    for key, value in prior.items():
+    for key, value in priority_dict.items():
         print(f"({value}) {key.replace('_', ' ').title()}")
 
     try:
@@ -61,7 +64,7 @@ def add_priority(Characteristics):
         return add_priority(Characteristics)
         
 def data_wrangling():
-    heading = add_priority(main.Characteristics())
+    heading = add_priority(char1)
 
     potential_users = filter_user_by_dating_goal(users_list, users_list[-1])
 
@@ -73,14 +76,22 @@ def data_wrangling():
     for attribute in heading:
         answer = []
         for person in potential_users:
-            current_user_value = getattr(users_list[-1].characteristics, attribute)
-            potential_user_value = getattr(person.characteristics, attribute)
+            current_user_value = getattr(users_list[-1].characteristics, attribute, None)
+            potential_user_value = getattr(person.characteristics, attribute, None)
 
             if current_user_value == potential_user_value:
                 answer.append(1)
             else:
                 answer.append(0)
         data[attribute] = answer
+
+    # print(data)
+    df = pd.DataFrame(data)
+    csv_file_path = 'data.csv'
+
+    df.to_csv(csv_file_path, index = False)
+
+    print(f'CSV file &quot;{csv_file_path}&quot; has been created successfully.')
 
 
 class Tree:
@@ -92,33 +103,59 @@ class Tree:
         self._root = root
         self._subtrees = subtrees
 
+    def insert_sequence(self, items: list) -> None:
+        """Insert the given items onto this tree."""
+        if not items:
+            return
+        else:
+            first = items[0]
+            rest = items[1:]
+            for subtree in self._subtrees:
+                if subtree._root == first:
+                    subtree.insert_sequence(rest)
+                    return
+            self._subtrees.append(Tree(first, []))
+            self._subtrees[-1].insert_sequence(rest)
 
-    def run_preference_tree(self) -> list[User]:
-        """Run the preference tree and return a list of 10 users that will display to the target user."""
+#    
+
+
+    # def run_preference_tree(self) -> list[User]:
+    #     """Run the preference tree and return a list of 10 users that will display to the target user."""
         
-        # base  case ()(return the leave of the tree):
-        if self.is_empty():
-          return []
+    #     # base  case ()(return the leave of the tree):
+    #     if self.is_empty():
+    #       return []
 
-        else: 
-          for subtree in
+    #     else: 
+    #       for subtree in
 
         
         
         
   
 
-  
-  
+@check_contracts
 def build_preference_tree(file:str) -> Tree:
-    tree = Tree('', [])
+tree = Tree('', [])
 
-    with open(file) as csv_file:
-        reader = csv.reader(csv_file)
-        next(reader) #skip the header row
+with open(file) as csv_file:
+    reader = csv.reader(csv_file)
+    next(reader) #skip the header row
+
+for row in reader: 
+        characteristics = str(row[0])
+        match = [int(item) for item in row[1:]]
+        match.append(characteristics)
+        tree.insert_sequence(match)
     
-    for row in reader: 
-        
+
+
+
+if __name__ == "__main__":
+    data_wrangling()
+    # build_preference_tree('data.csv')
+    # print('Tree
 
 
   

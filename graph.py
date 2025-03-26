@@ -1,10 +1,10 @@
+from user_network import generate_users_with_class, add_fixed_users, User
+
 import plotly.graph_objects as go
 import networkx as nx
 from dash import Dash, dcc, html, Input, Output, State, callback_context
 
-from main import User, generate_users_with_class, add_fixed_users
-
-def plot_user_connections(users: list[User], search_name: str = None, positions = None) -> go.Figure:
+def plot_user_connections(users: list, search_name: str = None, positions = None) -> go.Figure:
     G = nx.Graph()
 
     # Add all users as nodes
@@ -153,7 +153,7 @@ def plot_user_connections(users: list[User], search_name: str = None, positions 
 app = Dash(__name__)
 
 # Generate the initial graph and node positions
-initial_user_list = generate_users_with_class(1234)
+initial_user_list = generate_users_with_class(200, 25, 1234)
 add_fixed_users(initial_user_list)
 initial_fig, node_positions = plot_user_connections(initial_user_list)
 
