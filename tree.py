@@ -12,7 +12,7 @@ from python_ta.contracts import check_contracts
 
 users_list = user_network.users
 
-char1 = users_list[-1].characteristics
+char1 = users_list[-2].characteristics
 
 # char1 = user_network.Characteristics(
 #     ethnicity="Asian",
@@ -147,6 +147,35 @@ class Tree:
     #     else: 
     #       for subtree in
 
+    def run_preference_tree(self) -> list[str]:
+        """Run the decision tree and return a list of 10 users that will display to the target user."""
+        recommendation_list = []
+        # t = build_preference_tree('data.csv')
+        # result = t.show_result()
+        
+        if self._root != "" and isinstance(self._root, str):
+            recommendation_list.append(self._root)
+            return recommendation_list
+        elif self._root == "" or self._root == 1:
+            for subtree in self._subtrees:
+                # recommendation_list.append(subtree._root)
+                recommendation_list.append(subtree.run_preference_tree())
+        
+        # if recommendation_list < 10:
+
+        # else:
+        #     for subtree in self._subtrees:
+        #         # recommendation_list.append(subtree._root)
+        #         subtree.run_preference_tree
+
+
+        # print(recommendation_list)
+
+        # if len(recommendation_list) < 10:
+
+
+    
+
         
         
         
@@ -168,18 +197,6 @@ def build_preference_tree(file:str) -> Tree:
     print(tree)
     return tree
 
-@check_contracts
-def run_preference_tree(self, user: user_network.User) -> list[user_network.User]:
-        """Run the decision tree and return a list of 10 users that will display to the target user."""
-        recommendation_list = []
-        t = build_preference_tree('data.csv')
-        result = t.show_result()
-        
-        if self._root != "" and isinstance(self._root, str):
-            recommendation_list.append(self._root)
-        elif self._root == "":
-            for subtree in self._subtrees:
-                if subtree._root == 1:
                     
 
 
@@ -187,7 +204,10 @@ def run_preference_tree(self, user: user_network.User) -> list[user_network.User
 
 if __name__ == "__main__":
     data_wrangling()
-    # build_preference_tree('data.csv')
+    
+    t = build_preference_tree('data.csv')
+    recommendation_list = t.run_preference_tree()
+    print(recommendation_list)
     # print('Tree
 
 
