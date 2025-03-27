@@ -506,4 +506,5 @@ users = generate_users_with_class(200, 25, 1234)
 
 if __name__ == "__main__":
     import graph
-    graph.app.run_server(debug=True)
+    # Use a different port when running from user_network.py
+    graph.app.run_server(debug=True, port=8051)
