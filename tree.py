@@ -101,6 +101,7 @@ def data_wrangling():
     print(f'CSV file "{csv_file_path}" has been created successfully.')
 
 
+    
 class Tree:
     _root:Optional[Any]
     _subtrees:list[Tree]
@@ -133,13 +134,13 @@ class Tree:
 
 
     # def show_result(self) -> Any:
-        
+    
 
 
 
     # def run_preference_tree(self) -> list[User]:
     #     """Run the preference tree and return a list of 10 users that will display to the target user."""
-        
+    
     #     # base  case ()(return the leave of the tree):
     #     if self.is_empty():
     #       return []
@@ -181,16 +182,14 @@ class Tree:
         recommendation_list.sort(key=lambda x: match_priority(x[0]))
 
         return [item[1] for item in recommendation_list[:10]]  # Return top 10 users
-            
-
-
 
         
 
 
+    
 
 
-        
+
         # if self._root != "" and isinstance(self._root, str):
         #     recommendation_list.append(self._root)
         #     return recommendation_list
@@ -198,7 +197,7 @@ class Tree:
         #     for subtree in self._subtrees:
         #         # recommendation_list.append(subtree._root)
         #         recommendation_list.append(subtree.run_preference_tree())
-        
+    
         # # if recommendation_list < 10:
 
         # # else:
@@ -212,7 +211,7 @@ class Tree:
         # # if len(recommendation_list) < 10:
 
 
-    
+
 
 @check_contracts
 def get_input() -> list[int]:
@@ -226,10 +225,10 @@ def change_input(answer:list[int]) -> list[int]:
         if answer[i] == 1:
             answer_so_far[i] = 0
             return answer_so_far
+
     
-        
-        
-  
+    
+
 
 @check_contracts
 def build_preference_tree(file:str) -> Tree:

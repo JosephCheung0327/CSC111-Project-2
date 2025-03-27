@@ -107,12 +107,11 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
     # Create the figure with the basic edge trace and node trace
     fig = go.Figure(data = [edge_trace, node_trace],
                    layout = go.Layout(
-                       title = "User Connections",
                        titlefont_size = 16,
                        showlegend = False,
                        hovermode = "closest",
                        margin = dict(b = 20, l = 5, r = 5, t = 40),
-                       height = 1300,
+                       height = 1800,
                        xaxis = dict(showgrid = False, zeroline = False, showticklabels = False),
                        yaxis = dict(showgrid = False, zeroline = False, showticklabels = False))
                    )
@@ -151,14 +150,14 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
     return fig, pos
 
 def create_app(user_list=None):
-    """Create and return a Dash app instance
+    """Create and return a Dash app instance with multiple tabs for different network views
     
     Args:
         user_list: Optional list of User objects to use instead of generating new ones
     """
     # Import the necessary modules at the function level
     # This prevents circular imports
-    from dash import Dash, html, dcc, Input, Output, State, callback_context
+    from dash import Dash, html, dcc, Input, Output, State, callback_context, dash_table
     import plotly.graph_objects as go
     
     # Store the provided user list in a globally scoped variable
@@ -175,28 +174,42 @@ def create_app(user_list=None):
         add_fixed_users(initial_user_list)
         print(f"Generated new user list with {len(initial_user_list)} users")
     
-    # Generate the initial graph and node positions
-    initial_fig, node_positions = plot_user_connections(initial_user_list)
+    # Generate the initial graph and node positions for social connections
+    initial_social_fig, social_node_positions = plot_user_connections(initial_user_list)
+    
+    # For now, use the same graph for romantic connections (this will be replaced later)
+    # When you implement the romantic connections graph, replace this with your new function
+    initial_romantic_fig, romantic_node_positions = initial_social_fig, social_node_positions
     
     # Create the Dash app
-    app = Dash(__name__)
+    app = Dash(__name__, suppress_callback_exceptions=True)
     
-    # Define the layout
+    # Define the layout with tabs
     app.layout = html.Div([
+        # App title
+        html.H1("Destiny Network Visualization", 
+               style={
+                   'textAlign': 'center',
+                   'color': '#2C3E50',
+                   'marginTop': '20px',
+                   'marginBottom': '20px',
+                   'fontFamily': 'Arial, sans-serif'
+               }),
+        
         # Top controls div with search input and buttons
         html.Div([
-            dcc.Input(id = "search-input", type = "text", placeholder = "Enter user name",
-                     style = {'margin': '10px', 'padding': '8px', 'borderRadius': '4px'}),
-            html.Button("Search", id = "search-button",
-                       style = {'margin': '10px', 'padding': '8px', 'backgroundColor': '#4CAF50', 'color': 'white', 'border': 'none', 'borderRadius': '4px'}),
-            html.Button("Reset", id = "reset-button",
-                       style = {'margin': '10px', 'padding': '8px', 'backgroundColor': '#f44336', 'color': 'white', 'border': 'none', 'borderRadius': '4px'}),
-        ], style = {'display': 'flex', 'justifyContent': 'center', 'marginBottom': '10px'}),
+            dcc.Input(id="search-input", type="text", placeholder="Enter user name",
+                     style={'margin': '10px', 'padding': '8px', 'borderRadius': '4px', 'width': '250px'}),
+            html.Button("Search", id="search-button",
+                       style={'margin': '10px', 'padding': '8px', 'backgroundColor': '#4CAF50', 'color': 'white', 'border': 'none', 'borderRadius': '4px'}),
+            html.Button("Reset", id="reset-button",
+                       style={'margin': '10px', 'padding': '8px', 'backgroundColor': '#f44336', 'color': 'white', 'border': 'none', 'borderRadius': '4px'}),
+        ], style={'display': 'flex', 'justifyContent': 'center', 'marginBottom': '10px'}),
         
-        # Centered clicked node output with styling
+        # Clicked node output
         html.Div(
-            id = "clicked-node-output",  
-            style = {
+            id="clicked-node-output",  
+            style={
                 'textAlign': 'center',
                 'fontSize': '18px',
                 'fontWeight': 'bold',
@@ -206,82 +219,148 @@ def create_app(user_list=None):
             }
         ),
         
-        # Graph component
-        dcc.Graph(id = "user-graph", figure = initial_fig)
-    ], style = {'fontFamily': 'Arial, sans-serif'})
+        # Tabs component
+        dcc.Tabs(id='graph-tabs', value='social-tab', children=[
+            dcc.Tab(label='Social Connections', value='social-tab', children=[
+                html.Div([
+                    html.H3("User Social Network", 
+                           style={'textAlign': 'center', 'color': '#3498DB', 'marginTop': '20px'}),
+                    html.P("This graph shows social connections between users in the network.",
+                          style={'textAlign': 'center', 'fontStyle': 'italic', 'marginBottom': '20px'}),
+                    dcc.Graph(id="social-graph", figure=initial_social_fig, style={'height': '120vh'})
+                ])
+            ]),
+            dcc.Tab(label='Romantic Connections', value='romantic-tab', children=[
+                html.Div([
+                    html.H3("User Romantic/Dating Network", 
+                           style={'textAlign': 'center', 'color': '#E74C3C', 'marginTop': '20px'}),
+                    html.P("This graph shows potential romantic connections between users in the network.",
+                          style={'textAlign': 'center', 'fontStyle': 'italic', 'marginBottom': '20px'}),
+                    dcc.Graph(id="romantic-graph", figure=initial_romantic_fig, style={'height': '120vh'})
+                ])
+            ])
+        ], style={'fontFamily': 'Arial, sans-serif'}),
+        
+        # Footer with stats
+        html.Div([
+            html.Hr(),
+            html.P(f"Network size: {len(initial_user_list)} users", 
+                  style={'textAlign': 'center', 'color': '#7F8C8D'})
+        ], style={'marginTop': '20px'})
+        
+    ], style={'fontFamily': 'Arial, sans-serif', 'maxWidth': '1800px', 'margin': '0 auto', 'padding': '20px'})
 
-    # Define the callback for this specific app instance
+    # Define the callbacks for the active tab
     @app.callback(
-        [Output("user-graph", "figure"), Output("clicked-node-output", "children")],
+        [Output("social-graph", "figure"), 
+         Output("romantic-graph", "figure"), 
+         Output("clicked-node-output", "children")],
         [Input("search-button", "n_clicks"), 
          Input("reset-button", "n_clicks"),
-         Input("user-graph", "clickData")],
+         Input("social-graph", "clickData"),
+         Input("romantic-graph", "clickData"),
+         Input("graph-tabs", "value")],
         [State("search-input", "value")]
     )
-    def update_graph_custom(search_clicks, reset_clicks, click_data, search_name):
+    def update_graphs(search_clicks, reset_clicks, social_click_data, romantic_click_data, active_tab, search_name):
         ctx = callback_context
         
         if not ctx.triggered:
-            return initial_fig, ""
+            return initial_social_fig, initial_romantic_fig, ""
 
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
         prop_type = ctx.triggered[0]['prop_id'].split('.')[1] if '.' in ctx.triggered[0]['prop_id'] else None
         
-        clicked_node = ""
+        social_fig = initial_social_fig
+        romantic_fig = initial_romantic_fig
+        output_text = ""
         
         # Handle reset button click
         if button_id == "reset-button":
-            reset_fig, _ = plot_user_connections(initial_user_list, positions = node_positions)
-            return reset_fig, ""
+            social_fig, _ = plot_user_connections(initial_user_list, positions=social_node_positions)
+            romantic_fig, _ = plot_user_connections(initial_user_list, positions=romantic_node_positions)
+            output_text = ""
         
         # Handle search button click
         elif button_id == "search-button" and search_name:
-            search_fig, _ = plot_user_connections(initial_user_list, search_name, node_positions)
+            social_fig, _ = plot_user_connections(initial_user_list, search_name, social_node_positions)
+            romantic_fig, _ = plot_user_connections(initial_user_list, search_name, romantic_node_positions)
             
             # Get the network stats if found
             selected_user = next((u for u in initial_user_list if u.name.lower() == search_name.lower()), None)
             if selected_user:
                 friend_count = selected_user.social_degree
-                return search_fig, html.Div([
+                match_count = len(selected_user.match) if hasattr(selected_user, 'match') else 0
+                
+                output_text = html.Div([
                     "Searched for: ",
-                    html.Span(search_name, style = {'color': '#4CAF50'}),
-                    html.Div(f"Number of friends: {friend_count}", style = {'marginTop': '5px', 'fontSize': '16px'})
+                    html.Span(search_name, style={'color': '#4CAF50'}),
+                    html.Div([
+                        html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
+                        html.Span(f"Romantic partners: {match_count}")
+                    ], style={'marginTop': '5px', 'fontSize': '16px'})
                 ])
             else:
-                return search_fig, html.Div([
+                output_text = html.Div([
                     "Searched for: ",
-                    html.Span(search_name, style = {'color': '#4CAF50'}),
-                    html.Div("User not found", style = {'marginTop': '5px', 'fontSize': '16px', 'color': '#999'})
+                    html.Span(search_name, style={'color': '#4CAF50'}),
+                    html.Div("User not found", style={'marginTop': '5px', 'fontSize': '16px', 'color': '#999'})
                 ])
         
-        # Handle node click
-        elif button_id == "user-graph" and prop_type == "clickData" and click_data:
-            # Extract the node name from the click data
+        # Handle node click in social graph
+        elif button_id == "social-graph" and prop_type == "clickData" and social_click_data:
             try:
-                clicked_node = click_data['points'][0]['hovertext']
-                click_fig, _ = plot_user_connections(initial_user_list, clicked_node, node_positions)
+                clicked_node = social_click_data['points'][0]['hovertext']
+                social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
+                romantic_fig, _ = plot_user_connections(initial_user_list, clicked_node, romantic_node_positions)
                 
-                # Find the clicked user in our list to get their friend count
+                # Find the clicked user in our list to get their stats
                 selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
                 friend_count = selected_user.social_degree if selected_user else "Unknown"
+                match_count = len(selected_user.match) if selected_user and hasattr(selected_user, 'match') else 0
                 
-                # Return a styled message with friend count
-                return click_fig, html.Div([
+                output_text = html.Div([
                     html.Div([
                         "Clicked on: ",
-                        html.Span(clicked_node, style = {'color': '#3498DB'})
+                        html.Span(clicked_node, style={'color': '#3498DB'})
                     ]),
                     html.Div([
-                        "Number of friends: ",
-                        html.Span(f"{friend_count}", style = {'fontWeight': 'bold'})
-                    ], style = {'marginTop': '5px', 'fontSize': '16px'})
+                        html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
+                        html.Span(f"Romantic partners: {match_count}")
+                    ], style={'marginTop': '5px', 'fontSize': '16px'})
                 ])
             except (KeyError, IndexError):
                 # If the click wasn't on a node with hover text
-                return initial_fig, "Click missed or was on a non-node element"
+                output_text = "Click missed or was on a non-node element"
         
-        # Default return
-        return initial_fig, clicked_node
+        # Handle node click in romantic graph
+        elif button_id == "romantic-graph" and prop_type == "clickData" and romantic_click_data:
+            try:
+                clicked_node = romantic_click_data['points'][0]['hovertext']
+                social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
+                romantic_fig, _ = plot_user_connections(initial_user_list, clicked_node, romantic_node_positions)
+                
+                # Find the clicked user in our list to get their stats
+                selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
+                friend_count = selected_user.social_degree if selected_user else "Unknown"
+                match_count = len(selected_user.match) if selected_user and hasattr(selected_user, 'match') else 0
+                
+                output_text = html.Div([
+                    html.Div([
+                        "Clicked on: ",
+                        html.Span(clicked_node, style={'color': '#E74C3C'})
+                    ]),
+                    html.Div([
+                        html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
+                        html.Span(f"Romantic partners: {match_count}")
+                    ], style={'marginTop': '5px', 'fontSize': '16px'})
+                ])
+            except (KeyError, IndexError):
+                # If the click wasn't on a node with hover text
+                output_text = "Click missed or was on a non-node element"
+        
+        # Return appropriate output based on active tab
+        return social_fig, romantic_fig, output_text
     
     # Return the app instance
     return app

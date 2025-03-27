@@ -529,10 +529,7 @@ class DestinyApp:
         """Add the newly created user to the existing user network"""
         # First add the user to the list
         user_list.append(new_user)
-        
-        # Determine how many users should find the new user interesting
-        # More realistic than assuming all users are interested in the new user
-        num_interested = random.randint(20, 50)  # 20-50 users will be interested in the new user
+        num_interested = 20
         
         # Select random users who might be interested in the new user
         interested_users = random.sample([u for u in user_list if u != new_user], 
@@ -670,7 +667,7 @@ class DestinyApp:
             self.print_user_list_debug()
             
             # Display success message
-            self.status_label.config(text=f"Profile created successfully for {name}!)")
+            self.status_label.config(text=f"Profile created successfully for {name}!")
             
             # Store the user object for later use
             self.current_user = user
@@ -725,17 +722,17 @@ class DestinyApp:
                     font=("Arial", 24), fg="white", bg="#7A8B9C")
         label.pack(pady=20)
         
-        # Show the current user's matches
-        match_count = len(self.current_user.match)
-        match_text = f"You have {match_count} matches!" if match_count > 0 else "No matches yet"
+        # # Show the current user's matches
+        # match_count = len(self.current_user.match)
+        # match_text = f"You have {match_count} matches!" if match_count > 0 else "No matches yet"
         
-        matches_label = tk.Label(frame, text=match_text,
-                            font=("Arial", 18), fg="white", bg="#7A8B9C")
-        matches_label.pack(pady=10)
+        # matches_label = tk.Label(frame, text=match_text,
+        #                     font=("Arial", 18), fg="white", bg="#7A8B9C")
+        # matches_label.pack(pady=10)
         
         # Show social connections
         social_count = len(self.current_user.social_current)
-        social_text = f"You have {social_count} social connections"
+        social_text = f"You have {social_count} friends!"
         
         social_label = tk.Label(frame, text=social_text,
                             font=("Arial", 18), fg="white", bg="#7A8B9C")
