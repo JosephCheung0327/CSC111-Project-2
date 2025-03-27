@@ -3,8 +3,6 @@ from user_network import generate_users_with_class, add_fixed_users, User
 import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output, State, callback_context
 import networkx as nx
-import random
-import math
 
 def plot_user_connections(users: list, search_name: str = None, positions = None) -> go.Figure:
     G = nx.Graph()

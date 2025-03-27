@@ -147,36 +147,86 @@ class Tree:
     #     else: 
     #       for subtree in
 
-    def run_preference_tree(self) -> list[str]:
-        """Run the decision tree and return a list of 10 users that will display to the target user."""
-        recommendation_list = []
-        # t = build_preference_tree('data.csv')
-        # result = t.show_result()
-        
-        if self._root != "" and isinstance(self._root, str):
-            recommendation_list.append(self._root)
-            return recommendation_list
-        elif self._root == "" or self._root == 1:
-            for subtree in self._subtrees:
-                # recommendation_list.append(subtree._root)
-                recommendation_list.append(subtree.run_preference_tree())
-        
-        # if recommendation_list < 10:
+    # def run_preference_tree(self) -> list[str]:
+    #     """Run the decision tree and return a list of 10 users that will display to the target user."""
+    #     recommendation_list = []
+    #     t = build_preference_tree('data.csv')
+    #     # result = t.show_result()
+    #     for subtree in self._subtrees:
 
-        # else:
+    def run_preference_tree(self) -> list[str]:
+        """Run the decision tree and return a list of closest match users ordered by priority."""
+        recommendation_list = []
+
+        def traverse_tree(tree: Tree, path: list[int]):
+            """Helper function to traverse the tree and collect recommendations."""
+            if not tree._subtrees:  # Leaf node (user match)
+                if tree._root != "":
+                    recommendation_list.append((path, tree._root))  # (match pattern, user)
+                return
+
+            for i, subtree in enumerate(tree._subtrees):
+                traverse_tree(subtree, path + [i])
+
+        traverse_tree(self, [])
+
+        # Custom sorting:
+        def match_priority(path):
+            # 1. First, find the position of the first 0 (or len(path) if all are 1)
+            first_zero = next((i for i, bit in enumerate(path) if bit == 0), len(path))
+            # 2. Higher priority for leftmost match, then total 1's
+            return (first_zero, -sum(path))
+
+        # Sort by the best match (leftmost 1s first, then total 1s)
+        recommendation_list.sort(key=lambda x: match_priority(x[0]))
+
+        return [item[1] for item in recommendation_list[:10]]  # Return top 10 users
+            
+
+
+
+        
+
+
+
+
+        
+        # if self._root != "" and isinstance(self._root, str):
+        #     recommendation_list.append(self._root)
+        #     return recommendation_list
+        # elif self._root == "" or self._root == 1:
         #     for subtree in self._subtrees:
         #         # recommendation_list.append(subtree._root)
-        #         subtree.run_preference_tree
+        #         recommendation_list.append(subtree.run_preference_tree())
+        
+        # # if recommendation_list < 10:
+
+        # # else:
+        # #     for subtree in self._subtrees:
+        # #         # recommendation_list.append(subtree._root)
+        # #         subtree.run_preference_tree
 
 
-        # print(recommendation_list)
+        # # print(recommendation_list)
 
-        # if len(recommendation_list) < 10:
+        # # if len(recommendation_list) < 10:
 
 
     
 
-        
+@check_contracts
+def get_input() -> list[int]:
+    answer_so_far = []
+    for i in range(len(vars(Characteristics))):
+        answer_so_far.append(1)
+
+@check_contracts
+def change_input(answer:list[int]) -> list[int]:
+    for i in range(len(answer)-1, -1, -1):
+        if answer[i] == 1:
+            answer_so_far[i] = 0
+            return answer_so_far
+    
         
         
   
@@ -196,8 +246,6 @@ def build_preference_tree(file:str) -> Tree:
                 tree.insert_sequence(match)
     print(tree)
     return tree
-
-                    
 
 
 

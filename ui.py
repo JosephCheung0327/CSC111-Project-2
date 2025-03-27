@@ -5,7 +5,7 @@ import os
 import sys
 import random
 
-# Import the add_user function from user_network
+# Import the add_user() function from user_network.py
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users
@@ -13,7 +13,59 @@ except ImportError:
     print("Error importing from user_network.py")
 
 class DestinyApp:
-    def __init__(self, image_path, window_width=1440, window_height=1440):
+    """
+    A dating app interface that allows users to create profiles and visualize social networks.
+
+    root: tk.Tk
+    window_width: int
+    window_height: int
+    image_path: str
+    username: str
+    username_entry: tk.Entry
+    attributes: dict[str, Union[tk.StringVar, tk.BooleanVar, dict[str, tk.BooleanVar]]]
+    status_label: tk.Label
+    result_label: tk.Label
+    user_list: list[User]
+    current_user: User
+
+
+    Instance Attributes:
+        - root: The tkinter root window for the application interface
+        - window_width: The width of the application window in pixels
+        - window_height: The height of the application window in pixels
+        - image_path: The file path to the app's logo/splash screen image
+        - username: The name of the current user being processed (str)
+        - username_entry: The tkinter Entry widget for inputting username
+        - attributes: A dictionary mapping attribute names to their tkinter variable objects 
+                    (StringVar, BooleanVar, etc.) for user profile creation
+        - status_label: A tkinter Label widget for displaying status messages
+        - result_label: A tkinter Label widget for showing input validation results
+        - user_list: A list of User objects representing all users in the network
+        - current_user: The User object representing the currently logged-in user
+
+    Representation Invariants:
+        - self.window_width > 0
+        - self.window_height > 0
+        - isinstance(self.root, tk.Tk)
+        - isinstance(self.image_path, str) and len(self.image_path) > 0
+
+        # Conditional checks are used below because these attributes are not initialized in __init__
+
+        - if hasattr(self, 'username'): isinstance(self.username, str) and len(self.username) > 0
+        - if hasattr(self, 'attributes'): isinstance(self.attributes, dict)
+        - if hasattr(self, 'user_list'): 
+            - isinstance(self.user_list, list)
+            - all(isinstance(user, User) for user in self.user_list)
+        - if hasattr(self, 'current_user'): 
+            - isinstance(self.current_user, User)
+            - self.current_user in self.user_list
+        - if hasattr(self, 'username_entry'): isinstance(self.username_entry, tk.Entry)
+        - if hasattr(self, 'status_label'): isinstance(self.status_label, tk.Label)
+        - if hasattr(self, 'result_label'): isinstance(self.result_label, tk.Label)
+        
+    """
+
+    def __init__(self, image_path, window_width=720, window_height=720):
         # Initialize the main window
         self.root = tk.Tk()
         self.root.title("Destiny App")
@@ -477,18 +529,50 @@ class DestinyApp:
         """Add the newly created user to the existing user network"""
         # First add the user to the list
         user_list.append(new_user)
-
-        # Assign a reasonable number of random users as topmatch (like the original code does)
-        topmatch_size = min(25, len(user_list) - 1)  # Similar to the original code
+        
+        # Determine how many users should find the new user interesting
+        # More realistic than assuming all users are interested in the new user
+        num_interested = random.randint(20, 50)  # 20-50 users will be interested in the new user
+        
+        # Select random users who might be interested in the new user
+        interested_users = random.sample([u for u in user_list if u != new_user], 
+                                        min(num_interested, len(user_list) - 1))
+        
+        # Add the new user to their topmatch lists
+        for user in interested_users:
+            if new_user not in user.topmatch:
+                user.topmatch.append(new_user)
+        
+        # Assign random users to the new user's topmatch list
+        topmatch_size = min(50, len(user_list) - 1)  # More realistic number
         new_user.topmatch = random.sample([u for u in user_list if u != new_user], topmatch_size)
-
-        # Update match and social_current attributes
-        new_user.match = [match for match in new_user.topmatch if new_user in match.topmatch]
-        new_user.social_current = [match for match in new_user.topmatch if new_user in match.topmatch]
-
+        
+        # Create matches where there's mutual interest
+        new_user.match = [u for u in new_user.topmatch if new_user in u.topmatch]
+        
+        # Update social connections based on matches
+        new_user.social_current = list(new_user.match)  # Start with matches
+        
+        # Add some additional social connections that aren't matches
+        additional_connections = random.randint(5, 15)
+        potential_connections = [u for u in user_list if u != new_user and u not in new_user.social_current]
+        if potential_connections:
+            additional_social = random.sample(potential_connections, 
+                                            min(additional_connections, len(potential_connections)))
+            new_user.social_current.extend(additional_social)
+            
+            # Make connections bidirectional
+            for connection in new_user.social_current:
+                if new_user not in connection.social_current:
+                    connection.social_current.append(new_user)
+        
         # Update the social_degree attribute
         new_user.update_social_degree()
-
+        for user in new_user.social_current:
+            user.update_social_degree()
+        
+        print(f"Added user {new_user.name} with {len(new_user.match)} matches and {len(new_user.social_current)} social connections")
+        
         # Return the updated list
         return user_list
 

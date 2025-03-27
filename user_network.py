@@ -79,6 +79,7 @@ def generate_users_with_class(list_size: int, topmatch_simulation_size: int, see
 
 class Characteristics:
     """Class representing user characteristics that influence a user's preference.
+    
         Instance Attributes:
         - ethnicity: The user's ethnicity.
         - interests: A list of the user's hobbies or interests.
@@ -173,6 +174,20 @@ class User:
     def update_social_degree(self):
         self.social_degree = len(self.social_current)
 
+    def match(self, user1: User) -> None:
+        """Match user with user1 as romantic relationship.
+        Preconditions:
+        - (user not in user1.romantic_current and user1 not in user.romantic_current) 
+            or (user in user1.romantic_current and user1 in user.romantic_current)
+        """
+        if user1 not in user2.romantic_current and user2 not in user1.romantic_current:
+            user1.romantic_current.append(user2)
+            user2.romantic_current.append(user1)
+            user1.romantic_degree += 1
+            user2.romantic_degree += 1
+        else:
+            print(f"Matching failed. {user1} and {user2} are already couples.")
+
 
 
 class DatingApp:
@@ -192,7 +207,7 @@ class DatingApp:
         """Match user1 with user2 as romantic relationship.
         Preconditions:
         - (user1 not in user2.romantic_current and user2 not in user1.romantic_current) 
-        or (user1 in user2.romantic_current and user2 in user1.romantic_current)
+            or (user1 in user2.romantic_current and user2 in user1.romantic_current)
         """
         if user1 not in user2.romantic_current and user2 not in user1.romantic_current:
             user1.romantic_current.append(user2)
@@ -204,6 +219,11 @@ class DatingApp:
 
 
     def unmatch(self, user1: User, user2: User) -> None:
+        """Unmatch user1 and user2 romantic relationship.
+        Preconditions:
+        - (user1 not in user2.romantic_current and user2 not in user1.romantic_current) 
+            or (user1 in user2.romantic_current and user2 in user1.romantic_current)
+        """
         if user1 in user2.romantic_current and user2 in user1.romantic_current:
             user1.romantic_current.remove(user2)
             user2.romantic_current.remove(user2)
@@ -216,6 +236,11 @@ class DatingApp:
 
 
     def socialize(self, user1: User, user2: User) -> None:
+        """Create user1 and user2 friendship.
+        Preconditions:
+        - (user1 not in user2.social_current and user2 not in user1.social_current) 
+            or (user1 in user2.social_current and user2 in user1.social_current)
+        """
         if user1 not in user2.romantic_current and user2 not in user1.romantic_current:
             user1.social_current.append(user2)
             user2.social_current.append(user1)
@@ -225,6 +250,11 @@ class DatingApp:
             print(f"Friend add failed. {user1} and {user2} are already friends.")
 
     def unsocialize(self, user1: User, user2: User) -> None:
+        """Create user1 and user2 friendship.
+        Preconditions:
+        - (user1 not in user2.romantic_current and user2 not in user1.romantic_current) 
+            or (user1 in user2.romantic_current and user2 in user1.romantic_current)
+        """
         if user1 in user2.romantic_current and user2 in user1.romantic_current:
             user1.social_current.remove(user2)
             user2.social_current.remove(user2)
@@ -256,6 +286,7 @@ class DecisionTree:
 
 
 def add_fixed_users(users: list[dict]) -> None:
+    
     fixed_users = [
         User(
             name="Charlotte Wong",
