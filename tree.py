@@ -134,9 +134,6 @@ class Tree:
 
 
     # def show_result(self) -> Any:
-    
-
-
 
     # def run_preference_tree(self) -> list[User]:
     #     """Run the preference tree and return a list of 10 users that will display to the target user."""
