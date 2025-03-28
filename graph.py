@@ -146,6 +146,167 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
     
     return fig, pos
 
+def plot_romantic_connections(users: list, search_name: str = None, positions = None) -> go.Figure:
+    """Create a graph visualization showing only romantic connections between users"""
+    G = nx.Graph()
+
+    # Add all users as nodes - FIXED to handle None values
+    for user in users:
+        # Handle case where romantic_current might be None
+        if user.romantic_current is None:
+            romantic_count = 0
+        else:
+            romantic_count = 1
+        
+        G.add_node(user.name, size=romantic_count)
+    
+    # Add edges ONLY for romantic_current connections - FIXED to handle None values
+    for user in users:
+        # Skip users with no romantic connections
+        if user.romantic_current is None:
+            continue
+            
+        else:
+            G.add_edge(user.name, user.romantic_current.name)
+
+    if positions is None:
+        pos = nx.spring_layout(G, k = 0.3, seed = 1234)
+    else:
+        pos = positions
+    
+    # Create edge traces
+    edge_x = []
+    edge_y = []
+    highlight_edge_x = []
+    highlight_edge_y = []
+    
+    # Find the actual node name in case-insensitive way
+    actual_search_name = None
+    if search_name:
+        search_name_lower = search_name.lower()
+        # Print search info for debugging
+        print(f"Searching for romantic connections: {search_name_lower}")
+        
+        # Case-insensitive search for the node
+        for node in G.nodes():
+            if node.lower() == search_name_lower:
+                actual_search_name = node
+                print(f"Found matching node: {actual_search_name}")
+                break
+    
+    # Add edges to appropriate traces
+    for edge in G.edges():
+        x0, y0 = pos[edge[0]]
+        x1, y1 = pos[edge[1]]
+        
+        if actual_search_name and (edge[0] == actual_search_name or edge[1] == actual_search_name):
+            highlight_edge_x.extend([x0, x1, None])
+            highlight_edge_y.extend([y0, y1, None])
+        else:
+            edge_x.extend([x0, x1, None])
+            edge_y.extend([y0, y1, None])
+
+    # Create node traces
+    node_x = []
+    node_y = []
+    node_size = []
+    node_text = []
+    hover_text = []
+    node_color = []
+    
+    # Add nodes to traces
+    for node in G.nodes():
+        x, y = pos[node]
+        node_x.append(x)
+        node_y.append(y)
+        # Calculate node size based on number of romantic connections
+        user = next((u for u in users if u.name == node), None)
+        romantic_count = 0
+        if user and user.romantic_current is not None:
+            romantic_count = 1
+        
+        node_size.append(romantic_count * 5 + 8)  # Adjust size calculation for romantic connections
+        
+        node_text.append(node if romantic_count > 0 else "")
+        hover_text.append(f"{node}\nRomantic connections: {romantic_count}")
+        
+        # Use different color scheme for romantic graph (reds/pinks instead of blues)
+        if actual_search_name:
+            if node == actual_search_name:
+                node_color.append("#E74C3C")  # Red for the searched node
+            elif node in G.neighbors(actual_search_name):
+                node_color.append("#FF85A2")  # Pink for connected nodes 
+            else:
+                node_color.append("rgba(200,200,200,0.5)")  # Other nodes faded out
+        else:
+            node_color.append("#F5A9BC")  # Light pink default
+    
+    # Create traces
+    edge_trace = go.Scatter(
+        x = edge_x, y = edge_y,
+        line = dict(width = 0.7, color = "#FF85A2"),  # Pink edges for romantic
+        hoverinfo = "none",
+        mode = "lines")
+    
+    highlight_edge_trace = go.Scatter(
+        x = highlight_edge_x, y = highlight_edge_y,
+        line = dict(width = 2.0, color = "#E74C3C"),  # Red highlight for romantic
+        hoverinfo = "none",
+        mode = "lines")
+    
+    node_trace = go.Scatter(
+        x = node_x, y = node_y,
+        mode = "markers+text",
+        text = node_text,
+        textposition = "top center",
+        textfont = dict(size = 12),
+        hoverinfo = "text",
+        hovertext = hover_text,
+        marker = dict(
+            color = node_color,
+            size = node_size,
+            line = dict(width = 1, color = "#440000")))  # Darker border for romantic nodes
+    
+    # Create figure with romantic theme colors
+    fig = go.Figure(data = [edge_trace, highlight_edge_trace, node_trace],
+                   layout = go.Layout(
+                       showlegend = False,
+                       hovermode = "closest",
+                       margin = dict(b = 20, l = 5, r = 5, t = 40),
+                       plot_bgcolor="#FFF9F9",  # Very light pink background
+                       xaxis = dict(showgrid = False, zeroline = False, showticklabels = False),
+                       yaxis = dict(showgrid = False, zeroline = False, showticklabels = False)))
+    
+    # Zoom to the searched node's romantic neighborhood if found
+    if actual_search_name and actual_search_name in G.nodes:
+        relevant_positions = [pos[actual_search_name]]
+        for neighbor in G.neighbors(actual_search_name):
+            relevant_positions.append(pos[neighbor])
+        
+        x_coords = [p[0] for p in relevant_positions]
+        y_coords = [p[1] for p in relevant_positions]
+        
+        if x_coords and y_coords:
+            x_min, x_max = min(x_coords), max(x_coords)
+            y_min, y_max = min(y_coords), max(y_coords)
+            
+            padding = 0.2  # More padding for better view
+            x_range = [x_min - padding, x_max + padding]
+            y_range = [y_min - padding, y_max + padding]
+            
+            fig.update_layout(
+                xaxis = dict(range = x_range, showgrid = False, zeroline = False, showticklabels = False),
+                yaxis = dict(range = y_range, showgrid = False, zeroline = False, showticklabels = False)
+            )
+            
+            # Add title indicating the romantic search
+            fig.update_layout(
+                title = f"Showing romantic connections for: {actual_search_name}",
+                titlefont = dict(size = 16, color = "#E74C3C")
+            )
+    
+    return fig, pos
+
 def create_app(user_list=None):
     """Create and return a Dash app instance with multiple tabs for different network views
     
@@ -173,10 +334,7 @@ def create_app(user_list=None):
     
     # Generate the initial graph and node positions for social connections
     initial_social_fig, social_node_positions = plot_user_connections(initial_user_list)
-    
-    # For now, use the same graph for romantic connections (this will be replaced later)
-    # When you implement the romantic connections graph, replace this with your new function
-    initial_romantic_fig, romantic_node_positions = initial_social_fig, social_node_positions
+    initial_romantic_fig, romantic_node_positions = plot_romantic_connections(initial_user_list)
     
     # Create the Dash app
     app = Dash(__name__, suppress_callback_exceptions=True)
@@ -324,6 +482,9 @@ def create_app(user_list=None):
                 ])
         
         # Handle node click in social graph
+        # Replace the incomplete social graph click handler (around line 487-491) with this:
+
+        # Handle node click in social graph
         elif button_id == "social-graph" and prop_type == "clickData" and social_click_data:
             try:
                 # Debug to see what's in the click data
@@ -343,20 +504,17 @@ def create_app(user_list=None):
                     
                     if clicked_node:
                         social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
-                        romantic_fig, _ = plot_user_connections(initial_user_list, clicked_node, romantic_node_positions)
+                        romantic_fig, _ = plot_romantic_connections(initial_user_list, clicked_node, romantic_node_positions)
                         
                         # Find the clicked user in our list to get their stats
                         selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
                         if selected_user:
                             friend_count = selected_user.social_degree
                             
-                            # Fixed match count calculation
-                            if hasattr(selected_user, 'interested_romantic') and isinstance(selected_user.interested_romantic, list):
-                                match_count = len(selected_user.interested_romantic)
-                            elif hasattr(selected_user, 'topmatch') and isinstance(selected_user.topmatch, list):
-                                match_count = len(selected_user.topmatch)
-                            else:
-                                match_count = 0
+                            # Safely handle romantic count
+                            romantic_count = 0
+                            if selected_user.romantic_current is not None:
+                                romantic_count = len(selected_user.romantic_current)
                             
                             output_text = html.Div([
                                 html.Div([
@@ -365,7 +523,7 @@ def create_app(user_list=None):
                                 ]),
                                 html.Div([
                                     html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
-                                    html.Span(f"Romantic partners: {match_count}")
+                                    html.Span(f"Romantic connections: {romantic_count}")
                                 ], style={'marginTop': '5px', 'fontSize': '16px'})
                             ])
                         else:
@@ -378,7 +536,73 @@ def create_app(user_list=None):
             except Exception as e:
                 print(f"Error handling social graph click: {e}")
                 output_text = f"Error processing click: {str(e)}"
-        
+
+        # Handle node click in romantic graph
+        elif button_id == "romantic-graph" and prop_type == "clickData" and romantic_click_data:
+            try:
+                # Debug output to see the exact structure
+                print("Romantic click data:", romantic_click_data)
+                
+                # Access the point data safely
+                if 'points' in romantic_click_data and len(romantic_click_data['points']) > 0:
+                    point = romantic_click_data['points'][0]
+                    clicked_node = None
+                    
+                    # Extract the node name from multiple possible sources
+                    if 'hovertext' in point:
+                        # More robust parsing of the hovertext
+                        hover = point['hovertext']
+                        if '\n' in hover:
+                            clicked_node = hover.split('\n')[0]
+                        else:
+                            clicked_node = hover
+                    elif 'text' in point and point['text']:
+                        clicked_node = point['text']
+                    elif 'customdata' in point:
+                        clicked_node = point['customdata']
+                    elif 'pointNumber' in point and 'curveNumber' in point:
+                        # If we can get the index, use it to find the node in the graph
+                        curve_num = point['curveNumber']
+                        point_num = point['pointNumber']
+                        print(f"Looking for node at curve {curve_num}, point {point_num}")
+                    
+                    print(f"Extracted clicked node: {clicked_node}")
+                    
+                    if clicked_node:
+                        # Update both graphs
+                        social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
+                        romantic_fig, _ = plot_romantic_connections(initial_user_list, clicked_node, romantic_node_positions)
+                        
+                        # Find the user data
+                        selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
+                        if selected_user:
+                            friend_count = selected_user.social_degree
+                            
+                            # Safely handle romantic count
+                            romantic_count = 0
+                            if selected_user.romantic_current is not None:
+                                romantic_count = len(selected_user.romantic_current)
+                            
+                            output_text = html.Div([
+                                html.Div([
+                                    "Clicked on: ",
+                                    html.Span(clicked_node, style={'color': '#E74C3C'})
+                                ]),
+                                html.Div([
+                                    html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
+                                    html.Span(f"Romantic connections: {romantic_count}", style={'color': '#E74C3C'})
+                                ], style={'marginTop': '5px', 'fontSize': '16px'})
+                            ])
+                        else:
+                            output_text = f"User data not found for {clicked_node}"
+                    else:
+                        output_text = "Couldn't determine which node was clicked"
+                else:
+                    output_text = "No point data in click"
+            except Exception as e:
+                print(f"Error handling romantic graph click: {e}")
+                output_text = f"Error processing click: {str(e)}"
+
         # Return appropriate output based on active tab
         return social_fig, romantic_fig, output_text
     

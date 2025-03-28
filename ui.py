@@ -133,13 +133,12 @@ class DestinyApp:
                                   fg="white", bg="#7A8B9C", padx=20, pady=20, font=("Arial", 16))
             error_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         
-        # Create the username input field in the bottom frame
-        # Add a large, bold heading with white text for better visibility on dark background
+        # Add heading and create the username input field in the bottom frame
         heading = tk.Label(bottom_frame, text="Welcome to Destiny",
                           font=("Arial", 36, "bold"), fg="white", bg="#7A8B9C")
         heading.pack(pady=(50, 20))
         
-        # Add a description
+        # Add description
         description = tk.Label(bottom_frame, text="Please enter your name to continue",
                              font=("Arial", 18), fg="white", bg="#7A8B9C")
         description.pack(pady=(0, 40))
@@ -148,16 +147,14 @@ class DestinyApp:
         input_frame = tk.Frame(bottom_frame, bg="#7A8B9C")
         input_frame.pack(pady=20, padx=(0, 62.5))  # Add right padding to shift everything to the left
         
-        # Username label
+        # Create username label, input field, and submit button
         username_label = tk.Label(input_frame, text="Name:", font=("Arial", 16), fg="white", bg="#7A8B9C")
         username_label.pack(side=tk.LEFT, padx=(0, 10))
         
-        # Username input field
         self.username_entry = tk.Entry(input_frame, font=("Arial", 16), width=20)
         self.username_entry.pack(side=tk.LEFT)
-        self.username_entry.focus_set()  # Set focus to this field
+        self.username_entry.focus_set()  # Set cursor focus to this field
         
-        # Add a submit button below the input field with improved styling
         submit_button = tk.Button(bottom_frame, text="Continue", font=("Arial", 16),
                                  bg="#4CAF50", fg="black", padx=20, pady=10,
                                  command=self.handle_username_submit)
@@ -168,7 +165,7 @@ class DestinyApp:
                               fg="white", bg="#7A8B9C")
         self.result_label.pack(pady=10)
         
-        # Also handle Enter key press
+        # Handle Enter key press
         self.root.bind('<Return>', lambda event: self.handle_username_submit())
     
     def handle_username_submit(self):
@@ -941,29 +938,8 @@ class DestinyApp:
 image_dir = Path('/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[05] CSC111/csc111/assignments/project2/build/assets')
 os.makedirs(image_dir, exist_ok=True)
 
-# Specify the path to your PNG image
+# Specify the path to the PNG image for home page
 image_path = '/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[05] CSC111/csc111/assignments/project2/build/destiny_home_page.png'
-
-# Create a simple test image if needed
-if not os.path.exists(image_path):
-    print(f"Creating test image at {image_path}")
-    try:
-        # Create directory if needed
-        os.makedirs(os.path.dirname(image_path), exist_ok=True)
-        
-        # Create a simple colored image with text
-        img = Image.new('RGB', (1200, 800), color=(73, 109, 137))
-        from PIL import ImageDraw, ImageFont
-        draw = ImageDraw.Draw(img)
-        try:
-            font = ImageFont.truetype("Arial.ttf", 72)
-        except IOError:
-            font = ImageFont.load_default()
-        draw.text((300, 350), "Destiny App", fill=(255, 255, 255), font=font)
-        img.save(image_path)
-        print(f"Created image at {image_path}")
-    except Exception as e:
-        print(f"Error creating test image: {e}")
 
 # Create and run the app
 if __name__ == "__main__":

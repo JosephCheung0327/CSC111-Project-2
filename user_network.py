@@ -177,7 +177,7 @@ class User:
         self.social_degree = social_degree
 
     def __repr__(self):
-        return f"User({self.name}, {self.age}, {self.gender}, {self.mbti})"
+        return f"User({self.name}, {self.age}, {self.gender}, {self.characteristics.mbti})"
     
     def update_social_degree(self):
         self.social_degree = len(self.social_current)
@@ -188,9 +188,9 @@ class User:
         - (self not in user1.romantic_current and user1 not in self.romantic_current) 
             or (self in user1.romantic_current and user1 in self.romantic_current)
         """
-        if self not in user1.romantic_current and user1 not in self.romantic_current:
-            self.romantic_current.append(user1)
-            user1.romantic_current.append(self)
+        if self is not user1.romantic_current and user1 is not self.romantic_current:
+            self.romantic_current = user1
+            user1.romantic_current = self
             self.romantic_degree += 1
             user1.romantic_degree += 1
         else:
@@ -203,15 +203,30 @@ class User:
         - (self not in user1.romantic_current and user1 not in self.romantic_current) 
             or (self in user1.romantic_current and user1 in self.romantic_current)
         """
-        if self in user1.romantic_current and user1 in self.romantic_current:
-            self.romantic_current.remove(user1)
-            user1.romantic_current.remove(user1)
+        if self is user1.romantic_current and user1 is self.romantic_current:
+            self.romantic_current = None
+            user1.romantic_current = None
             self.romantic_ex.append(user1)
             user1.romantic_ex.append(self)
             self.romantic_degree -= 1
             user1.romantic_degree -= 1
         else:
             print(f"Unmatch failed. {self} and {user1} are not couples.")
+
+
+    def socialize(self, user1: User) -> None:
+        """Create self and user1 friendship.
+        Preconditions:
+        - (self not in user1.social_current and user1 not in self.social_current) 
+            or (self in user1.social_current and user1 in self.social_current)
+        """
+        if self not in user1.romantic_current and user1 not in self.romantic_current:
+            self.social_current.append(user1)
+            user1.social_current.append(self)
+            self.social_degree += 1
+            user1.social_degree += 1
+        else:
+            print(f"Friend add failed. {self} and {user1} are already friends.")
 
 
     def socialize(self, user1: User) -> None:
