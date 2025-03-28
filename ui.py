@@ -70,59 +70,55 @@ class DestinyApp:
         self.root = tk.Tk()
         self.root.title("Destiny App")
         self.root.geometry(f"{window_width}x{window_height}")
-        self.root.configure(bg="#7A8B9C")  # Changed background color to requested #7A8B9C
-        
-        # Store dimensions for later use
+        self.root.configure(bg="#7A8B9C")
+    
         self.window_width = window_width
         self.window_height = window_height
-        
-        # Store image path for later use
+    
         self.image_path = image_path
         
-        # Create the welcome page
         self.create_welcome_page(image_path)
     
     def create_welcome_page(self, image_path):
-        """Create the initial welcome page with image and username input"""
+        """
+        Create the initial welcome page with image and username input.
+        """
         # Clear any existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
         
-        # Set background color for the entire window
-        self.root.configure(bg="#7A8B9C")
+        self.root.configure(bg="#7A8B9C") # Set background color
         
-        # Create two frames - one for the image (top half) and one for input (bottom half)
-        top_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height//2, bg="#7A8B9C")
+        # Create two frames, one for the image (top half) and one for username input (bottom half)
+        top_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height // 2, bg="#7A8B9C")
         top_frame.pack(side=tk.TOP, fill=tk.BOTH)
         top_frame.pack_propagate(False)  # Prevent frame from shrinking
         
-        bottom_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height//2, bg="#7A8B9C")
+        bottom_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height // 2, bg="#7A8B9C")
         bottom_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
         
         # Load and display the image in the top half
         try:
             img = Image.open(image_path)
-            
-            # Calculate if we need to resize to fit the top half while maintaining aspect ratio
             img_width, img_height = img.size
             
-            # Get the display area dimensions for the top half (accounting for some padding)
-            display_width = self.window_width - 40
-            display_height = (self.window_height//2) - 60
+            # Get the display area dimensions for the top half, and account for some padding
+            horizontal_padding = 40
+            vertical_padding = 60
+            display_width = self.window_width - horizontal_padding
+            display_height = (self.window_height // 2) - vertical_padding
             
             # Calculate scale factors
             width_ratio = display_width / img_width
             height_ratio = display_height / img_height
-            
-            # Use the smaller ratio to ensure the image fits
-            scale_factor = min(width_ratio, height_ratio)
+            scale_factor = min(width_ratio, height_ratio)  # Use the smaller ratio to ensure the image fits
             
             # Always resize to fit the top half
             new_width = int(img_width * scale_factor)
             new_height = int(img_height * scale_factor)
-            img = img.resize((new_width, new_height), Image.LANCZOS)
+            img = img.resize((new_width, new_height), Image.LANCZOS)  # Use LANCZOS filter for high-quality downsampling
             
-            photo = ImageTk.PhotoImage(img)
+            photo = ImageTk.PhotoImage(img)  # Convert the image to PhotoImage format
             
             # Create a label to display the image in the top frame
             image_label = tk.Label(top_frame, image=photo, bg="#7A8B9C")
@@ -139,7 +135,7 @@ class DestinyApp:
         
         # Create the username input field in the bottom frame
         # Add a large, bold heading with white text for better visibility on dark background
-        heading = tk.Label(bottom_frame, text="Welcome to Destiny App",
+        heading = tk.Label(bottom_frame, text="Welcome to Destiny",
                           font=("Arial", 36, "bold"), fg="white", bg="#7A8B9C")
         heading.pack(pady=(50, 20))
         
@@ -150,7 +146,7 @@ class DestinyApp:
         
         # Create a frame for the input field to control its width
         input_frame = tk.Frame(bottom_frame, bg="#7A8B9C")
-        input_frame.pack(pady=20)
+        input_frame.pack(pady=20, padx=(0, 62.5))  # Add right padding to shift everything to the left
         
         # Username label
         username_label = tk.Label(input_frame, text="Name:", font=("Arial", 16), fg="white", bg="#7A8B9C")
@@ -218,7 +214,7 @@ class DestinyApp:
         admin_label.pack(pady=20)
         
         # Show info about the user list
-        users_label = tk.Label(frame, text=f"User network has {len(self.user_list)} users",
+        users_label = tk.Label(frame, text=f"The user network has {len(self.user_list)} users",
                             font=("Arial", 24), fg="white", bg="#7A8B9C")
         users_label.pack(pady=20)
         
@@ -244,6 +240,29 @@ class DestinyApp:
                                 bg="#E74C3C", fg="black", padx=20, pady=10,
                                 command=lambda: self.create_welcome_page(image_path))
         logout_button.pack(pady=20)
+    
+    def configure_dropdown(self, dropdown, width=29):
+        """
+        Apply consistent styling to a dropdown menu.
+        """
+        dropdown.config(
+            font=("Arial", 14),
+            width=width,
+            bg="#5A6B7C", 
+            fg="white",
+            activebackground="#4A5B6C",
+            activeforeground="white",
+            highlightbackground="#5A6B7C",
+            highlightthickness=1
+        )
+        
+        dropdown["menu"].config(
+            bg="#5A6B7C",
+            fg="white",
+            activebackground="#4A5B6C",
+            activeforeground="white",
+            font=("Arial", 14)
+        )
     
     def create_attributes_page(self):
         """Create the page with input fields for all user attributes"""
@@ -273,6 +292,37 @@ class DestinyApp:
         
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+    
+        # Add these lines to enable mousewheel/trackpad scrolling
+        def _on_mousewheel(event):
+            # For Windows and macOS
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            
+        def _on_scrollwheel(event):
+            # For macOS with trackpad
+            canvas.yview_scroll(-1 * int(event.delta), "units")
+        
+        def _bound_to_mousewheel(event):
+            # Bind scrolling when mouse enters the canvas
+            if sys.platform == 'darwin':  # macOS
+                canvas.bind_all("<MouseWheel>", _on_scrollwheel)
+            else:  # Windows and others
+                canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        def _unbound_to_mousewheel(event):
+            # Unbind scrolling when mouse leaves the canvas
+            if sys.platform == 'darwin':  # macOS
+                canvas.unbind_all("<MouseWheel>")
+            else:  # Windows and others
+                canvas.unbind_all("<MouseWheel>")
+        
+        # Bind events to the canvas
+        canvas.bind('<Enter>', _bound_to_mousewheel)
+        canvas.bind('<Leave>', _unbound_to_mousewheel)
+        
+        # For macOS, add additional trackpad scrolling support
+        if sys.platform == 'darwin':
+            canvas.bind_all("<MouseWheel>", _on_scrollwheel)
         
         # Add heading
         heading = tk.Label(scroll_frame, text=f"Create Profile for {self.username}",
@@ -302,11 +352,11 @@ class DestinyApp:
         gender_label = tk.Label(gender_frame, text="Gender:", width=20, anchor="e", 
                              font=("Arial", 14), fg="white", bg="#7A8B9C")
         gender_label.pack(side="left", padx=(0, 10))
-        
+
         gender_var = tk.StringVar()
         gender_options = ["M", "F"]
         gender_dropdown = tk.OptionMenu(gender_frame, gender_var, *gender_options)
-        gender_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(gender_dropdown)
         gender_dropdown.pack(side="left")
         self.attributes["gender"] = gender_var
         
@@ -330,11 +380,11 @@ class DestinyApp:
         ethnicity_label = tk.Label(ethnicity_frame, text="Ethnicity:", width=20, anchor="e", 
                                 font=("Arial", 14), fg="white", bg="#7A8B9C")
         ethnicity_label.pack(side="left", padx=(0, 10))
-        
+
         ethnicity_var = tk.StringVar()
         ethnicity_options = ["Asian", "Black", "Hispanic", "White", "Mixed", "Other"]
         ethnicity_dropdown = tk.OptionMenu(ethnicity_frame, ethnicity_var, *ethnicity_options)
-        ethnicity_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(ethnicity_dropdown)
         ethnicity_dropdown.pack(side="left")
         self.attributes["ethnicity"] = ethnicity_var
         
@@ -360,7 +410,6 @@ class DestinyApp:
         
         self.attributes["interests"] = interests_vars
         
-        # Add more fields following the same pattern...
         # MBTI input
         mbti_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
         mbti_frame.pack(fill="x", padx=20, pady=10)
@@ -385,10 +434,10 @@ class DestinyApp:
         comm_var = tk.StringVar()
         comm_options = ["Texting", "Phonecall"]
         comm_dropdown = tk.OptionMenu(comm_frame, comm_var, *comm_options)
-        comm_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(comm_dropdown)
         comm_dropdown.pack(side="left")
         self.attributes["communication_type"] = comm_var
-        
+
         # Political Interests
         politics_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
         politics_frame.pack(fill="x", padx=20, pady=10)
@@ -400,7 +449,7 @@ class DestinyApp:
         politics_var = tk.StringVar()
         politics_options = ["Liberal", "Conservative"]
         politics_dropdown = tk.OptionMenu(politics_frame, politics_var, *politics_options)
-        politics_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(politics_dropdown)
         politics_dropdown.pack(side="left")
         self.attributes["political_interests"] = politics_var
         
@@ -416,7 +465,7 @@ class DestinyApp:
         religion_options = ["Protestant", "Orthodox", "Catholic", "Buddhism", "Hinduism", 
                          "Taoism", "Jewish", "Agnostic", "Other"]
         religion_dropdown = tk.OptionMenu(religion_frame, religion_var, *religion_options)
-        religion_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(religion_dropdown)
         religion_dropdown.pack(side="left")
         self.attributes["religion"] = religion_var
         
@@ -434,7 +483,7 @@ class DestinyApp:
                       "History", "Political Science", "Music", "Physics", "Chemistry", 
                       "Cognitive Science", "Philosophy", "Others"]
         major_dropdown = tk.OptionMenu(major_frame, major_var, *major_options)
-        major_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(major_dropdown)
         major_dropdown.pack(side="left")
         self.attributes["major"] = major_var
         
@@ -449,7 +498,7 @@ class DestinyApp:
         year_var = tk.StringVar()
         year_options = ["1", "2", "3", "4", "5", "Master"]
         year_dropdown = tk.OptionMenu(year_frame, year_var, *year_options)
-        year_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(year_dropdown)
         year_dropdown.pack(side="left")
         self.attributes["year"] = year_var
         
@@ -464,7 +513,7 @@ class DestinyApp:
         language_var = tk.StringVar()
         language_options = ["English", "Cantonese", "Mandarin", "French", "Spanish", "Japanese", "Korean", "Others"]
         language_dropdown = tk.OptionMenu(language_frame, language_var, *language_options)
-        language_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(language_dropdown)
         language_dropdown.pack(side="left")
         self.attributes["language"] = language_var
         
@@ -479,7 +528,7 @@ class DestinyApp:
         goal_var = tk.StringVar()
         goal_options = ["Meeting new friends", "Short-term relationship", "Long-term relationship", "Situationship"]
         goal_dropdown = tk.OptionMenu(goal_frame, goal_var, *goal_options)
-        goal_dropdown.config(font=("Arial", 14), width=29)
+        self.configure_dropdown(goal_dropdown)
         goal_dropdown.pack(side="left")
         self.attributes["dating_goal"] = goal_var
         
@@ -611,7 +660,7 @@ class DestinyApp:
             
             # Get MBTI
             mbti = self.attributes["mbti"].get().upper()
-            if not (len(mbti) == 4 and all(char in "IESTFPJ" for char in mbti)):
+            if not (len(mbti) == 4 and all(char in "IESNTFPJ" for char in mbti)):
                 self.status_label.config(text="Please enter a valid MBTI (e.g., INFP)")
                 return
             
@@ -798,7 +847,7 @@ class DestinyApp:
                 app = graph.create_app(self.user_list)
                 
                 # Configure the server to run without automatically opening the browser
-                app.run_server(debug=False, port=port)
+                app.run(debug=False, port=port)
             
             # Define a function to open the browser after a short delay
             def open_browser():

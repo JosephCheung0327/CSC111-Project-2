@@ -381,6 +381,6 @@ if __name__ == "__main__":
     port = find_available_port(8050)
     if port:
         print(f"Starting server on port {port}")
-        app.run_server(debug=True, port=port)
+        app.run(debug=True, port=port)
     else:
         print("No available ports found. Try closing other applications.")
