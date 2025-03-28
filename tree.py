@@ -165,27 +165,27 @@ class BinaryTree:
                 self._right.to_nested_list() if self._right else None]
                 
 
-    def run_preference_tree(self) -> list:[str]:
-        """
-        >>> t = BinaryTree("")
-        >>> t.insert_sequence([1, 1, "Charlie"])
-        >>> t.insert_sequence([0, 1, "Bob"])
-        >>> t.insert_sequence([1, 0, "Alice"])
-        >>> t.insert_sequence([1, 1, "Mary"])
-        >>> t.run_preference_tree()
-        ["Charlie", "Mary", "Alice", "Bob"]
-        """
-        recommendation_list = []
-        if self._root != '' and isinstance(self._root, str):
-            recommendation_list.extend(self._root)
+    # def run_preference_tree(self) -> list:[str]:
+    #     """
+    #     >>> t = BinaryTree("")
+    #     >>> t.insert_sequence([1, 1, "Charlie"])
+    #     >>> t.insert_sequence([0, 1, "Bob"])
+    #     >>> t.insert_sequence([1, 0, "Alice"])
+    #     >>> t.insert_sequence([1, 1, "Mary"])
+    #     >>> t.run_preference_tree()
+    #     ["Charlie", "Mary", "Alice", "Bob"]
+    #     """
+    #     recommendation_list = []
+    #     if self._root != '' and isinstance(self._root, str):
+    #         recommendation_list.extend(self._root)
 
-         #Traverse the right subtree first, then the left subtree.
-        if hasattr(self, '_left') and self._left is not None:
-            recommendation_list.extend(self._left.run_preference_tree())
-        if hasattr(self, '_right') and self._right is not None:
-            recommendation_list.extend(self._right.run_preference_tree())
+    #      #Traverse the right subtree first, then the left subtree.
+    #     if hasattr(self, '_left') and self._left is not None:
+    #         recommendation_list.extend(self._left.run_preference_tree())
+    #     if hasattr(self, '_right') and self._right is not None:
+    #         recommendation_list.extend(self._right.run_preference_tree())
 
-        return recommendation_list
+    #     return recommendation_list
             
                     
             
@@ -199,14 +199,35 @@ class BinaryTree:
         """
         recommendation_list = []
         
+        if not self._left and not self._right:
+            if id(self) not in visited and self._root is not None:
+                recommendation_list.append(self._root)
+                vistied.add(id(self))
+            return recommendation_list
+        
+        if self._left:
+            for child in self._left:
+                if len(recommendation_list)>=10:
+                    break
+                child_recs=child.run_decision_tree(visited)
+                recommendation_list.extend(child_recs)
+                if len(recommendation_list)>=10:
+                    recommendation_list = recommendation_list [:10]
+                    return recommendation_list
+                
+        if self._right:
+            for child in self._right:
+                if len(recommendation_list) >= 10:
+                    break
+                child_recs = child.run_decision_tree(visited)
+                recommendation_list.extend(child_recs)
+                if len(recommendation_list) >= 10:
+                    recommendation_list = recommendation_list[:10]
+                    return recommendation_list
+        
+        return recommendation_list[:10]
         
 
-
-        
-
-        
-        
-        
     
 
 
