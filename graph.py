@@ -9,45 +9,44 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
 
     # Add all users as nodes
     for user in users:
-        G.add_node(user.name, size = max(1, user.social_degree))  # Minimum size of 1 even if the user has no connections
+        G.add_node(user.name, size = max(1, user.social_degree))
     
     # Add all edges based on social_current connections
     for user in users:
         for friend in user.social_current:
             G.add_edge(user.name, friend.name)
 
-    # Get positions for the nodes in the graph or use provided positions
+    # Get positions for the nodes in the graph
     if positions is None:
-        pos = nx.spring_layout(G, k = 0.3, seed = 1234)  # Fixed seed for consistent layout
+        pos = nx.spring_layout(G, k = 0.3, seed = 1234)
     else:
         pos = positions
     
     # Create edge traces
     edge_x = []
     edge_y = []
-    
-    # Create lists for highlighted edges if searching
     highlight_edge_x = []
     highlight_edge_y = []
     
+    # Find the actual node name in case-insensitive way
+    actual_search_name = None
     if search_name:
         search_name_lower = search_name.lower()
-    else:
-        search_name_lower = None
-
-    actual_search_name = None
-    
-    if search_name_lower:
+        # Print search info for debugging
+        print(f"Searching for: {search_name_lower}")
+        
+        # Case-insensitive search for the node
         for node in G.nodes():
             if node.lower() == search_name_lower:
                 actual_search_name = node
+                print(f"Found matching node: {actual_search_name}")
                 break
     
+    # Add edges to appropriate traces
     for edge in G.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
         
-        # If we're searching and this edge connects to the search node
         if actual_search_name and (edge[0] == actual_search_name or edge[1] == actual_search_name):
             highlight_edge_x.extend([x0, x1, None])
             highlight_edge_y.extend([y0, y1, None])
@@ -63,6 +62,7 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
     hover_text = []
     node_color = []
     
+    # Add nodes to traces
     for node in G.nodes():
         x, y = pos[node]
         node_x.append(x)
@@ -71,81 +71,78 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
         node_text.append(node if G.nodes[node]["size"] > 5 else "")
         hover_text.append(node)
         
-        # Set node color based on search
         if actual_search_name:
             if node == actual_search_name:
-                node_color.append("red")
+                node_color.append("red")  # The searched node
             elif node in G.neighbors(actual_search_name):
-                node_color.append("blue")
+                node_color.append("blue")  # Connected nodes
             else:
-                node_color.append("gray")
+                node_color.append("rgba(200,200,200,0.5)")  # Other nodes faded out
         else:
-            node_color.append("gray")
-
-    # Create the basic edge trace
+            node_color.append("#888")  # Default color when not searching
+    
+    # Create traces
     edge_trace = go.Scatter(
         x = edge_x, y = edge_y,
         line = dict(width = 0.5, color = "#888"),
         hoverinfo = "none",
         mode = "lines")
     
-    # Create node trace
+    highlight_edge_trace = go.Scatter(
+        x = highlight_edge_x, y = highlight_edge_y,
+        line = dict(width = 1.5, color = "red"),
+        hoverinfo = "none",
+        mode = "lines")
+    
     node_trace = go.Scatter(
         x = node_x, y = node_y,
         mode = "markers+text",
         text = node_text,
         textposition = "top center",
-        textfont = dict(size = 15),
+        textfont = dict(size = 12),
         hoverinfo = "text",
         hovertext = hover_text,
         marker = dict(
-            showscale = False,
             color = node_color,
             size = node_size,
-            line_width = 2))
+            line = dict(width = 1, color = "#444")))
     
-    # Create the figure with the basic edge trace and node trace
-    fig = go.Figure(data = [edge_trace, node_trace],
+    # Create figure
+    fig = go.Figure(data = [edge_trace, highlight_edge_trace, node_trace],
                    layout = go.Layout(
-                       titlefont_size = 16,
                        showlegend = False,
                        hovermode = "closest",
                        margin = dict(b = 20, l = 5, r = 5, t = 40),
-                       height = 1800,
                        xaxis = dict(showgrid = False, zeroline = False, showticklabels = False),
-                       yaxis = dict(showgrid = False, zeroline = False, showticklabels = False))
-                   )
+                       yaxis = dict(showgrid = False, zeroline = False, showticklabels = False)))
     
-    # Add highlighted edges if searching
-    if search_name and highlight_edge_x:
-        highlight_edge_trace = go.Scatter(
-            x = highlight_edge_x, y = highlight_edge_y,
-            line = dict(width = 2, color = "red"),
-            hoverinfo = "none",
-            mode = "lines")
-        fig.add_trace(highlight_edge_trace)
+    # Zoom to the searched node's neighborhood if found
+    if actual_search_name and actual_search_name in G.nodes:
+        relevant_positions = [pos[actual_search_name]]
+        for neighbor in G.neighbors(actual_search_name):
+            relevant_positions.append(pos[neighbor])
         
-        # Zoom to show searched user and connections
-        if actual_search_name and actual_search_name in G.nodes:
-            relevant_positions = [pos[actual_search_name]]
-            for neighbor in G.neighbors(actual_search_name):
-                relevant_positions.append(pos[neighbor])
+        x_coords = [p[0] for p in relevant_positions]
+        y_coords = [p[1] for p in relevant_positions]
+        
+        if x_coords and y_coords:
+            x_min, x_max = min(x_coords), max(x_coords)
+            y_min, y_max = min(y_coords), max(y_coords)
             
-            x_coords = [p[0] for p in relevant_positions]
-            y_coords = [p[1] for p in relevant_positions]
+            padding = 0.2  # More padding for better view
+            x_range = [x_min - padding, x_max + padding]
+            y_range = [y_min - padding, y_max + padding]
             
-            if x_coords and y_coords:
-                x_min, x_max = min(x_coords), max(x_coords)
-                y_min, y_max = min(y_coords), max(y_coords)
-                
-                padding = 0.1
-                x_range = [x_min - padding, x_max + padding]
-                y_range = [y_min - padding, y_max + padding]
-                
-                fig.update_layout(
-                    xaxis = dict(range = x_range, showgrid = False, zeroline = False, showticklabels = False),
-                    yaxis = dict(range = y_range, showgrid = False, zeroline = False, showticklabels = False)
-                )
+            fig.update_layout(
+                xaxis = dict(range = x_range, showgrid = False, zeroline = False, showticklabels = False),
+                yaxis = dict(range = y_range, showgrid = False, zeroline = False, showticklabels = False)
+            )
+            
+            # Add title indicating the search
+            fig.update_layout(
+                title = f"Showing connections for: {actual_search_name}",
+                titlefont = dict(size = 16)
+            )
     
     return fig, pos
 
@@ -252,16 +249,16 @@ def create_app(user_list=None):
 
     # Define the callbacks for the active tab
     @app.callback(
-        [Output("social-graph", "figure"), 
-         Output("romantic-graph", "figure"), 
-         Output("clicked-node-output", "children")],
-        [Input("search-button", "n_clicks"), 
-         Input("reset-button", "n_clicks"),
-         Input("social-graph", "clickData"),
-         Input("romantic-graph", "clickData"),
-         Input("graph-tabs", "value")],
-        [State("search-input", "value")]
-    )
+    [Output("social-graph", "figure"), 
+     Output("romantic-graph", "figure"), 
+     Output("clicked-node-output", "children")],
+    [Input("search-button", "n_clicks"), 
+     Input("reset-button", "n_clicks"),
+     Input("social-graph", "clickData"),
+     Input("romantic-graph", "clickData"),
+     Input("graph-tabs", "value")],
+    [State("search-input", "value")]
+)
     def update_graphs(search_clicks, reset_clicks, social_click_data, romantic_click_data, active_tab, search_name):
         ctx = callback_context
         
@@ -283,18 +280,37 @@ def create_app(user_list=None):
         
         # Handle search button click
         elif button_id == "search-button" and search_name:
+            print(f"Search button clicked for: {search_name}")
+            
+            # Normalize search name by stripping whitespace
+            search_name = search_name.strip()
+            
+            # Generate figures with the search term
             social_fig, _ = plot_user_connections(initial_user_list, search_name, social_node_positions)
             romantic_fig, _ = plot_user_connections(initial_user_list, search_name, romantic_node_positions)
             
-            # Get the network stats if found
-            selected_user = next((u for u in initial_user_list if u.name.lower() == search_name.lower()), None)
+            # Find user with case-insensitive search
+            selected_user = next(
+                (u for u in initial_user_list if u.name.lower() == search_name.lower()), 
+                None
+            )
+            
             if selected_user:
                 friend_count = selected_user.social_degree
-                match_count = len(selected_user.match) if hasattr(selected_user, 'match') else 0
+
+
+                if hasattr(selected_user, 'interested_romantic') and isinstance(selected_user.interested_romantic, list):
+                    match_count = len(selected_user.interested_romantic)
+                elif hasattr(selected_user, 'topmatch') and isinstance(selected_user.topmatch, list):
+                    match_count = len(selected_user.topmatch)
+                else:
+                    match_count = 0
                 
                 output_text = html.Div([
-                    "Searched for: ",
-                    html.Span(search_name, style={'color': '#4CAF50'}),
+                    html.Div([
+                        "Found user: ",
+                        html.Span(selected_user.name, style={'color': '#4CAF50', 'fontWeight': 'bold'})
+                    ]),
                     html.Div([
                         html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
                         html.Span(f"Romantic partners: {match_count}")
@@ -303,61 +319,65 @@ def create_app(user_list=None):
             else:
                 output_text = html.Div([
                     "Searched for: ",
-                    html.Span(search_name, style={'color': '#4CAF50'}),
+                    html.Span(search_name, style={'color': '#f44336'}),
                     html.Div("User not found", style={'marginTop': '5px', 'fontSize': '16px', 'color': '#999'})
                 ])
         
         # Handle node click in social graph
         elif button_id == "social-graph" and prop_type == "clickData" and social_click_data:
             try:
-                clicked_node = social_click_data['points'][0]['hovertext']
-                social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
-                romantic_fig, _ = plot_user_connections(initial_user_list, clicked_node, romantic_node_positions)
+                # Debug to see what's in the click data
+                print("Social click data:", social_click_data)
                 
-                # Find the clicked user in our list to get their stats
-                selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
-                friend_count = selected_user.social_degree if selected_user else "Unknown"
-                match_count = len(selected_user.match) if selected_user and hasattr(selected_user, 'match') else 0
-                
-                output_text = html.Div([
-                    html.Div([
-                        "Clicked on: ",
-                        html.Span(clicked_node, style={'color': '#3498DB'})
-                    ]),
-                    html.Div([
-                        html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
-                        html.Span(f"Romantic partners: {match_count}")
-                    ], style={'marginTop': '5px', 'fontSize': '16px'})
-                ])
-            except (KeyError, IndexError):
-                # If the click wasn't on a node with hover text
-                output_text = "Click missed or was on a non-node element"
-        
-        # Handle node click in romantic graph
-        elif button_id == "romantic-graph" and prop_type == "clickData" and romantic_click_data:
-            try:
-                clicked_node = romantic_click_data['points'][0]['hovertext']
-                social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
-                romantic_fig, _ = plot_user_connections(initial_user_list, clicked_node, romantic_node_positions)
-                
-                # Find the clicked user in our list to get their stats
-                selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
-                friend_count = selected_user.social_degree if selected_user else "Unknown"
-                match_count = len(selected_user.match) if selected_user and hasattr(selected_user, 'match') else 0
-                
-                output_text = html.Div([
-                    html.Div([
-                        "Clicked on: ",
-                        html.Span(clicked_node, style={'color': '#E74C3C'})
-                    ]),
-                    html.Div([
-                        html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
-                        html.Span(f"Romantic partners: {match_count}")
-                    ], style={'marginTop': '5px', 'fontSize': '16px'})
-                ])
-            except (KeyError, IndexError):
-                # If the click wasn't on a node with hover text
-                output_text = "Click missed or was on a non-node element"
+                # Access the point data more safely
+                if 'points' in social_click_data and len(social_click_data['points']) > 0:
+                    point = social_click_data['points'][0]
+                    # Try to get the node name from various possible properties
+                    clicked_node = None
+                    if 'hovertext' in point:
+                        clicked_node = point['hovertext']
+                    elif 'text' in point:
+                        clicked_node = point['text']
+                    elif 'customdata' in point:
+                        clicked_node = point['customdata']
+                    
+                    if clicked_node:
+                        social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
+                        romantic_fig, _ = plot_user_connections(initial_user_list, clicked_node, romantic_node_positions)
+                        
+                        # Find the clicked user in our list to get their stats
+                        selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
+                        if selected_user:
+                            friend_count = selected_user.social_degree
+                            
+                            # Fixed match count calculation
+                            if hasattr(selected_user, 'interested_romantic') and isinstance(selected_user.interested_romantic, list):
+                                match_count = len(selected_user.interested_romantic)
+                            elif hasattr(selected_user, 'topmatch') and isinstance(selected_user.topmatch, list):
+                                match_count = len(selected_user.topmatch)
+                            else:
+                                match_count = 0
+                            
+                            output_text = html.Div([
+                                html.Div([
+                                    "Clicked on: ",
+                                    html.Span(clicked_node, style={'color': '#3498DB'})
+                                ]),
+                                html.Div([
+                                    html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
+                                    html.Span(f"Romantic partners: {match_count}")
+                                ], style={'marginTop': '5px', 'fontSize': '16px'})
+                            ])
+                        else:
+                            output_text = "User data not found"
+                    else:
+                        output_text = "Click missed or was on a non-node element"
+                else:
+                    output_text = "No point data in click"
+                    
+            except Exception as e:
+                print(f"Error handling social graph click: {e}")
+                output_text = f"Error processing click: {str(e)}"
         
         # Return appropriate output based on active tab
         return social_fig, romantic_fig, output_text

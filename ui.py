@@ -243,24 +243,25 @@ class DestinyApp:
     
     def configure_dropdown(self, dropdown, width=29):
         """
-        Apply consistent styling to a dropdown menu.
+        Apply simple consistent styling to a dropdown menu.
         """
+        # Set the background of the dropdown button part
         dropdown.config(
             font=("Arial", 14),
             width=width,
-            bg="#5A6B7C", 
-            fg="white",
-            activebackground="#4A5B6C",
-            activeforeground="white",
-            highlightbackground="#5A6B7C",
-            highlightthickness=1
+            bg="#7A8B9C",           # Button background
+            fg="black",           # Button text color
+            highlightbackground="black",  # Border color (matching window)
+            activebackground="black",       # Color when clicked
+            activeforeground="black"        # Text color when clicked
         )
         
+        # Configure the dropdown menu part
         dropdown["menu"].config(
-            bg="#5A6B7C",
-            fg="white",
-            activebackground="#4A5B6C",
-            activeforeground="white",
+            bg="black",           # Menu background
+            fg="black",           # Menu text
+            activebackground="black",  # Highlight color when hovering
+            activeforeground="white",    # Text color when hovering
             font=("Arial", 14)
         )
     
@@ -584,20 +585,18 @@ class DestinyApp:
         interested_users = random.sample([u for u in user_list if u != new_user], 
                                         min(num_interested, len(user_list) - 1))
         
-        # Add the new user to their topmatch lists
+        # Add the new user to their interested_friend lists
         for user in interested_users:
-            if new_user not in user.topmatch:
-                user.topmatch.append(new_user)
+            if new_user not in user.interested_friend:
+                user.interested_friend.append(new_user)
         
-        # Assign random users to the new user's topmatch list
-        topmatch_size = min(50, len(user_list) - 1)  # More realistic number
-        new_user.topmatch = random.sample([u for u in user_list if u != new_user], topmatch_size)
+        # Assign random users to the new user's interested_friend list
+        interested_friend_size = min(50, len(user_list) - 1)  # More realistic number
+        new_user.interested_friend = random.sample([u for u in user_list if u != new_user], interested_friend_size)
         
-        # Create matches where there's mutual interest
-        new_user.match = [u for u in new_user.topmatch if new_user in u.topmatch]
-        
+
         # Update social connections based on matches
-        new_user.social_current = list(new_user.match)  # Start with matches
+        new_user.social_current = [u for u in new_user.interested_friend if new_user in u.interested_friend]  # Start with matches
         
         # Add some additional social connections that aren't matches
         additional_connections = random.randint(5, 15)
@@ -617,7 +616,7 @@ class DestinyApp:
         for user in new_user.social_current:
             user.update_social_degree()
         
-        print(f"Added user {new_user.name} with {len(new_user.match)} matches and {len(new_user.social_current)} social connections")
+        print(f"Added user {new_user.name} with {len(new_user.social_current)} social connections")
         
         # Return the updated list
         return user_list
@@ -698,9 +697,9 @@ class DestinyApp:
                 likes_outdoor_activities=likes_outdoor_activities,
                 enjoys_watching_movies=enjoys_watching_movies),
             dating_goal=dating_goal,
-            topmatch=[],
-            match=[],
-            social_current=[]
+            interested_friend=[],
+            social_current=[],
+            interested_romantic=[]
         )
         
             # Generate the initial user list if it hasn't been created yet
@@ -912,7 +911,7 @@ class DestinyApp:
             print(f"  Gender: {u.gender}")
             print(f"  MBTI: {u.characteristics.mbti}")
             print(f"  Interests: {', '.join(u.characteristics.interests)}")
-            print(f"  Match count: {len(u.match)}")
+            print(f"  Match count: {len(u.social_current)}")
             print(f"  Social degree: {u.social_degree}")
         
         # Print sample of users from the list

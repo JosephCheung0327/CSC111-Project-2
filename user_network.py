@@ -7,10 +7,10 @@ import os
 
 
 
-def generate_users_with_class(list_size: int, topmatch_simulation_size: int, seed: int = 1234) -> list[User]:
+def generate_users_with_class(list_size: int, interested_friend_simulation_size: int, seed: int = 1234) -> list[User]:
     """Return a list of list_size number of users with randomly generated attributes, and randomly simulate 
-    top_match_simulation_size number of users in the topmatch list (users that a user is interested in). 
-    If both users have each other in their  topmatch list mutually, they are added to their self.match list as user.
+    interested_friend_simulation_size number of users in the interested_friend list (users that a user is interested in). 
+    If both users have each other in their interested_friend list mutually, they are added to their self.social_current list as user.
     
     Preconditions:
     - seed is not None
@@ -18,9 +18,9 @@ def generate_users_with_class(list_size: int, topmatch_simulation_size: int, see
     
     
     >>> user_list_generated = generate_users_with_class(2, 1, 1234)
-    >>> user_list_generated[0].match == user_list_generated[1].match 
+    >>> user_list_generated[0].social_current == user_list_generated[1].social_current 
     True
-    # Since there are only two users generated, and each of them has a topmatch (the other person), they are matched.
+    # Since there are only two users generated, and each of them has a interested_friend (the other person), they are matched.
     """
     fake = Faker()
     Faker.seed(seed)
@@ -58,19 +58,27 @@ def generate_users_with_class(list_size: int, topmatch_simulation_size: int, see
             likes_outdoor_activities=random.choice([True, False]),
             enjoys_watching_movies=random.choice([True, False])),
             dating_goal=random.choice(dating_goals),
-            topmatch = [],
-            match = [],
-            social_current = []
+
+            interested_friend = [],
+
+            interested_romantic = [],
+
+            social_current = [],
+            romantic_current = None
+            
         )
         user_list.append(user)
     
     # Assign top matches for each user (Simulation)
     for user in user_list:
-        user.topmatch = random.sample([u for u in user_list if u != user], topmatch_simulation_size)
+        user.interested_friend = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
+        user.interested_romantic = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
+
+
     for user in user_list:
-        user.match = [match for match in user.topmatch if user in match.topmatch]
-    for user in user_list:
-        user.social_current = [match for match in user.topmatch if user in match.topmatch]
+        user.social_current = [social_current for social_current in user.interested_friend if user in social_current.interested_friend]
+        if user.interested_romantic and user.interested_romantic[0].interested_romantic[0] == user:
+            user.romantic_current = user.interested_romantic[0]
 
     for user in user_list:
         user.update_social_degree()
@@ -125,8 +133,7 @@ class User:
     - dating_goal: Whether the user is planning to just "Meeting new friends", having
         "Short-term relationship", "Long-term relationship", or "Situationship".
     - characteristics: the features of the user, as provided by the user.
-    - topmatch: a list of users that the user is interested in.
-    - match: a list of users that the user are interested in and they also are interested in the user.
+    - interested_friend: a list of users that the user is interested in.
     - romantic_current: the user's current romantic partner.
     - romantic_ex: a list of user's ex-partners.
     - social_current: a list of the user's friends.
@@ -147,8 +154,8 @@ class User:
     romantic_degree: int
     social_degree: int
 
-    def __init__(self, name: str,  age, gender, pronouns, dating_goal, characteristics: Characteristics, topmatch, match,
-                 romantic_current: Optional[User] = None, romantic_ex: list[User] = [],
+    def __init__(self, name: str,  age, gender, pronouns, dating_goal, characteristics: Characteristics, interested_friend,
+                 interested_romantic, romantic_current: Optional[User] = None, romantic_ex: list[User] = [],
                  social_current: Optional[list[User]] = None, social_ex: list[User] = [], romantic_degree: int = 0,
                  social_degree: int = 0):
         self.name = name
@@ -159,8 +166,9 @@ class User:
         self.dating_goal = dating_goal
       
         
-        self.topmatch = topmatch
-        self.match = []
+        self.interested_friend = interested_friend
+        self.interested_romantic = interested_romantic
+
         self.romantic_current = romantic_current
         self.romantic_ex = romantic_ex
         self.social_current = social_current
@@ -371,9 +379,9 @@ def add_fixed_users(users: list[dict]) -> None:
             likes_outdoor_activities=True,
             enjoys_watching_movies=True),
             dating_goal="Long-term relationship",
-            topmatch = [],
-            match = [],
-            social_current = []
+            interested_friend = [],
+            social_current = [],
+            interested_romantic=[]
         ),
         User(
             name="Joseph Cheung",
@@ -394,9 +402,9 @@ def add_fixed_users(users: list[dict]) -> None:
             likes_outdoor_activities=False,
             enjoys_watching_movies=True),
             dating_goal="Long-term relationship",
-            topmatch = [],
-            match = [],
-            social_current = []
+            interested_friend = [],
+            social_current = [],
+            interested_romantic=[]
         ),
         User(
             name="Janice Lam",
@@ -417,9 +425,9 @@ def add_fixed_users(users: list[dict]) -> None:
             likes_outdoor_activities=True,
             enjoys_watching_movies=False),
             dating_goal="Meeting new friends",
-            topmatch = [],
-            match = [],
-            social_current = []
+            interested_friend = [],
+            social_current = [],
+            interested_romantic=[]
         ),
          User(
             name="Winston Liang",
@@ -440,9 +448,9 @@ def add_fixed_users(users: list[dict]) -> None:
             likes_outdoor_activities=False,
             enjoys_watching_movies=False),
             dating_goal="Meeting new friends",
-            topmatch = [],
-            match = [],
-            social_current = []
+            interested_friend = [],
+            social_current = [],
+            interested_romantic=[]
         )
     ]
 
@@ -577,9 +585,10 @@ def add_user(users: list[dict]) -> None:
             likes_outdoor_activities=likes_outdoor_activities,
             enjoys_watching_movies=enjoys_watching_movies),
             dating_goal=dating_goal,
-            topmatch = [],
-            match = [],
-            social_current = [])
+            interested_friend = [],
+            interested_romantic = [],
+            social_current = [],
+            romantic_current = None)
     
     users.append(user)
     print("User added successfully!")

@@ -101,11 +101,11 @@ def data_wrangling():
     print(f'CSV file "{csv_file_path}" has been created successfully.')
 
 class BinaryTree:
-    _root:Optional[Any]
-    _left:list[BinaryTree]
-    _right:list[BinaryTree]
+    _root: Optional[Any]
+    _left: Optional[BinaryTree]
+    _right: Optional[BinaryTree]
 
-    def __init__(self, root:Optional[Any]=None)-> None:
+    def __init__(self, root: Optional[Any] = None) -> None:
         if root is None:
             self._root = None
             self._left = None
@@ -115,117 +115,99 @@ class BinaryTree:
             self._left = BinaryTree(None)
             self._right = BinaryTree(None)
 
-    def insert_sequence(self, items:list) -> None:
+    def is_empty(self) -> bool:
+        return self._root is None
+
+    def __str__(self) -> str:
+        return self._str_indented(0)
+
+    def _str_indented(self, depth:int) -> str:
+        if self.is_empty():
+            return ""
+        else:
+            return(
+                depth * " " + f'{self._root}\n'
+                + self._left._str_indented(depth+1)
+                + self._right._str_indented(depth+1)
+            )
+
+    def insert_sequence(self, items: list) -> None:
         """
         >>> t = BinaryTree("")
-        >>> t.insert_sequence([1, 1, 1, 1])  # Leftmost branch
-        >>> t.insert_sequence([0, 1, 1, 1])  # Right → Left → Left → Left
-        >>> t.insert_sequence([1, 0, 1, 1])  # Left → Right → Left → Left
-        >>> t.insert_sequence([1, 1, 1, 0])  # Left → Left → Left → Right
-        >>> t.insert_sequence([0, 0, 0, 1])  # Rightmost branch with final left
-    
-        # Verify the complete tree structure
-        >>> t == BinaryTree("",
-        ...     BinaryTree(1,
-        ...         BinaryTree(1,
-        ...             BinaryTree(1,
-        ...                 BinaryTree(1),
-        ...                 BinaryTree(0)
-        ...             ),
-        ...             BinaryTree(0,
-        ...                 BinaryTree(1,
-        ...                     BinaryTree(1),
-        ...                     None
-        ...                 ),
-        ...                 None
-        ...             )
-        ...         ),
-        ...         None
-        ...     ),
-        ...     BinaryTree(0,
-        ...         BinaryTree(1,
-        ...             BinaryTree(1,
-        ...                 BinaryTree(1),
-        ...                 None
-        ...             ),
-        ...             None
-        ...         ),
-        ...         BinaryTree(0,
-        ...             None,
-        ...             BinaryTree(0,
-        ...                 BinaryTree(1),
-        ...                 None
-        ...             )
-        ...         )
-        ...     )
-        ... )
-        True
-    
-        # Test individual nodes
-        >>> t.left.left.left.left.value == 1  # [1,1,1,1]
-        True
-        >>> t.right.left.left.left.value == 1  # [0,1,1,1]
-        True
-        >>> t.left.right.left.left.value == 1  # [1,0,1,1]
-        True
-        >>> t.left.left.left.right.value == 0  # [1,1,1,0]
-        True
-        >>> t.right.right.right.left.value == 1  # [0,0,0,1]
-        True
+        >>> t.insert_sequence([1, 1])
+        >>> t.insert_sequence([0, 1])
+        >>> t.insert_sequence([1, 0])
+        >>> t.to_nested_list()
+        ['', [1, [1, None, None], [0, None, None]], [0, [1, None, None], None]]
+
         """
         if not items:
             return
 
-        current = items[0]
-        rest = items[1:]
+        first, rest = items[0], items[1:]
 
-        if current == 1:
+        if first == 1:
             if self._left is None:
-                self._left = BinaryTree(current)
+                self._left = BinaryTree()
+            if self._left._root is None:
+                self._left._root = 1
+                self._left._left = BinaryTree()
+                self._left._right = BinaryTree()
             self._left.insert_sequence(rest)
-        else:  # current == 0
+        elif first == 0:  # first == 0
             if self._right is None:
-                self._right = BinaryTree(current)
+                self._right = BinaryTree()
+            if self._right._root is None:
+                self._right._root = 0
+                self._right._left = BinaryTree()
+                self._right._right = BinaryTree()
             self._right.insert_sequence(rest)
+        else:
+
+
+    def to_nested_list(self) -> Optional[list]:
+        if self._root is None:
+            return None
+        return [self._root,
+                self._left.to_nested_list() if self._left else None,
+                self._right.to_nested_list() if self._right else None]
                 
 
 
 
-#     def run_decision_tree(self) -> list[str]:
-#         """Run the decision tr"""
+    def run_decision_tree(self,visited:set) -> list[str]:
+        """Run the decision tree based on the desgined algorithm and return a recommendation list of top 10 people matched with the user. 
+        Recurse into the branch with all 1s (leftmost branch), followed by the second leftmost branch with all 1s except the last subdivision that goes to 0. 
+        """
 
-# ,visited:setn the desgined algorithm and return a recommendation list of top 10 people matched with the useer.. That is, recurse into the branch with all 1s (leftmost branch), followed by the second leftmost branch with all 1s except the last subdivision that goes to 0. Retur
-list[str]
+        recommendation_list = []
+        stack = [self]
 
-        #corner case:        
+        while stack and len(recommendation_list) < 10:
+            node = stack.pop()
 
-        # recommendation_list = []
-        # stack = [self]
+            if node._root is None or id(node) in visited:
+                continue
 
-        # while stack and len(recommendation_list) < 10:
-        #     node = stack.pop()
-
-        #     if node._root is None or id(node) in visited:
-        #         continue
-
-        #     # If it's a leaf and hasn't been visited
-        #     if not node._left and not node._right:
-        #         recommendation_list.append(node._root)
-        #         visited.add(id(node))
-        #     else:
-        #         # Push right first so left is processed first
-        #         if node._right:
-        #             stack.append(node._right[0])
-        #         if node._left:
-        #             stack.append(node._left[0])
+            # If it's a leaf and hasn't been visited
+            if not node._left and not node._right:
+                recommendation_list.append(node._root)
+                visited.add(id(node))
+            else:
+                # Push right first so left is processed first
+                if node._right:
+                    stack.append(node._right[0])
+                if node._left:
+                    stack.append(node._left[0])
 
         return recommendation_list
 
 
-def refresh_tree()  -> None:
-    """This function is called """
-      if response == "Yes" :  
-        run_decision_tree()         
+# def refresh_tree()  -> None:
+#     """This function is called """
+#     if response == "Yes" :  
+#         run_decision_tree()         
+             
        
 # class Tree:
 #     _root:Optional[Any]
@@ -354,49 +336,38 @@ def refresh_tree()  -> None:
     
 
 
-# @check_contracts
-# def build_preference_tree(file:str) -> Tree:
-#     tree = BinaryTree("")
+@check_contracts
+def build_preference_tree(file:str) -> Tree:
+    tree = BinaryTree("")
 
-#     with open(file) as csv_file:
-#         reader = csv.reader(csv_file)
-#         next(reader) #skip the header row
+    with open(file) as csv_file:
+        reader = csv.reader(csv_file)
+        next(reader) #skip the header row
 
-#         for row in reader: 
-#             characteristics = str(row[0])
-#             match = [int(item) for item in row[1:]]
-#             match.append(characteristics)
-#             tree.insert_sequence(match)
-#     print(tree)
-#     return tree
+        for row in reader: 
+            name = str(row[0])
+            match = [int(item) for item in row[1:]]
+            match.append(name)
+            tree.insert_sequence(match)
+    # print(tree)
+    return tree
 
 
 
 
 if __name__ == "__main__":
-    t = BinaryTree("")
-    match1 = [1, 1, 1, 1]
-    match2 = [0, 1, 1, 1]
-    match3 = [1, 0, 1, 1]
-    match4 = [1, 1, 1, 0]
-    match5 = [0, 0, 0, 1]
-    t.insert_sequence(match1)
-    t.insert_sequence(match2)
-    t.insert_sequence(match3)
-    t.insert_sequence(match4)
-    t.insert_sequence(match5)
-    expected = BinaryTree("", BinaryTree(1, BinaryTree(1, BinaryTree(1, BinaryTree(1), BinaryTree(0)), None), BinaryTree(0, \
-    BinaryTree(1, BinaryTree(1), None), None)), BinaryTree(0, BinaryTree(1, BinaryTree(1, BinaryTree(1), None), None), \
-    BinaryTree(0, None, BinaryTree(0, BinaryTree(1), None))))
-    print(t == expected)
+    import doctest
+
+    doctest.testmod()
 
     
-    # data_wrangling()
+    data_wrangling()
     
-    # t = build_preference_tree('data.csv')
+    t = build_preference_tree('data.csv')
+    print(t)
     # recommendation_list = t.run_preference_tree()
     # print(recommendation_list)
-    # print('Tree
+    # # print('Tree
 
 
   
