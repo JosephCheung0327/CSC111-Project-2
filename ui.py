@@ -66,7 +66,6 @@ class DestinyApp:
     """
 
     def __init__(self, image_path, window_width=720, window_height=720):
-        # Initialize the main window
         self.root = tk.Tk()
         self.root.title("Destiny App")
         self.root.geometry(f"{window_width}x{window_height}")
@@ -78,6 +77,10 @@ class DestinyApp:
         self.image_path = image_path
         
         self.create_welcome_page(image_path)
+
+        self.user_list = generate_users_with_class(200, 25, 1234)
+        add_fixed_users(self.user_list)
+        print(f"Generated initial user list with {len(self.user_list)} users")
     
     def create_welcome_page(self, image_path):
         """
@@ -124,8 +127,7 @@ class DestinyApp:
             image_label = tk.Label(top_frame, image=photo, bg="#7A8B9C")
             image_label.image = photo  # Keep a reference to prevent garbage collection
             
-            # Center the image in the top frame
-            image_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+            image_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER) # Center the image in the top frame
             
         except Exception as e:
             # Show error message instead
@@ -165,74 +167,63 @@ class DestinyApp:
                               fg="white", bg="#7A8B9C")
         self.result_label.pack(pady=10)
         
-        # Handle Enter key press
-        self.root.bind('<Return>', lambda event: self.handle_username_submit())
+        self.root.bind('<Return>', lambda event: self.handle_username_submit())  # Handle Enter key press to advance
     
     def handle_username_submit(self):
-        """Handle the username submission and transition to appropriate page"""
+        """
+        Handle the username submission and transition to appropriate page.
+        """
         username = self.username_entry.get().strip()
         if not username:
             self.result_label.config(text="Please enter your name")
             return
         
-        # Store the username
         self.username = username
         
         # Check if this is the admin user
         if username.lower() == "admin":
-            # Generate users if not already done
-            if not hasattr(self, 'user_list'):
-                self.user_list = generate_users_with_class(200, 25, 1234)
-                add_fixed_users(self.user_list)
-                print(f"Generated initial user list with {len(self.user_list)} users")
-            
-            # Skip to admin page with graph access
-            self.create_admin_page()
+            self.create_admin_page()  # Admin user, proceed to admin page
         else:
-            # Regular user - proceed to attributes page
-            self.create_attributes_page()
+            self.create_attributes_page()  # Regular user, proceed to attributes page
 
     def create_admin_page(self):
-        """Create the admin page with direct access to the network graph"""
+        """
+        Create the admin page with direct access to the network graph.
+        """
         # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
             
-        # Set background color
-        self.root.configure(bg="#7A8B9C")
+        self.root.configure(bg="#7A8B9C")  # Set background color
         
         # Create main frame
         frame = tk.Frame(self.root, bg="#7A8B9C")
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         
-        # Admin welcome message
+        # Description
         admin_label = tk.Label(frame, text="ADMIN MODE",
                             font=("Arial", 36, "bold"), fg="white", bg="#7A8B9C")
         admin_label.pack(pady=20)
         
-        # Show info about the user list
         users_label = tk.Label(frame, text=f"The user network has {len(self.user_list)} users",
                             font=("Arial", 24), fg="white", bg="#7A8B9C")
         users_label.pack(pady=20)
         
-        # Add a description
         description = tk.Label(frame, text="You have direct access to the network visualization",
                             font=("Arial", 18), fg="white", bg="#7A8B9C")
         description.pack(pady=(20, 40))
         
-        # Add a button to view the network graph
+        # Buttons
         graph_button = tk.Button(frame, text="View Network Graph", font=("Arial", 16, "bold"),
                             bg="#3498DB", fg="black", padx=30, pady=15,
                             command=self.view_network_graph)
         graph_button.pack(pady=20)
         
-        # Add a print users button
         print_button = tk.Button(frame, text="Print User List to Console", font=("Arial", 16),
                             bg="#2ECC71", fg="black", padx=20, pady=10,
                             command=self.print_user_list_debug)
         print_button.pack(pady=20)
         
-        # Add a logout button to return to the welcome page
         logout_button = tk.Button(frame, text="Logout", font=("Arial", 16),
                                 bg="#E74C3C", fg="black", padx=20, pady=10,
                                 command=lambda: self.create_welcome_page(image_path))
@@ -246,30 +237,31 @@ class DestinyApp:
         dropdown.config(
             font=("Arial", 14),
             width=width,
-            bg="#7A8B9C",           # Button background
-            fg="black",           # Button text color
-            highlightbackground="black",  # Border color (matching window)
-            activebackground="black",       # Color when clicked
-            activeforeground="black"        # Text color when clicked
+            bg="#7A8B9C",
+            fg="black",
+            highlightbackground="black",
+            activebackground="black",
+            activeforeground="black"
         )
         
         # Configure the dropdown menu part
         dropdown["menu"].config(
-            bg="black",           # Menu background
-            fg="black",           # Menu text
-            activebackground="black",  # Highlight color when hovering
-            activeforeground="white",    # Text color when hovering
+            bg="black",
+            fg="black",
+            activebackground="black",
+            activeforeground="white",
             font=("Arial", 14)
         )
     
     def create_attributes_page(self):
-        """Create the page with input fields for all user attributes"""
+        """
+        Create the page with input fields for all user attributes.
+        """
         # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
             
-        # Set background color
-        self.root.configure(bg="#7A8B9C")
+        self.root.configure(bg="#7A8B9C")  # Set background color
         
         # Create a main frame with scrolling capability
         main_frame = tk.Frame(self.root, bg="#7A8B9C")
@@ -291,7 +283,7 @@ class DestinyApp:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
     
-        # Add these lines to enable mousewheel/trackpad scrolling
+        # Enable mousewheel/trackpad scrolling
         def _on_mousewheel(event):
             # For Windows and macOS
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -318,16 +310,11 @@ class DestinyApp:
         canvas.bind('<Enter>', _bound_to_mousewheel)
         canvas.bind('<Leave>', _unbound_to_mousewheel)
         
-        # For macOS, add additional trackpad scrolling support
-        if sys.platform == 'darwin':
-            canvas.bind_all("<MouseWheel>", _on_scrollwheel)
-        
         # Add heading
         heading = tk.Label(scroll_frame, text=f"Create Profile for {self.username}",
                          font=("Arial", 24, "bold"), fg="white", bg="#7A8B9C")
         heading.pack(pady=(20, 30))
         
-        # Create a dictionary to store all entry fields and variables
         self.attributes = {}
         
         # Age input (numeric)
@@ -945,3 +932,9 @@ image_path = '/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[05] CSC
 if __name__ == "__main__":
     app = DestinyApp(image_path)
     app.run()
+
+    python_ta.check_all(config={
+    'extra-imports': [],  # the names (strs) of imported modules
+    'allowed-io': [],     # the names (strs) of functions that call print/open/input
+    'max-line-length': 120
+})

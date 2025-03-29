@@ -12,25 +12,7 @@ from python_ta.contracts import check_contracts
 
 users_list = user_network.users
 
-char1 = users_list[-2].characteristics
-
-# char1 = user_network.Characteristics(
-#     ethnicity="Asian",
-#     interests=["coding", "data science", "movies"],
-#     mbti="INTJ",
-#     communication_type="Direct",
-#     political_interests="Moderate",
-#     religion="None",
-#     major="Computer Science",
-#     year="3rd",
-#     language="English, Cantonese",
-#     likes_pets=True,
-#     likes_outdoor_activities=True,
-#     enjoys_watching_movies=True
-# )
-
-
-
+char1 = users_list[-1].characteristics
 
 
 def filter_user_by_dating_goal (users:List[user_network.User],user:user_network.User)-> list[user_network.User]:
@@ -39,8 +21,31 @@ def filter_user_by_dating_goal (users:List[user_network.User],user:user_network.
     return [u for u in users if u.dating_goal == user.dating_goal and u!= user]
         
 
-
 def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
+    """
+    Ask the user to rank the attributes of the Characteristics class in order of importance. 
+    Returns a list of attributes sorted by the user's ranking.
+
+    >>> users_list = user_network.users
+    >>> char1 = users_list[-1].characteristics
+    >>> add_priority(char1)
+    Please rank the following criteria in order of importance (from most to least important):
+    (1) Age
+    (2) Height
+    (3) Weight
+    (4) Hair Color
+    (5) Eye Color
+    (6) Education Level
+    (7) Occupation
+    (8) Hobbies
+    (9) Personality Type
+    (10) Relationship Status
+    (11) Location
+    (12) Interests
+    Enter the numbers in order (e.g., 3 1 4 2 5 6 7 8 10 11 9 12):
+    3 1 4 2 5 6 7 8 10 11 9 12
+    ['Weight', 'Age', 'Hair Color', 'Height', 'Eye Color', 'Education Level', 'Occupation', 'Hobbies', 'Relationship Status', 'Location', 'Personality Type', 'Interests']
+    """
     priority_dict = {}
     rank = 1
     for attribute in vars(Characteristics):
@@ -165,67 +170,6 @@ class BinaryTree:
                 self._right.to_nested_list() if self._right else None]
                 
 
-    # def run_preference_tree(self) -> list:[str]:
-    #     """
-    #     >>> t = BinaryTree("")
-    #     >>> t.insert_sequence([1, 1, "Charlie"])
-    #     >>> t.insert_sequence([0, 1, "Bob"])
-    #     >>> t.insert_sequence([1, 0, "Alice"])
-    #     >>> t.insert_sequence([1, 1, "Mary"])
-    #     >>> t.run_preference_tree()
-    #     ["Charlie", "Mary", "Alice", "Bob"]
-    #     """
-    #     recommendation_list = []
-    #     if self._root != '' and isinstance(self._root, str):
-    #         recommendation_list.extend(self._root)
-
-    #      #Traverse the right subtree first, then the left subtree.
-    #     if hasattr(self, '_left') and self._left is not None:
-    #         recommendation_list.extend(self._left.run_preference_tree())
-    #     if hasattr(self, '_right') and self._right is not None:
-    #         recommendation_list.extend(self._right.run_preference_tree())
-
-    #     return recommendation_list
-            
-                    
-            
-
-    # def run_decision_tree(self,visited:set) -> list[str]:
-    #     """Run the decision tree based on the desgined algorithm and return a recommendation list of top 10 people matched with the user. 
-    #     Recurse into the branch with all 1s (leftmost branch), followed by the second leftmost branch with all 1s except the last subdivision that goes to 0. 
-        
-    #     >>> t.to_nested_list()
-    #     ['', [1, [1, [['Charlie', 'Mary'], None, None], None], [0, [['Alice'], None, None], None]], [0, [1, [['Bob'], None, None], None], None]]
-    #     """
-    #     recommendation_list = []
-        
-    #     if not self._left and not self._right:
-    #         if id(self) not in visited and self._root is not None:
-    #             recommendation_list.append(self._root)
-    #             vistied.add(id(self))
-    #         return recommendation_list
-        
-    #     if self._left:
-    #         for child in self._left:
-    #             if len(recommendation_list)>=10:
-    #                 break
-    #             child_recs=child.run_decision_tree(visited)
-    #             recommendation_list.extend(child_recs)
-    #             if len(recommendation_list)>=10:
-    #                 recommendation_list = recommendation_list [:10]
-    #                 return recommendation_list
-                
-    #     if self._right:
-    #         for child in self._right:
-    #             if len(recommendation_list) >= 10:
-    #                 break
-    #             child_recs = child.run_decision_tree(visited)
-    #             recommendation_list.extend(child_recs)
-    #             if len(recommendation_list) >= 10:
-    #                 recommendation_list = recommendation_list[:10]
-    #                 return recommendation_list
-        
-    #     return recommendation_list[:10]
 
     def run_preference_tree(self) -> list:
         """
@@ -236,7 +180,7 @@ class BinaryTree:
         >>> t.insert_sequence([1, 1, "Mary"])
         >>> t.insert_sequence([0, 0, "Hi"])
         >>> t.run_preference_tree()
-        ["Charlie", "Mary", "Alice", "Bob", "Hi"]
+        ['Charlie', 'Mary', 'Alice', 'Bob', 'Hi']
         """
         recommendation_list = []
 
@@ -254,6 +198,17 @@ class BinaryTree:
         return recommendation_list
 
        
+
+def generate_10_people_list(tree:BinaryTree, full_list:list)->list:
+    full_recommendation_list = tree.run_preference_tree
+    
+    new_list = []
+    while len (new_list)<10:
+        new_list.append(full_list.pop(0))
+    
+    return new_list
+
+
 
 # @check_contracts
 def build_preference_tree(file:str) -> Tree:
@@ -284,13 +239,11 @@ if __name__ == "__main__":
     t = build_preference_tree('data.csv')
     
     print("\nFinding recommendations...")
-    print(t.run_preference_tree())
-    
+    result = t.run_preference_tree()
+    print(generate_10_people_list(t,result))
 
-    # print(t)
-    # recommendation_list = t.run_preference_tree()
-    # print(recommendation_list)
-    # # print('Tree
+    
+    
 
 
   
