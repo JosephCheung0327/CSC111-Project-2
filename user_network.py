@@ -6,6 +6,7 @@ import json
 import os
 
 user_list = []
+user_keypair = dict()
 
 def generate_users_with_class(list_size: int, interested_friend_simulation_size: int, seed: int = 1234) -> list[User]:
     """Return a list of list_size number of users with randomly generated attributes, and randomly simulate 
@@ -68,31 +69,43 @@ def generate_users_with_class(list_size: int, interested_friend_simulation_size:
             
         )
         user_list.append(user)
+    
+
 
     return user_list
 
 def simulate_connections(user_list: list[User]) -> tuple(list[User], list[User]):
         # TODO: use tree methods without attribute ranking
-    import tree
+    from tree import data_wrangling, build_preference_tree, BinaryTree, generate_10_people_list
         
     users_looking_for_friends = [user for user in user_list if user.dating_goal == "Meeting new friends"]
     users_looking_for_love = [user for user in user_list if user.dating_goal != "Meeting new friends"]
 
-
+    characteristics_default_rank = ["ethnicity", "interests", "mbti", "communication_type", "political_interests",
+                          "religion", "major", "year", "language", "likes_pets",
+                          "likes_outdoor_activities", "enjoys_watching_movies"]
+    
     for user in users_looking_for_friends:
-        tree.data_wrangling(user.characteristics, users_looking_for_friends, "friends.csv")
-        t = tree.build_preference_tree('friends.csv') # Build decision tree
+        data_wrangling(user, characteristics_default_rank, users_looking_for_friends, "friends.csv")
+        t = build_preference_tree('friends.csv') # Build decision tree
         result = t.run_preference_tree() # Run the decision tree 
-        user.interested_friend = tree.generate_10_people_list(t,result)
+        user.interested_friend = generate_10_people_list(t,result)
+        user.interested_friend = [user_keypair[nameString] for nameString in user.interested_friend]
         user.update_social_degree()
 
     for user in users_looking_for_love:
-        tree.data_wrangling(user.characteristic, users_looking_for_love, "love.csv")
-        t = tree.build_preference_tree('love.csv') # Build decision tree
+        data_wrangling(user, characteristics_default_rank, users_looking_for_love, "love.csv")
+        t = build_preference_tree('love.csv') # Build decision tree
         result = t.run_preference_tree() # Run the decision tree 
-        user.interested_romantic = tree.generate_10_people_list(t,result)
+        user.interested_romantic = generate_10_people_list(t,result)
+        user.interested_romantic = [user_keypair[nameString] for nameString in user.interested_romantic]
         user.update_romantic_degree()
-
+    
+    for user in users_looking_for_friends:
+        user.social_current = [social_current for social_current in user.interested_friend if user in social_current.interested_friend]
+    for user in users_looking_for_love:
+        if user.interested_romantic and user.interested_romantic[0].interested_romantic[0] == user:
+            user.romantic_current = user.interested_romantic[0]
     
     # # Assign top matches for each user (Simulation)
     # for user in user_list:
@@ -650,6 +663,13 @@ def add_priority():
     
 
 users = generate_users_with_class(200, 25, 1234)
+user_keypair = dict()
+for user in users:
+    if user.name not in user_keypair:
+        user_keypair[user.name] = user
+    else:
+        continue
+user_looking_for_friends, user_looking_for_love = simulate_connections(users)
 
 if __name__ == "__main__":
     # import graph

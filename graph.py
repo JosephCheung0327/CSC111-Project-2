@@ -1,4 +1,4 @@
-from user_network import generate_users_with_class, add_fixed_users, User
+from user_network import generate_users_with_class, add_fixed_users, User, user_looking_for_friends, user_looking_for_love
 
 import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output, State, callback_context
@@ -333,9 +333,9 @@ def create_app(user_list=None):
         add_fixed_users(initial_user_list)
         print(f"Generated new user list with {len(initial_user_list)} users")
     
-    # Generate the initial graph and node positions for social connections
-    initial_social_fig, social_node_positions = plot_user_connections(initial_user_list)
-    initial_romantic_fig, romantic_node_positions = plot_romantic_connections(initial_user_list)
+    # Generate the initial graph and node positions for social connections 
+    initial_social_fig, social_node_positions = plot_user_connections(user_looking_for_friends)
+    initial_romantic_fig, romantic_node_positions = plot_romantic_connections(user_looking_for_love)
     
     # Create the Dash app
     app = Dash(__name__, suppress_callback_exceptions=True)
@@ -433,8 +433,8 @@ def create_app(user_list=None):
         
         # Handle reset button click
         if button_id == "reset-button":
-            social_fig, _ = plot_user_connections(initial_user_list, positions=social_node_positions)
-            romantic_fig, _ = plot_romantic_connections(initial_user_list, positions=romantic_node_positions)  # Fixed: use plot_romantic_connections
+            social_fig, _ = plot_user_connections(user_looking_for_friends, positions=social_node_positions)
+            romantic_fig, _ = plot_romantic_connections(user_looking_for_love, positions=romantic_node_positions)  # Fixed: use plot_romantic_connections
             output_text = ""
         
         # Handle search button click
@@ -445,12 +445,12 @@ def create_app(user_list=None):
             search_name = search_name.strip()
             
             # Generate figures with the search term
-            social_fig, _ = plot_user_connections(initial_user_list, search_name, social_node_positions)
-            romantic_fig, _ = plot_romantic_connections(initial_user_list, search_name, romantic_node_positions)
+            social_fig, _ = plot_user_connections(user_looking_for_friends, search_name, social_node_positions)
+            romantic_fig, _ = plot_romantic_connections(user_looking_for_love, search_name, romantic_node_positions)
             
             # Find user with case-insensitive search
             selected_user = next(
-                (u for u in initial_user_list if u.name.lower() == search_name.lower()), 
+                (u for u in user_looking_for_friends if u.name.lower() == search_name.lower()), 
                 None
             )
             
@@ -497,8 +497,8 @@ def create_app(user_list=None):
                         clicked_node = point['customdata']
                     
                     if clicked_node:
-                        social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
-                        romantic_fig, _ = plot_romantic_connections(initial_user_list, clicked_node, romantic_node_positions)
+                        social_fig, _ = plot_user_connections(user_looking_for_friends, clicked_node, social_node_positions)
+                        romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node, romantic_node_positions)
                         
                         # Find the clicked user in our list to get their stats
                         selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
@@ -564,8 +564,8 @@ def create_app(user_list=None):
                     
                     if clicked_node:
                         # Update both graphs
-                        social_fig, _ = plot_user_connections(initial_user_list, clicked_node, social_node_positions)
-                        romantic_fig, _ = plot_romantic_connections(initial_user_list, clicked_node, romantic_node_positions)
+                        social_fig, _ = plot_user_connections(user_looking_for_friends, clicked_node, social_node_positions)
+                        romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node, romantic_node_positions)
                         
                         # Find the user data
                         selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)

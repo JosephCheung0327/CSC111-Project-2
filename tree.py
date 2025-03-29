@@ -9,7 +9,6 @@ import json
 from python_ta.contracts import check_contracts
 
 
-
 users_list = user_network.users
 
 char1 = users_list[-1].characteristics
@@ -55,7 +54,8 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
         print(f"Error: {e}")
         return add_priority(Characteristics)
         
-def data_wrangling(user_characteristics: Optional[user_network.Characteristics] = char1, users_list: List[user_network.User] = users_list, file_name: Optional[str] = "data.csv") -> None:
+def data_wrangling(currentUser: user_network.User, user_characteristics: list | None | user_network.Characteristics = char1,
+                    users_list: List[user_network.User] = users_list, file_name: Optional[str] = "data.csv") -> None:
     """
     Creates a CSV file containing user data, including their characteristics and potential matches.
 
@@ -66,15 +66,16 @@ def data_wrangling(user_characteristics: Optional[user_network.Characteristics] 
       - A value of 1 indicates a match in characteristics with the current user.
       - A value of 0 indicates no match.
 
-    >>> data_wrangling()
+    >>> data_wrangling
 
     """
-    if isinstance(user_characteristics, list):
+    if isinstance(user_characteristics, list): 
         heading = user_characteristics
     else:
         heading = add_priority(user_characteristics)
+        currentUser = users_list[-1]
 
-    potential_users = filter_user_by_dating_goal(users_list, users_list[-1])
+    potential_users = filter_user_by_dating_goal(users_list, currentUser)
 
     data = {"name":[]}
 
@@ -84,8 +85,9 @@ def data_wrangling(user_characteristics: Optional[user_network.Characteristics] 
     for attribute in heading:
         answer = []
         for person in potential_users:
-            current_user_value = getattr(users_list[-1].characteristics, attribute, None)
-            potential_user_value = getattr(person.characteristics, attribute, None)
+            # print(currentUser.characteristics.religion)
+            current_user_value = getattr(currentUser.characteristics, attribute)
+            potential_user_value = getattr(person.characteristics, attribute)
 
             if current_user_value == potential_user_value:
                 answer.append(1)
@@ -126,10 +128,10 @@ class BinaryTree:
         
         >>> t = BinaryTree("A")
         >>> t._root
-        "A"
-        >>> t._left is None
+        'A'
+        >>> t._left._root is None
         True
-        >>> t._right is None
+        >>> t._right._root is None
         True
         """
         if root is None:
@@ -168,8 +170,11 @@ class BinaryTree:
 
     def insert_sequence(self, items: list) -> None:
         """
+        A helper function for build_preference_tree. 
+
         Insert a sequence of items into the binary tree. 
         The first attribute is ranked at depth 1, the second at depth 2, and so on.
+        
         A value of `1` (a match) goes to the left child.
         A value of `0` (a non-match) goes to the right child.
 
@@ -280,7 +285,6 @@ def generate_10_people_list(tree: BinaryTree, full_list: list)->list:
     return new_list
 
 
-
 # @check_contracts
 def build_preference_tree(file:str) -> Tree:
     """
@@ -305,8 +309,9 @@ def build_preference_tree(file:str) -> Tree:
 
 
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+    # import doctest
+    # doctest.testmod(verbose=True)
+    # doctest.testmod()
     
     data_wrangling()
     

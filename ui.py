@@ -4,7 +4,6 @@ from pathlib import Path
 import os
 import sys
 import random
-import tree
 
 # Import the add_user() function from user_network.py
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -801,6 +800,7 @@ class DestinyApp:
         """
         Show a success page after profile creation.
         """
+        import tree
         # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
         
@@ -834,6 +834,7 @@ class DestinyApp:
         """
         Show a page where users can swipe through recommended matches and connect with them.
         """
+        import tree
         # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
 
@@ -866,7 +867,7 @@ class DestinyApp:
                             font=("Arial", 16), fg="white", bg="#7A8B9C")
         description.pack(pady=(0, 20))
 
-        tree.data_wrangling(self.priority_attributes, self.user_list)
+        tree.data_wrangling(currentUser=self.current_user, user_characteristics=self.priority_attributes, users_list=self.user_list)
         preference_tree = tree.build_preference_tree("data.csv")
         recommendation_names = preference_tree.run_preference_tree()
         
@@ -1054,7 +1055,7 @@ class DestinyApp:
             self.matches_made += 1
             
             # For romantic connections, immediately go to summary after one match
-            self.root.after(1500, self.show_matching_summary)
+            self.root.after(200, self.show_matching_summary)
 
     def show_temporary_message(self, message, color="#2ECC71"):
         """
