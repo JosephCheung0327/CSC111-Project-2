@@ -5,7 +5,7 @@ import random
 import json
 import os
 
-
+user_list = [User(), User(), User()]
 
 def generate_users_with_class(list_size: int, interested_friend_simulation_size: int, seed: int = 1234) -> list[User]:
     """Return a list of list_size number of users with randomly generated attributes, and randomly simulate 

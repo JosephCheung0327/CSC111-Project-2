@@ -26,25 +26,6 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
     Ask the user to rank the attributes of the Characteristics class in order of importance. 
     Returns a list of attributes sorted by the user's ranking.
 
-    >>> users_list = user_network.users
-    >>> char1 = users_list[-1].characteristics
-    >>> add_priority(char1)
-    Please rank the following criteria in order of importance (from most to least important):
-    (1) Age
-    (2) Height
-    (3) Weight
-    (4) Hair Color
-    (5) Eye Color
-    (6) Education Level
-    (7) Occupation
-    (8) Hobbies
-    (9) Personality Type
-    (10) Relationship Status
-    (11) Location
-    (12) Interests
-    Enter the numbers in order (e.g., 3 1 4 2 5 6 7 8 10 11 9 12):
-    3 1 4 2 5 6 7 8 10 11 9 12
-    ['Weight', 'Age', 'Hair Color', 'Height', 'Eye Color', 'Education Level', 'Occupation', 'Hobbies', 'Relationship Status', 'Location', 'Personality Type', 'Interests']
     """
     priority_dict = {}
     rank = 1
@@ -76,6 +57,16 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
         return add_priority(Characteristics)
         
 def data_wrangling():
+    """
+    Creates a CSV file containing user data, including their characteristics and potential matches.
+
+    The CSV file structure:
+    - The first row contains characteristics ordered according to users' ranking.
+    - The first column contains user names.
+    - Each row represents a potential match, with a ranking value of 0 or 1.
+      - A value of 1 indicates a match in characteristics with the current user.
+      - A value of 0 indicates no match.
+    """
     heading = add_priority(char1)
 
     potential_users = filter_user_by_dating_goal(users_list, users_list[-1])
@@ -106,11 +97,36 @@ def data_wrangling():
     print(f'CSV file "{csv_file_path}" has been created successfully.')
 
 class BinaryTree:
+    """
+    A binary tree data structure that can be used to represent a preference tree.
+    
+    Representation Invariants:
+    - (self._root is None) == (self._left is None)
+    - (self._root is None) == (self._right is None)
+    
+    Private Instance Attributes:
+    - _root: The value stored at the root of the tree, or None if the tree is empty.
+    - _left: The left subtree, or None if there is no left child.
+    - _right: The right subtree, or None if there is no right child.
+    
+    """
     _root: Optional[Any]
     _left: Optional[BinaryTree]
     _right: Optional[BinaryTree]
 
     def __init__(self, root: Optional[Any] = None) -> None:
+        """
+        Initialize a new binary tree containing only the given root value.
+        If root is None, initialize an empty tree.
+        
+        >>> t = BinaryTree("A")
+        >>> t._root
+        "A"
+        >>> t._left is None
+        True
+        >>> t._right is None
+        True
+        """
         if root is None:
             self._root = None
             self._left = None
@@ -225,7 +241,6 @@ def build_preference_tree(file:str) -> Tree:
             tree.insert_sequence(match)
     print(tree)
     return tree
-
 
 
 

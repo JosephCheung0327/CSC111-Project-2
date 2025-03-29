@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import sys
 import random
+import tree
 
 # Import the add_user() function from user_network.py
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -62,7 +63,6 @@ class DestinyApp:
         - if hasattr(self, 'username_entry'): isinstance(self.username_entry, tk.Entry)
         - if hasattr(self, 'status_label'): isinstance(self.status_label, tk.Label)
         - if hasattr(self, 'result_label'): isinstance(self.result_label, tk.Label)
-        
     """
 
     def __init__(self, image_path, window_width=720, window_height=720):
@@ -560,11 +560,15 @@ class DestinyApp:
         self.status_label.pack(pady=10)
     
     def add_user_to_network(self, new_user, user_list):
-        """Add the newly created user to the existing user network"""
-        # First add the user to the list
+        """
+        Add the newly created user to the existing user network.
+        """
+        # Add the user to the list
         user_list.append(new_user)
         num_interested = 20
         
+        # TODO: Handle matches with tree implementation
+
         # Select random users who might be interested in the new user
         interested_users = random.sample([u for u in user_list if u != new_user], 
                                         min(num_interested, len(user_list) - 1))
@@ -578,7 +582,6 @@ class DestinyApp:
         interested_friend_size = min(50, len(user_list) - 1)  # More realistic number
         new_user.interested_friend = random.sample([u for u in user_list if u != new_user], interested_friend_size)
         
-
         # Update social connections based on matches
         new_user.social_current = [u for u in new_user.interested_friend if new_user in u.interested_friend]  # Start with matches
         
@@ -606,7 +609,9 @@ class DestinyApp:
         return user_list
 
     def submit_user_profile(self):
-        """Collect all the input values and create a new user"""
+        """
+        Collect all the input values and create a new user.
+        """
         try:
             # Get values from the inputs
             name = self.username
@@ -713,7 +718,9 @@ class DestinyApp:
             self.status_label.config(text=f"Error: {str(e)}")
     
     def show_success_page(self):
-        """Show a success page after profile creation"""
+        """
+        Show a success page after profile creation.
+        """
         # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -741,7 +748,9 @@ class DestinyApp:
         continue_button.pack(pady=30)
     
     def launch_main_app(self):
-        """Launch the main app (graph visualization or other main functionality)"""
+        """
+        Launch the main app (graph visualization or other main functionality).
+        """
         # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -754,6 +763,8 @@ class DestinyApp:
                     font=("Arial", 24), fg="white", bg="#7A8B9C")
         label.pack(pady=20)
         
+        # TODO: 
+
         # # Show the current user's matches
         # match_count = len(self.current_user.match)
         # match_text = f"You have {match_count} matches!" if match_count > 0 else "No matches yet"
@@ -796,7 +807,9 @@ class DestinyApp:
         hint_label.pack()
 
     def view_network_graph(self):
-        """Show the network graph visualization"""
+        """
+        Show the network graph visualization.
+        """
         # Import graph module here to avoid circular imports
         try:
             import graph
@@ -864,7 +877,9 @@ class DestinyApp:
             error_label.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
 
     def update_status_message(self, message):
-        """Update status message at the bottom of the window"""
+        """
+        Update status message at the bottom of the window.
+        """
         # Clear any existing status message
         for widget in self.root.winfo_children():
             if hasattr(widget, 'status_tag') and widget.status_tag:
@@ -882,7 +897,9 @@ class DestinyApp:
         status_label.pack(fill=tk.X)
 
     def print_user_list_debug(self):
-        """Print debug information about all users in the network to the terminal"""
+        """
+        Print debug information about all users in the network to the terminal.
+        """
         print("\n===== USER LIST DEBUG INFORMATION =====")
         print(f"Total users in network: {len(self.user_list)}")
         
@@ -918,23 +935,19 @@ class DestinyApp:
         print("\n==========================================")
     
     def run(self):
-        """Run the application"""
+        """
+        Run the application.
+        """
         self.root.mainloop()
 
-# Create the assets directory if it doesn't exist
-image_dir = Path('/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[05] CSC111/csc111/assignments/project2/build/assets')
-os.makedirs(image_dir, exist_ok=True)
+image_path = "destiny_home_page.png"  # The path to the PNG image for home page
 
-# Specify the path to the PNG image for home page
-image_path = '/Users/joseph/Desktop/Joseph Folder/[01] UofT/[01] Year 1/[05] CSC111/csc111/assignments/project2/build/destiny_home_page.png'
-
-# Create and run the app
 if __name__ == "__main__":
     app = DestinyApp(image_path)
     app.run()
 
-    python_ta.check_all(config={
-    'extra-imports': [],  # the names (strs) of imported modules
-    'allowed-io': [],     # the names (strs) of functions that call print/open/input
-    'max-line-length': 120
-})
+#     python_ta.check_all(config={
+#     'extra-imports': [],  # the names (strs) of imported modules
+#     'allowed-io': [],     # the names (strs) of functions that call print/open/input
+#     'max-line-length': 120
+# })
