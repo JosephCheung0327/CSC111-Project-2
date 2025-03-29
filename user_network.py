@@ -400,7 +400,7 @@ def add_fixed_users(users: list[dict]) -> None:
         ),
         User(
             name="Joseph Cheung",
-            age=18,
+            age=19,
             gender="M",
             pronouns="He/Him",
             characteristics=Characteristics(

@@ -147,27 +147,28 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
     return fig, pos
 
 def plot_romantic_connections(users: list, search_name: str = None, positions = None) -> go.Figure:
-    """Create a graph visualization showing only romantic connections between users"""
+    """
+    Create a graph visualization showing only romantic connections between users.
+    """
     G = nx.Graph()
 
     # Add all users as nodes - FIXED to handle None values
     for user in users:
-        # Handle case where romantic_current might be None
-        if user.romantic_current is None:
-            romantic_count = 0
-        else:
-            romantic_count = 1
-        
-        G.add_node(user.name, size=romantic_count)
+        G.add_node(user.name, gender=user.gender)
     
-    # Add edges ONLY for romantic_current connections - FIXED to handle None values
+    # Add edges (romantic connections between users)
     for user in users:
-        # Skip users with no romantic connections
-        if user.romantic_current is None:
-            continue
-            
-        else:
-            G.add_edge(user.name, user.romantic_current.name)
+        if hasattr(user, 'romantic_current') and user.romantic_current:
+            # Make sure romantic_current is a list
+            if isinstance(user.romantic_current, list):
+                # Add an edge for each romantic connection
+                for romantic_partner in user.romantic_current:
+                    # Only add edges in one direction to avoid duplicates
+                    if user.name < romantic_partner.name:
+                        G.add_edge(user.name, romantic_partner.name)
+            else:
+                # Handle the case where romantic_current might be a single user object
+                G.add_edge(user.name, user.romantic_current.name)
 
     if positions is None:
         pos = nx.spring_layout(G, k = 0.3, seed = 1234)

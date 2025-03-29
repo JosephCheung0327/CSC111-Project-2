@@ -86,6 +86,9 @@ class DestinyApp:
         """
         Create the initial welcome page with image and username input.
         """
+        # Unbind any mousewheel events first
+        
+
         # Clear any existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -190,6 +193,9 @@ class DestinyApp:
         """
         Create the admin page with direct access to the network graph.
         """
+        # Unbind any mousewheel events first
+        self.root.unbind_all("<MouseWheel>")
+
         # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -282,16 +288,8 @@ class DestinyApp:
         
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
-    
-        # Enable mousewheel/trackpad scrolling
-        def _on_mousewheel(event):
-            # For Windows and macOS
-            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-            
-        def _on_scrollwheel(event):
-            # For macOS with trackpad
-            canvas.yview_scroll(-1 * int(event.delta), "units")
-        
+
+        # Define mousewheel event handlers first before using them
         def _bound_to_mousewheel(event):
             # Bind scrolling when mouse enters the canvas
             if sys.platform == 'darwin':  # macOS
@@ -305,6 +303,26 @@ class DestinyApp:
                 canvas.unbind_all("<MouseWheel>")
             else:  # Windows and others
                 canvas.unbind_all("<MouseWheel>")
+
+        # Enable mousewheel/trackpad scrolling
+        def _on_mousewheel(event):
+            # For Windows and macOS
+            try:
+                canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            except (tk.TclError, RuntimeError):
+                # Widget no longer exists, unbind the event
+                if sys.platform == 'darwin':  # macOS
+                    self.root.unbind_all("<MouseWheel>")
+                else:  # Windows and others
+                    self.root.unbind_all("<MouseWheel>")
+        
+        def _on_scrollwheel(event):
+            # For macOS with trackpad
+            try:
+                canvas.yview_scroll(-1 * int(event.delta), "units")
+            except (tk.TclError, RuntimeError):
+                # Widget no longer exists, unbind the event
+                self.root.unbind_all("<MouseWheel>")
         
         # Bind events to the canvas
         canvas.bind('<Enter>', _bound_to_mousewheel)
@@ -550,7 +568,7 @@ class DestinyApp:
                                 font=("Arial", 18, "bold"), fg="white", bg="#7A8B9C")
         priority_heading.pack(pady=(30, 10))
 
-        priority_description = tk.Label(scroll_frame, text="Drag attributes to rank them by importance (top = most important)",
+        priority_description = tk.Label(scroll_frame, text="Select attributes and use the buttons to rank them by importance (top = most important)",
                                 font=("Arial", 14), fg="white", bg="#7A8B9C")
         priority_description.pack(pady=(0, 20))
         
@@ -559,8 +577,9 @@ class DestinyApp:
         priority_frame.pack(fill="x", padx=20, pady=10)
 
         # Define the attributes to rank
-        attribute_list = ["MBTI", "Interests", "Ethnicity", "Politics", "Religion", 
-                        "Major", "Language", "Pets", "Outdoor Activities", "Movies"]
+        attribute_list = ["Ethnicity", "Interests", "MBTI", "Communication Type", "Political Interests",
+                          "Religion", "Major", "Year", "Language", "Likes Pets",
+                          "Likes Outdoor Activities", "Enjoys Watching Movies"]
 
         # Create a listbox for drag and drop
         priority_listbox = tk.Listbox(priority_frame, 
@@ -616,8 +635,28 @@ class DestinyApp:
                             activebackground="#C0392B", activeforeground="white")
         down_button.pack()
 
-        # Store the listbox in self.attributes so we can access it later
-        self.attributes["priority_ranking"] = priority_listbox
+        self.priority_attributes = []
+        for i in range(priority_listbox.size()):
+            self.priority_attributes.append(priority_listbox.get(i))
+
+        # Map UI attribute names to internal attribute keys
+        priority_mapping = {
+            "MBTI": "mbti",
+            "Ethnicity": "ethnicity", 
+            "Communication Type": "communication_type",
+            "Interests": "interests",
+            "Political Interests": "political_interests",
+            "Religion": "religion",
+            "Major": "major",
+            "Year": "year",
+            "Language": "language",
+            "Likes Pets": "likes_pets",
+            "Likes Outdoor Activities": "likes_outdoor_activities",
+            "Enjoys Watching Movies": "enjoys_watching_movies"
+        }
+
+        # Convert user-friendly names to internal attribute keys
+        self.priority_attributes = [priority_mapping.get(attr, attr.lower()) for attr in self.priority_attributes]
 
         # Add some space
         spacer = tk.Label(scroll_frame, text="", bg="#7A8B9C")
@@ -638,119 +677,14 @@ class DestinyApp:
         bottom_spacer = tk.Label(scroll_frame, text="", bg="#7A8B9C")
         bottom_spacer.pack(pady=50)
     
-    def add_user_to_network(self, new_user, user_list, prioritized_attributes):
+    def add_user_to_network(self, new_user, user_list):
         """
         Add the newly created user to the existing user network.
         """
         # Add the user to the list
         user_list.append(new_user)
-        
-        # Define prioritized_attributes here - this was missing!
-        # Get attribute priorities from the listbox
-        attribute_priorities = []
-        for i in range(self.attributes["priority_ranking"].size()):
-            attribute_priorities.append(self.attributes["priority_ranking"].get(i))
 
-        # Map UI attribute names to the attribute keys used in the tree module
-        priority_mapping = {
-            "MBTI": "mbti",
-            "Interests": "interests", 
-            "Ethnicity": "ethnicity",
-            "Politics": "political_interests",
-            "Religion": "religion",
-            "Major": "major",
-            "Language": "language",
-            "Pets": "likes_pets",
-            "Outdoor Activities": "likes_outdoor_activities",
-            "Movies": "enjoys_watching_movies"
-        }
-
-        # Create the prioritized attributes list
-        prioritized_attributes = [priority_mapping.get(attr, attr.lower()) for attr in attribute_priorities]
-        
-        # Use the tree module to find matches based on user priorities
-        preference_tree = tree.BinaryTree("")
-        for existing_user in user_list:
-            if existing_user != new_user:
-                # Create matches data based on attribute comparisons
-                match_data = []
-                
-                # Compare attributes based on priority
-                for attr in prioritized_attributes:
-                    if attr == "mbti":
-                        # MBTI similarity (1 if same, 0 if different)
-                        match_data.append(1 if existing_user.characteristics.mbti == new_user.characteristics.mbti else 0)
-                    elif attr == "interests":
-                        # Interest overlap (1 if any shared interests, 0 otherwise)
-                        shared = set(existing_user.characteristics.interests) & set(new_user.characteristics.interests)
-                        match_data.append(1 if shared else 0)
-                    elif attr in ["likes_pets", "likes_outdoor_activities", "enjoys_watching_movies"]:
-                        # Boolean attributes (1 if same preference, 0 if different)
-                        new_val = getattr(new_user.characteristics, attr)
-                        existing_val = getattr(existing_user.characteristics, attr)
-                        match_data.append(1 if new_val == existing_val else 0)
-                    else:
-                        # Other string attributes (1 if same, 0 if different)
-                        new_val = getattr(new_user.characteristics, attr, None)
-                        existing_val = getattr(existing_user.characteristics, attr, None)
-                        match_data.append(1 if new_val == existing_val else 0)
-                
-                # Add the user name at the end
-                match_data.append(existing_user.name)
-                
-                # Insert the sequence into the preference tree
-                preference_tree.insert_sequence(match_data)
-            
-        # Get recommendations from the tree
-        recommendations = preference_tree.run_preference_tree()
-        print(f"Top recommendations for {new_user.name}: {recommendations[:10]}")
-
-        # Connect the user with their top recommendations
-        for rec_name in recommendations[:10]:
-            rec_user = next((u for u in user_list if u.name == rec_name), None)
-            if rec_user:
-                # Add to social connections
-                if rec_user not in new_user.social_current:
-                    new_user.social_current.append(rec_user)
-                if new_user not in rec_user.social_current:
-                    rec_user.social_current.append(new_user)
-
-
-        # # Select random users who might be interested in the new user
-        # interested_users = random.sample([u for u in user_list if u != new_user], 
-        #                                 min(num_interested, len(user_list) - 1))
-        
-        # # Add the new user to their interested_friend lists
-        # for user in interested_users:
-        #     if new_user not in user.interested_friend:
-        #         user.interested_friend.append(new_user)
-        
-        # # Assign random users to the new user's interested_friend list
-        # interested_friend_size = min(50, len(user_list) - 1)  # More realistic number
-        # new_user.interested_friend = random.sample([u for u in user_list if u != new_user], interested_friend_size)
-        
-        # # Update social connections based on matches
-        # new_user.social_current = [u for u in new_user.interested_friend if new_user in u.interested_friend]  # Start with matches
-        
-        # # Add some additional social connections that aren't matches
-        # additional_connections = random.randint(5, 15)
-        # potential_connections = [u for u in user_list if u != new_user and u not in new_user.social_current]
-        # if potential_connections:
-        #     additional_social = random.sample(potential_connections, 
-        #                                     min(additional_connections, len(potential_connections)))
-        #     new_user.social_current.extend(additional_social)
-            
-        #     # Make connections bidirectional
-        #     for connection in new_user.social_current:
-        #         if new_user not in connection.social_current:
-        #             connection.social_current.append(new_user)
-        
-        # Update the social_degree attribute
-        new_user.update_social_degree()
-        for user in new_user.social_current:
-            user.update_social_degree()
-        
-        print(f"Added user {new_user.name} with {len(new_user.social_current)} social connections")
+        print(f"Added user {new_user.name}.")
         
         return user_list
 
@@ -811,27 +745,6 @@ class DestinyApp:
             likes_pets = self.attributes["likes_pets"].get()
             likes_outdoor_activities = self.attributes["likes_outdoor_activities"].get()
             enjoys_watching_movies = self.attributes["enjoys_watching_movies"].get()
-            
-            attribute_priorities = []
-            for i in range(self.attributes["priority_ranking"].size()):
-                attribute_priorities.append(self.attributes["priority_ranking"].get(i))
-
-            # Map UI attribute names to the attribute keys used in the tree module
-            priority_mapping = {
-                "MBTI": "mbti",
-                "Interests": "interests", 
-                "Ethnicity": "ethnicity",
-                "Politics": "political_interests",
-                "Religion": "religion",
-                "Major": "major",
-                "Language": "language",
-                "Pets": "likes_pets",
-                "Outdoor Activities": "likes_outdoor_activities",
-                "Movies": "enjoys_watching_movies"
-            }
-
-            # Create the prioritized attributes list
-            prioritized_attributes = [priority_mapping.get(attr, attr.lower()) for attr in attribute_priorities]
 
             # Create the user object
             user = User(
@@ -865,13 +778,13 @@ class DestinyApp:
                 print(f"Generated initial user list with {len(self.user_list)} users")
             
             # Add the user to the network
-            self.user_list = self.add_user_to_network(user, self.user_list, prioritized_attributes)
+            self.user_list = self.add_user_to_network(user, self.user_list)
 
             # Print debug information to terminal
             self.print_user_list_debug()
             
             # Display success message
-            self.status_label.config(text=f"Profile created successfully for {name}!")
+            self.status_label.config(text=f"Profile created successfully for {name}!", fg="white")
             
             # Store the user object for later use
             self.current_user = user
@@ -888,36 +801,370 @@ class DestinyApp:
         """
         Show a success page after profile creation.
         """
+        # Unbind any mousewheel events first
+        self.root.unbind_all("<MouseWheel>")
+        
+        # Clear existing widgets
+        for widget in self.root.winfo_children():
+            widget.destroy()
+                
+        # Success message
+        frame = tk.Frame(self.root, bg="#7A8B9C")
+        frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+            
+        success_label = tk.Label(frame, text="Profile Created Successfully!",
+                            font=("Arial", 24, "bold"), fg="white", bg="#7A8B9C")
+        success_label.pack(pady=20)
+            
+        name_label = tk.Label(frame, text=f"Welcome, {self.username}!",
+                        font=("Arial", 18), fg="white", bg="#7A8B9C")
+        name_label.pack(pady=10)
+            
+        message = tk.Label(frame, text="Your profile has been created and added to the system.",
+                        font=("Arial", 14), fg="white", bg="#7A8B9C")
+        message.pack(pady=10)
+            
+        # Add a button to launch the matching page
+        continue_button = tk.Button(frame, text="Find Matches", font=("Arial", 16),
+                                bg="#4CAF50", fg="black", padx=20, pady=10,
+                                command=self.show_matching_page)
+        continue_button.pack(pady=30)
+
+    def show_matching_page(self):
+        """
+        Show a page where users can swipe through recommended matches and connect with them.
+        """
+        # Unbind any mousewheel events first
+        self.root.unbind_all("<MouseWheel>")
+
         # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
             
-        # Success message
+        self.root.configure(bg="#7A8B9C")
+        
+        # Get the dating goal of the current user
+        dating_goal = self.current_user.dating_goal
+        connection_type = "friendship" if dating_goal == "Meeting new friends" else "romantic"
+        
+        # Main frame
+        main_frame = tk.Frame(self.root, bg="#7A8B9C")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Header
+        header = tk.Label(main_frame, text="Find Your Matches", 
+                        font=("Arial", 28, "bold"), fg="white", bg="#7A8B9C")
+        header.pack(pady=(30, 10))
+        
+        # Description
+        if connection_type == "friendship":
+            desc = "Find new friends based on your preferences"
+        else:
+            desc = "Find a romantic partner based on your preferences"
+        
+        description = tk.Label(main_frame, text=desc,
+                            font=("Arial", 16), fg="white", bg="#7A8B9C")
+        description.pack(pady=(0, 20))
+
+        tree.data_wrangling(self.priority_attributes, self.user_list)
+        preference_tree = tree.build_preference_tree("data.csv")
+        recommendation_names = preference_tree.run_preference_tree()
+        
+        # Convert names to user objects
+        self.recommendations = []
+        for name in recommendation_names:
+            user = next((u for u in self.user_list if u.name == name), None)
+            if user:
+                self.recommendations.append(user)
+        
+        if not self.recommendations:
+            # No recommendations
+            no_matches = tk.Label(main_frame, text="No potential matches found!",
+                                font=("Arial", 20), fg="#E74C3C", bg="#7A8B9C")
+            no_matches.pack(pady=40)
+            
+            back_button = tk.Button(main_frame, text="Return to Home", font=("Arial", 16),
+                                bg="#3498DB", fg="black", padx=20, pady=10,
+                                command=lambda: self.create_welcome_page(self.image_path))
+            back_button.pack(pady=30)
+            return
+        
+        # Create a frame for the current recommendation
+        self.match_frame = tk.Frame(main_frame, bg="#5A6B7C", padx=40, pady=40,
+                                highlightbackground="#3A4B5C", highlightthickness=2)
+        self.match_frame.pack(pady=20, fill=tk.BOTH, expand=True, padx=80)
+        
+        # Initialize the match counter
+        self.matches_made = 0
+        
+        # Display the first recommendation
+        self.display_current_recommendation()
+        
+        # Create the buttons frame
+        button_frame = tk.Frame(main_frame, bg="#7A8B9C")
+        button_frame.pack(pady=30)
+        
+        # Pass button
+        pass_button = tk.Button(button_frame, text="Pass", font=("Arial", 16),
+                            bg="#E74C3C", fg="black", padx=30, pady=15,
+                            command=self.pass_current_recommendation)
+        pass_button.pack(side=tk.LEFT, padx=15)
+        
+        # Match button
+        match_button = tk.Button(button_frame, text="Match!", font=("Arial", 16, "bold"),
+                            bg="#2ECC71", fg="black", padx=30, pady=15,
+                            command=self.match_current_recommendation)
+        match_button.pack(side=tk.LEFT, padx=15)
+        
+        # Exit button
+        exit_button = tk.Button(button_frame, text="Exit", font=("Arial", 16),
+                            bg="#95A5A6", fg="black", padx=30, pady=15,
+                            command=self.launch_main_app)
+        exit_button.pack(side=tk.LEFT, padx=15)
+        
+        # Display counter
+        counter_text = f"Showing match 1 of {len(self.recommendations)}"
+        self.counter_label = tk.Label(main_frame, text=counter_text,
+                                    font=("Arial", 14), fg="white", bg="#7A8B9C")
+        self.counter_label.pack(pady=(20, 0))
+
+    def display_current_recommendation(self):
+        """
+        Display the current recommendation in the match frame.
+        """
+        # Clear the match frame
+        for widget in self.match_frame.winfo_children():
+            widget.destroy()
+        
+        # Get the current recommendation
+        if not self.recommendations:
+            # No more recommendations
+            no_more = tk.Label(self.match_frame, text="No more matches!",
+                            font=("Arial", 20), fg="white", bg="#5A6B7C")
+            no_more.pack(pady=40)
+            return
+        
+        user = self.recommendations[0]  # Always show the first user in the list
+        
+        # Create the profile display
+        name = tk.Label(self.match_frame, text=user.name,
+                    font=("Arial", 24, "bold"), fg="white", bg="#5A6B7C")
+        name.pack(pady=(0, 20))
+        
+        # Basic info
+        basic_info = tk.Label(self.match_frame, 
+                        text=f"{user.age} • {user.gender} • {user.characteristics.mbti}",
+                        font=("Arial", 16), fg="white", bg="#5A6B7C")
+        basic_info.pack(pady=(0, 15))
+        
+        # Major & Year
+        major_year = tk.Label(self.match_frame, 
+                        text=f"{user.characteristics.major}, Year {user.characteristics.year}",
+                        font=("Arial", 16), fg="white", bg="#5A6B7C")
+        major_year.pack(pady=(0, 15))
+        
+        # Interests
+        interests_label = tk.Label(self.match_frame, text="Interests:",
+                            font=("Arial", 16, "bold"), fg="white", bg="#5A6B7C")
+        interests_label.pack(pady=(15, 5), anchor="w", padx=40)
+        
+        interests_text = ", ".join(user.characteristics.interests)
+        interests = tk.Label(self.match_frame, text=interests_text,
+                        font=("Arial", 14), fg="white", bg="#5A6B7C",
+                        wraplength=400, justify="left")
+        interests.pack(pady=(0, 15), anchor="w", padx=40)
+        
+        # Update the counter label - add safety check
+        try:
+            if hasattr(self, 'counter_label') and self.counter_label.winfo_exists():
+                counter_text = f"Showing match {self.recommendations.index(user) + 1} of {len(self.recommendations)}"
+                self.counter_label.config(text=counter_text)
+        except (tk.TclError, AttributeError):
+            # If counter_label doesn't exist or has been destroyed, create a new one
+            pass
+
+    def pass_current_recommendation(self):
+        """
+        Skip the current recommendation and show the next one.
+        """
+        if self.recommendations:
+            self.recommendations.pop(0)  # Remove the current recommendation
+            
+            if not self.recommendations:
+                # No more recommendations, go to the summary page
+                self.show_matching_summary()
+                return
+            
+            self.display_current_recommendation()
+
+    def match_current_recommendation(self):
+        """
+        Match with the current recommendation and show the next one.
+        """
+        # Get the current recommendation
+        if not self.recommendations:
+            return
+        
+        matched_user = self.recommendations.pop(0)  # Remove and get the current recommendation
+        dating_goal = self.current_user.dating_goal
+        
+        # Add connection based on dating goal
+        if dating_goal == "Meeting new friends":
+            # Add social connection
+            if matched_user not in self.current_user.social_current:
+                self.current_user.social_current.append(matched_user)
+            if self.current_user not in matched_user.social_current:
+                matched_user.social_current.append(self.current_user)
+            
+            # Update social degree
+            self.current_user.update_social_degree()
+            matched_user.update_social_degree()
+            
+            # Show success message
+            success_text = f"You've connected with {matched_user.name}!"
+            self.show_temporary_message(success_text, "#2ECC71")
+            
+            # Increment match counter
+            self.matches_made += 1
+            
+            if not self.recommendations:
+                # No more recommendations
+                self.root.after(1500, self.show_matching_summary)
+                return
+            
+            # Display next recommendation after a short delay
+            self.root.after(1500, self.display_current_recommendation)
+            
+        else:
+            # Add romantic connection
+            if not hasattr(self.current_user, 'romantic_current') or self.current_user.romantic_current is None:
+                self.current_user.romantic_current = []
+                
+            if not hasattr(matched_user, 'romantic_current') or matched_user.romantic_current is None:
+                matched_user.romantic_current = []
+                
+            self.current_user.romantic_current.append(matched_user)
+            matched_user.romantic_current.append(self.current_user)
+            
+            # Show success message
+            success_text = f"You've matched with {matched_user.name}!"
+            self.show_temporary_message(success_text, "#E74C3C")
+            
+            # Increment match counter
+            self.matches_made += 1
+            
+            # For romantic connections, immediately go to summary after one match
+            self.root.after(1500, self.show_matching_summary)
+
+    def show_temporary_message(self, message, color="#2ECC71"):
+        """
+        Show a temporary message overlay on the match frame.
+        """
+        # Create a semi-transparent overlay
+        overlay = tk.Frame(self.match_frame, bg="#5A6B7C")
+        overlay.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=1, relheight=1)
+        
+        # Message
+        msg = tk.Label(overlay, text=message,
+                    font=("Arial", 24, "bold"), fg=color, bg="#5A6B7C")
+        msg.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        # Remove overlay after 1.5 seconds
+        self.root.after(1500, overlay.destroy)
+
+    def show_matching_summary(self):
+        """
+        Show a summary of the user's matches.
+        """
+        # Unbind any mousewheel events first
+        self.root.unbind_all("<MouseWheel>")
+
+        # Clear existing widgets
+        for widget in self.root.winfo_children():
+            widget.destroy()
+            
         frame = tk.Frame(self.root, bg="#7A8B9C")
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         
-        success_label = tk.Label(frame, text="Profile Created Successfully!",
-                              font=("Arial", 24, "bold"), fg="white", bg="#7A8B9C")
-        success_label.pack(pady=20)
+        # Header
+        header = tk.Label(frame, text="Matching Complete!",
+                        font=("Arial", 28, "bold"), fg="white", bg="#7A8B9C")
+        header.pack(pady=20)
         
-        name_label = tk.Label(frame, text=f"Welcome, {self.username}!",
-                          font=("Arial", 18), fg="white", bg="#7A8B9C")
-        name_label.pack(pady=10)
+        # Results
+        dating_goal = self.current_user.dating_goal
         
-        message = tk.Label(frame, text="Your profile has been created and added to the system.",
-                        font=("Arial", 14), fg="white", bg="#7A8B9C")
-        message.pack(pady=10)
+        if dating_goal == "Meeting new friends":
+            social_count = len(self.current_user.social_current)
+            results_text = f"You've made {self.matches_made} new friends!"
+            
+            results = tk.Label(frame, text=results_text,
+                            font=("Arial", 20), fg="white", bg="#7A8B9C")
+            results.pack(pady=20)
+            
+            if self.matches_made > 0:
+                connections = tk.Label(frame, text=f"Total social connections: {social_count}",
+                                    font=("Arial", 16), fg="white", bg="#7A8B9C")
+                connections.pack(pady=10)
+                
+                # List new connections
+                if self.matches_made > 0:
+                    new_connections_label = tk.Label(frame, text="Your new connections:",
+                                                font=("Arial", 16, "bold"), fg="white", bg="#7A8B9C")
+                    new_connections_label.pack(pady=(20, 10))
+                    
+                    # Create a scrollable frame for connections
+                    connections_canvas = tk.Canvas(frame, bg="#7A8B9C", highlightthickness=0,
+                                            width=300, height=min(200, self.matches_made * 30))
+                    connections_canvas.pack()
+                    
+                    scrollable_frame = tk.Frame(connections_canvas, bg="#7A8B9C")
+                    scrollable_frame_id = connections_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+                    
+                    # Add connections to the scrollable frame
+                    for i, user in enumerate(self.current_user.social_current[-self.matches_made:]):
+                        connection = tk.Label(scrollable_frame, text=f"{i+1}. {user.name}",
+                                        font=("Arial", 14), fg="white", bg="#7A8B9C",
+                                        anchor="w", padx=10)
+                        connection.pack(fill="x", pady=2)
+                    
+                    # Configure the scrollregion
+                    scrollable_frame.bind("<Configure>", lambda e: connections_canvas.configure(
+                        scrollregion=connections_canvas.bbox("all")))
+        else:
+            # Romantic match summary
+            if self.matches_made > 0:
+                matched_user = self.current_user.romantic_current[0]
+                results_text = f"Congratulations! You've matched with {matched_user.name}!"
+                
+                results = tk.Label(frame, text=results_text,
+                                font=("Arial", 20), fg="white", bg="#7A8B9C")
+                results.pack(pady=20)
+                
+                match_details = tk.Label(frame, 
+                                    text=f"{matched_user.age} • {matched_user.gender} • {matched_user.characteristics.mbti}",
+                                    font=("Arial", 16), fg="white", bg="#7A8B9C")
+                match_details.pack(pady=10)
+            else:
+                results_text = "You didn't make any romantic connections."
+                
+                results = tk.Label(frame, text=results_text,
+                                font=("Arial", 20), fg="white", bg="#7A8B9C")
+                results.pack(pady=20)
         
-        # Add a button to launch the main app or return to home
+        # Add button to continue to main app
         continue_button = tk.Button(frame, text="Continue to App", font=("Arial", 16),
-                                 bg="#4CAF50", fg="black", padx=20, pady=10,
-                                 command=self.launch_main_app)
+                                bg="#4CAF50", fg="black", padx=20, pady=10,
+                                command=self.launch_main_app)
         continue_button.pack(pady=30)
     
     def launch_main_app(self):
         """
         Launch the main app (graph visualization or other main functionality).
         """
+        # Unbind any mousewheel events first
+        self.root.unbind_all("<MouseWheel>")
+
         # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -942,11 +1189,12 @@ class DestinyApp:
         
         # Show social connections
         social_count = len(self.current_user.social_current)
-        social_text = f"You have {social_count} friends!"
+        romantic_count = len(self.current_user.romantic_current)
+        connections_text = f"You have {social_count} friends. You have f{romantic_count} romantic partner."
         
-        social_label = tk.Label(frame, text=social_text,
+        connections_label = tk.Label(frame, text=connections_text,
                             font=("Arial", 18), fg="white", bg="#7A8B9C")
-        social_label.pack(pady=10)
+        connections_label.pack(pady=10)
         
         # Create button frame for better layout
         button_frame = tk.Frame(frame, bg="#7A8B9C")

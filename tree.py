@@ -15,7 +15,7 @@ users_list = user_network.users
 char1 = users_list[-1].characteristics
 
 
-def filter_user_by_dating_goal (users:List[user_network.User],user:user_network.User)-> list[user_network.User]:
+def filter_user_by_dating_goal (users:List[user_network.User],user:user_network.User) -> list[user_network.User]:
     """Filters users who have the same dating goal as the given user, excluding themselves"""
 
     return [u for u in users if u.dating_goal == user.dating_goal and u!= user]
@@ -49,14 +49,13 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
             for key, value in priority_dict.items()
             if value == rank
         ]
-
         return ordered_attributes
 
     except ValueError as e:
         print(f"Error: {e}")
         return add_priority(Characteristics)
         
-def data_wrangling():
+def data_wrangling(user_characteristics: Optional[user_network.Characteristics] = char1, users_list: List[user_network.User] = users_list) -> None:
     """
     Creates a CSV file containing user data, including their characteristics and potential matches.
 
@@ -67,7 +66,10 @@ def data_wrangling():
       - A value of 1 indicates a match in characteristics with the current user.
       - A value of 0 indicates no match.
     """
-    heading = add_priority(char1)
+    if isinstance(user_characteristics, list):
+        heading = user_characteristics
+    else:
+        heading = add_priority(user_characteristics)
 
     potential_users = filter_user_by_dating_goal(users_list, users_list[-1])
 
