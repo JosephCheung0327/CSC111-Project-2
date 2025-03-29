@@ -8,7 +8,7 @@ import random
 # Import the add_user() function from user_network.py
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
-    from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users
+    from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love
 except ImportError:
     print("Error importing from user_network.py")
 
@@ -26,6 +26,8 @@ class DestinyApp:
     status_label: tk.Label
     result_label: tk.Label
     user_list: list[User]
+    user_list_friends: list[User]
+    user_list_love: list[User]
     current_user: User
 
 
@@ -778,6 +780,9 @@ class DestinyApp:
             
             # Add the user to the network
             self.user_list = self.add_user_to_network(user, self.user_list)
+            add_fixed_users(user_looking_for_friends)
+            self.user_list_friend = self.add_user_to_network(user, user_looking_for_friends)
+            self.user_list_love = self.add_user_to_network(user, user_looking_for_love)
 
             # Print debug information to terminal
             self.print_user_list_debug()
