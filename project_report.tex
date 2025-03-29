@@ -83,6 +83,17 @@ These two network graphs are created from \texttt{user\_list} (for generating al
 We will generate these interactive graphs using plotly, an interactive graphing Python library (Plotly, 2025).
 Then, as the developers of the application, we can zoom in and out of the graph, and view the detailed information of different users in our system.
 
+
+\\
+Question 6: 
+(tree part): Initially, we implemented the tree using the basic <self._root> and <self._subtree> structure to align with the format of Exercise 2's animal tree. However, we found that using a binary tree with self._root, self._left, and self._right was more suitable for our recommendation system. This approach is particularly effective because all the 1s in the tree, representing users most relevant to the target user, are positioned along the leftmost branch. By using a binary tree, we can simplify the process of generating a recommendation list by recursively traversing only the leftmost branch.
+
+
+\\
+Question 7:
+Absolutely! The graph effectively visualizes connections between users through edges, allowing us, as editors, to review potential relationships. Additionally, the tree structure sets priorities at different levels, enabling the creation of a customized tree and a corresponding recommendation list. This successfully fulfills our goal of developing a connection-based application.
+
+
 \section*{References}
 
 Plotly. (2025). \textit{Plotly}.
