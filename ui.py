@@ -918,8 +918,8 @@ class DestinyApp:
         
         # Exit button
         exit_button = tk.Button(button_frame, text="Exit", font=("Arial", 16),
-                            bg="#95A5A6", fg="black", padx=30, pady=15,
-                            command=self.launch_main_app)
+                    bg="#95A5A6", fg="black", padx=30, pady=15,
+                    command=lambda: self.create_welcome_page(self.image_path))
         exit_button.pack(side=tk.LEFT, padx=15)
         
         # Display counter
@@ -1029,11 +1029,11 @@ class DestinyApp:
             
             if not self.recommendations:
                 # No more recommendations
-                self.root.after(1500, self.show_matching_summary)
+                self.root.after(200, self.show_matching_summary)
                 return
             
             # Display next recommendation after a short delay
-            self.root.after(1500, self.display_current_recommendation)
+            self.root.after(200, self.display_current_recommendation)
             
         else:
             # Add romantic connection
@@ -1190,7 +1190,7 @@ class DestinyApp:
         # Show social connections
         social_count = len(self.current_user.social_current)
         romantic_count = len(self.current_user.romantic_current)
-        connections_text = f"You have {social_count} friends. You have f{romantic_count} romantic partner."
+        connections_text = f"You have {social_count} friends. You have {romantic_count} romantic partner."
         
         connections_label = tk.Label(frame, text=connections_text,
                             font=("Arial", 18), fg="white", bg="#7A8B9C")
@@ -1211,15 +1211,6 @@ class DestinyApp:
                             bg="#E74C3C", fg="black", padx=20, pady=10,
                             command=self.root.destroy)
         close_button.pack(side=tk.LEFT, padx=10)
-        
-        # Add a hint about admin mode at the bottom
-        hint_frame = tk.Frame(self.root, bg="#7A8B9C")
-        hint_frame.pack(side=tk.BOTTOM, fill=tk.X, pady=10)
-        
-        hint_label = tk.Label(hint_frame, 
-                            text="Hint: To view the network graph, return to home and login as 'admin'",
-                            font=("Arial", 12), fg="#D5D8DC", bg="#7A8B9C")
-        hint_label.pack()
 
     def view_network_graph(self):
         """
@@ -1279,7 +1270,7 @@ class DestinyApp:
             browser_thread.start()
             
             # Remove the temporary message after a delay
-            self.root.after(3500, lambda: temp_label.destroy())
+            self.root.after(200, lambda: temp_label.destroy())
             
             # Keep the main window responsive
             self.update_status_message("Graph launching in browser. Close browser tab when done.")

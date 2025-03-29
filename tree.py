@@ -55,7 +55,7 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
         print(f"Error: {e}")
         return add_priority(Characteristics)
         
-def data_wrangling(user_characteristics: Optional[user_network.Characteristics] = char1, users_list: List[user_network.User] = users_list) -> None:
+def data_wrangling(user_characteristics: Optional[user_network.Characteristics] = char1, users_list: List[user_network.User] = users_list, file_name: Optional[str] = "data.csv") -> None:
     """
     Creates a CSV file containing user data, including their characteristics and potential matches.
 
@@ -65,6 +65,9 @@ def data_wrangling(user_characteristics: Optional[user_network.Characteristics] 
     - Each row represents a potential match, with a ranking value of 0 or 1.
       - A value of 1 indicates a match in characteristics with the current user.
       - A value of 0 indicates no match.
+
+    >>> data_wrangling()
+
     """
     if isinstance(user_characteristics, list):
         heading = user_characteristics
@@ -92,7 +95,7 @@ def data_wrangling(user_characteristics: Optional[user_network.Characteristics] 
 
     # print(data)
     df = pd.DataFrame(data)
-    csv_file_path = 'data.csv'
+    csv_file_path = file_name
 
     df.to_csv(csv_file_path, index = False)
 
@@ -165,7 +168,11 @@ class BinaryTree:
 
     def insert_sequence(self, items: list) -> None:
         """
-        Insert a sequence of items into the binary tree.
+        Insert a sequence of items into the binary tree. 
+        The first attribute is ranked at depth 1, the second at depth 2, and so on.
+        A value of `1` (a match) goes to the left child.
+        A value of `0` (a non-match) goes to the right child.
+
         >>> t = BinaryTree("")
         >>> t.insert_sequence([1, 1, "Charlie"])
         >>> t.insert_sequence([0, 1, "Bob"])
@@ -204,6 +211,17 @@ class BinaryTree:
 
 
     def to_nested_list(self) -> Optional[list]:
+        """
+        Returns a nested list representation of the binary tree, \
+        and has a format of [root, left_subtree, right_subtree].
+
+        None is returned if the node is empty
+        
+        >>> t = BinaryTree("")
+        >>> t.insert_sequence([1, 1, "Charlie"])
+        ['', [1, [1, ['Charlie'], None], None], None]
+        """
+
         if self._root is None:
             return None
         return [self._root,
@@ -212,16 +230,18 @@ class BinaryTree:
                 
 
 
-    def run_preference_tree(self) -> list:
+    def run_preference_tree(self) -> list[str]:
         """
+        Return a list of ranked recommended users by traversing the binary tree in the preferencce-based manner.
+
         >>> t = BinaryTree("")
         >>> t.insert_sequence([1, 1, "Charlie"])
         >>> t.insert_sequence([0, 1, "Bob"])
         >>> t.insert_sequence([1, 0, "Alice"])
         >>> t.insert_sequence([1, 1, "Mary"])
-        >>> t.insert_sequence([0, 0, "Hi"])
+        >>> t.insert_sequence([0, 0, "Justin"])
         >>> t.run_preference_tree()
-        ['Charlie', 'Mary', 'Alice', 'Bob', 'Hi']
+        ['Charlie', 'Mary', 'Alice', 'Bob', 'Justin']
         """
         recommendation_list = []
 
@@ -240,7 +260,17 @@ class BinaryTree:
 
        
 
-def generate_10_people_list(tree:BinaryTree, full_list:list)->list:
+def generate_10_people_list(tree: BinaryTree, full_list: list)->list:
+    """
+    Generates a list of 10 people by sequentially removing the first element from the provided full_list.
+
+    >>> tree = BinaryTree("")
+    >>> people = ["Person1", "Person2", "Person3", "Person4", "Person5", 
+    ...           "Person6", "Person7", "Person8", "Person9", "Person10", "Person11"]
+    >>> generate_10_people_list(tree, people)
+    ['Person1', 'Person2', 'Person3', 'Person4', 'Person5', 'Person6', 'Person7', 'Person8', 'Person9', 'Person10']
+
+    """
     full_recommendation_list = tree.run_preference_tree
     
     new_list = []
@@ -253,6 +283,11 @@ def generate_10_people_list(tree:BinaryTree, full_list:list)->list:
 
 # @check_contracts
 def build_preference_tree(file:str) -> Tree:
+    """
+    Builds a preference tree from a CSV file.
+
+    """
+
     tree = BinaryTree("")
 
     with open(file) as csv_file:
@@ -264,7 +299,7 @@ def build_preference_tree(file:str) -> Tree:
             match = [int(item) for item in row[1:]]
             match.append(name)
             tree.insert_sequence(match)
-    print(tree)
+    # print(tree)
     return tree
 
 
@@ -283,9 +318,3 @@ if __name__ == "__main__":
     print(generate_10_people_list(t,result))
 
     
-    
-
-
-  
-
-  

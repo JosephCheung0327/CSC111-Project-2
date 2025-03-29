@@ -434,7 +434,7 @@ def create_app(user_list=None):
         # Handle reset button click
         if button_id == "reset-button":
             social_fig, _ = plot_user_connections(initial_user_list, positions=social_node_positions)
-            romantic_fig, _ = plot_user_connections(initial_user_list, positions=romantic_node_positions)
+            romantic_fig, _ = plot_romantic_connections(initial_user_list, positions=romantic_node_positions)  # Fixed: use plot_romantic_connections
             output_text = ""
         
         # Handle search button click
@@ -446,7 +446,7 @@ def create_app(user_list=None):
             
             # Generate figures with the search term
             social_fig, _ = plot_user_connections(initial_user_list, search_name, social_node_positions)
-            romantic_fig, _ = plot_user_connections(initial_user_list, search_name, romantic_node_positions)
+            romantic_fig, _ = plot_romantic_connections(initial_user_list, search_name, romantic_node_positions)
             
             # Find user with case-insensitive search
             selected_user = next(
@@ -456,14 +456,7 @@ def create_app(user_list=None):
             
             if selected_user:
                 friend_count = selected_user.social_degree
-
-
-                if hasattr(selected_user, 'interested_romantic') and isinstance(selected_user.interested_romantic, list):
-                    match_count = len(selected_user.interested_romantic)
-                elif hasattr(selected_user, 'topmatch') and isinstance(selected_user.topmatch, list):
-                    match_count = len(selected_user.topmatch)
-                else:
-                    match_count = 0
+                romantic_count = selected_user.romantic_degree
                 
                 output_text = html.Div([
                     html.Div([
@@ -472,7 +465,7 @@ def create_app(user_list=None):
                     ]),
                     html.Div([
                         html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
-                        html.Span(f"Romantic partners: {match_count}")
+                        html.Span(f"Romantic partners: {romantic_count}")
                     ], style={'marginTop': '5px', 'fontSize': '16px'})
                 ])
             else:

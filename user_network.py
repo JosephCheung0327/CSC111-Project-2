@@ -68,24 +68,45 @@ def generate_users_with_class(list_size: int, interested_friend_simulation_size:
             
         )
         user_list.append(user)
-    
-    # TODO: use tree methods without attribute ranking
-    
-    # Assign top matches for each user (Simulation)
-    for user in user_list:
-        user.interested_friend = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
-        user.interested_romantic = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
-
-
-    for user in user_list:
-        user.social_current = [social_current for social_current in user.interested_friend if user in social_current.interested_friend]
-        if user.interested_romantic and user.interested_romantic[0].interested_romantic[0] == user:
-            user.romantic_current = user.interested_romantic[0]
-
-    for user in user_list:
-        user.update_social_degree()
 
     return user_list
+
+def simulate_connections(user_list: list[User]) -> tuple(list[User], list[User]):
+        # TODO: use tree methods without attribute ranking
+    import tree
+        
+    users_looking_for_friends = [user for user in user_list if user.dating_goal == "Meeting new friends"]
+    users_looking_for_love = [user for user in user_list if user.dating_goal != "Meeting new friends"]
+
+
+    for user in users_looking_for_friends:
+        tree.data_wrangling(user.characteristics, users_looking_for_friends, "friends.csv")
+        t = tree.build_preference_tree('friends.csv') # Build decision tree
+        result = t.run_preference_tree() # Run the decision tree 
+        user.interested_friend = tree.generate_10_people_list(t,result)
+        user.update_social_degree()
+
+    for user in users_looking_for_love:
+        tree.data_wrangling(user.characteristic, users_looking_for_love, "love.csv")
+        t = tree.build_preference_tree('love.csv') # Build decision tree
+        result = t.run_preference_tree() # Run the decision tree 
+        user.interested_romantic = tree.generate_10_people_list(t,result)
+        user.update_romantic_degree()
+
+    
+    # # Assign top matches for each user (Simulation)
+    # for user in user_list:
+    #     user.interested_friend = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
+    #     user.interested_romantic = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
+
+
+    # for user in user_list:
+    #     user.social_current = [social_current for social_current in user.interested_friend if user in social_current.interested_friend]
+    #     if user.interested_romantic and user.interested_romantic[0].interested_romantic[0] == user:
+    #         user.romantic_current = user.interested_romantic[0]
+
+    return users_looking_for_friends, users_looking_for_love
+
 
 class Characteristics:
     """Class representing user characteristics that influence a user's preference.
@@ -183,7 +204,11 @@ class User:
     
     def update_social_degree(self):
         self.social_degree = len(self.social_current)
-    
+
+    def update_romantic_degree(self):
+        if self.romantic_current is not None:
+            self.romantic_degree = 1
+        
     def match(self, user1: User) -> None:
         """Match self with user1 as romantic relationship.
         Preconditions:
