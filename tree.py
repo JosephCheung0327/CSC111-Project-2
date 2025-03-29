@@ -190,46 +190,70 @@ class BinaryTree:
                     
             
 
-    def run_decision_tree(self,visited:set) -> list[str]:
-        """Run the decision tree based on the desgined algorithm and return a recommendation list of top 10 people matched with the user. 
-        Recurse into the branch with all 1s (leftmost branch), followed by the second leftmost branch with all 1s except the last subdivision that goes to 0. 
+    # def run_decision_tree(self,visited:set) -> list[str]:
+    #     """Run the decision tree based on the desgined algorithm and return a recommendation list of top 10 people matched with the user. 
+    #     Recurse into the branch with all 1s (leftmost branch), followed by the second leftmost branch with all 1s except the last subdivision that goes to 0. 
         
-        >>> t.to_nested_list()
-        ['', [1, [1, [['Charlie', 'Mary'], None, None], None], [0, [['Alice'], None, None], None]], [0, [1, [['Bob'], None, None], None], None]]
+    #     >>> t.to_nested_list()
+    #     ['', [1, [1, [['Charlie', 'Mary'], None, None], None], [0, [['Alice'], None, None], None]], [0, [1, [['Bob'], None, None], None], None]]
+    #     """
+    #     recommendation_list = []
+        
+    #     if not self._left and not self._right:
+    #         if id(self) not in visited and self._root is not None:
+    #             recommendation_list.append(self._root)
+    #             vistied.add(id(self))
+    #         return recommendation_list
+        
+    #     if self._left:
+    #         for child in self._left:
+    #             if len(recommendation_list)>=10:
+    #                 break
+    #             child_recs=child.run_decision_tree(visited)
+    #             recommendation_list.extend(child_recs)
+    #             if len(recommendation_list)>=10:
+    #                 recommendation_list = recommendation_list [:10]
+    #                 return recommendation_list
+                
+    #     if self._right:
+    #         for child in self._right:
+    #             if len(recommendation_list) >= 10:
+    #                 break
+    #             child_recs = child.run_decision_tree(visited)
+    #             recommendation_list.extend(child_recs)
+    #             if len(recommendation_list) >= 10:
+    #                 recommendation_list = recommendation_list[:10]
+    #                 return recommendation_list
+        
+    #     return recommendation_list[:10]
+
+    def run_preference_tree(self) -> list:
+        """
+        >>> t = BinaryTree("")
+        >>> t.insert_sequence([1, 1, "Charlie"])
+        >>> t.insert_sequence([0, 1, "Bob"])
+        >>> t.insert_sequence([1, 0, "Alice"])
+        >>> t.insert_sequence([1, 1, "Mary"])
+        >>> t.insert_sequence([0, 0, "Hi"])
+        >>> t.run_preference_tree()
+        ["Charlie", "Mary", "Alice", "Bob", "Hi"]
         """
         recommendation_list = []
-        
-        if not self._left and not self._right:
-            if id(self) not in visited and self._root is not None:
-                recommendation_list.append(self._root)
-                vistied.add(id(self))
-            return recommendation_list
-        
-        if self._left:
-            for child in self._left:
-                if len(recommendation_list)>=10:
-                    break
-                child_recs=child.run_decision_tree(visited)
-                recommendation_list.extend(child_recs)
-                if len(recommendation_list)>=10:
-                    recommendation_list = recommendation_list [:10]
-                    return recommendation_list
-                
-        if self._right:
-            for child in self._right:
-                if len(recommendation_list) >= 10:
-                    break
-                child_recs = child.run_decision_tree(visited)
-                recommendation_list.extend(child_recs)
-                if len(recommendation_list) >= 10:
-                    recommendation_list = recommendation_list[:10]
-                    return recommendation_list
-        
-        return recommendation_list[:10]
-        
 
-    
+        # If it's a leaf node, append the root value.
+        if isinstance(self._root, list):
+            recommendation_list.extend(self._root)
 
+        # Otherwise, include the current node and combine with children.
+        else:
+            if self._left:
+                recommendation_list.extend(self._left.run_preference_tree())
+            if self._right:
+                recommendation_list.extend(self._right.run_preference_tree())
+
+        return recommendation_list
+
+       
 
 # @check_contracts
 def build_preference_tree(file:str) -> Tree:
@@ -252,14 +276,15 @@ def build_preference_tree(file:str) -> Tree:
 
 if __name__ == "__main__":
     import doctest
-
     doctest.testmod()
-
     
     data_wrangling()
     
+    print("\nBuilding preference tree...")
     t = build_preference_tree('data.csv')
-    t.run_decision_tree(set())
+    
+    print("\nFinding recommendations...")
+    print(t.run_preference_tree())
     
 
     # print(t)
