@@ -137,10 +137,33 @@ class BinaryTree:
             self._right = BinaryTree(None)
 
     def __str__(self) -> str:
+        """
+        Return a string representation of the binary tree in JSON format.
+        >>> tree = BinaryTree([1, [2, None, None], [3, [4, None, None], None]])
+        >>> print(tree)
+        [
+        1,
+        [
+            2,
+            null,
+            null
+        ],
+        [
+            3,
+            [
+            4,
+            null,
+            null
+            ],
+            null
+        ]
+        ]
+        """
         return json.dumps(self.to_nested_list(), indent=2)
 
     def insert_sequence(self, items: list) -> None:
         """
+        Insert a sequence of items into the binary tree.
         >>> t = BinaryTree("")
         >>> t.insert_sequence([1, 1, "Charlie"])
         >>> t.insert_sequence([0, 1, "Bob"])

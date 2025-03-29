@@ -544,59 +544,206 @@ class DestinyApp:
             bool_false.pack(side="left")
             
             self.attributes[bool_attr] = bool_var
+
+        # Attribute priority ranking section
+        priority_heading = tk.Label(scroll_frame, text="Rank Attribute Importance",
+                                font=("Arial", 18, "bold"), fg="white", bg="#7A8B9C")
+        priority_heading.pack(pady=(30, 10))
+
+        priority_description = tk.Label(scroll_frame, text="Drag attributes to rank them by importance (top = most important)",
+                                font=("Arial", 14), fg="white", bg="#7A8B9C")
+        priority_description.pack(pady=(0, 20))
         
-        # Submit button
-        button_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
-        button_frame.pack(fill="x", padx=20, pady=30)
+        # Create a listbox with attribute names that can be reordered
+        priority_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        priority_frame.pack(fill="x", padx=20, pady=10)
+
+        # Define the attributes to rank
+        attribute_list = ["MBTI", "Interests", "Ethnicity", "Politics", "Religion", 
+                        "Major", "Language", "Pets", "Outdoor Activities", "Movies"]
+
+        # Create a listbox for drag and drop
+        priority_listbox = tk.Listbox(priority_frame, 
+                                font=("Arial", 14),
+                                bg="#5A6B7C",
+                                fg="white",
+                                selectbackground="#3A4B5C",
+                                selectforeground="white",
+                                height=len(attribute_list),
+                                width=40)
         
-        submit_button = tk.Button(button_frame, text="Create Profile", font=("Arial", 16),
-                                bg="#4CAF50", fg="black", padx=20, pady=10,
-                                command=self.submit_user_profile)
-        submit_button.pack(pady=10)
-        
-        # Status label for feedback
-        self.status_label = tk.Label(button_frame, text="", font=("Arial", 14),
-                                   fg="white", bg="#7A8B9C")
+        # Add attributes to the listbox
+        for attr in attribute_list:
+            priority_listbox.insert(tk.END, attr)
+
+        priority_listbox.pack(side="left", padx=(50, 0))
+
+       # Add up/down buttons for reordering
+        button_frame = tk.Frame(priority_frame, bg="#7A8B9C")
+        button_frame.pack(side="left", padx=10)
+
+        def move_up():
+            selected_idx = priority_listbox.curselection()
+            if not selected_idx or selected_idx[0] == 0:
+                return
+            
+            idx = selected_idx[0]
+            text = priority_listbox.get(idx)
+            priority_listbox.delete(idx)
+            priority_listbox.insert(idx-1, text)
+            priority_listbox.selection_set(idx-1)
+            priority_listbox.activate(idx-1)
+
+        def move_down():
+            selected_idx = priority_listbox.curselection()
+            if not selected_idx or selected_idx[0] == priority_listbox.size()-1:
+                return
+            
+            idx = selected_idx[0]
+            text = priority_listbox.get(idx)
+            priority_listbox.delete(idx)
+            priority_listbox.insert(idx+1, text)
+            priority_listbox.selection_set(idx+1)
+            priority_listbox.activate(idx+1)
+
+        up_button = tk.Button(button_frame, text="↑", font=("Arial", 18, "bold"), 
+                    bg="#E74C3C", fg="black", width=3, command=move_up,
+                    activebackground="#C0392B", activeforeground="white")
+        up_button.pack(pady=(0, 10))
+
+        down_button = tk.Button(button_frame, text="↓", font=("Arial", 18, "bold"), 
+                            bg="#E74C3C", fg="black", width=3, command=move_down,
+                            activebackground="#C0392B", activeforeground="white")
+        down_button.pack()
+
+        # Store the listbox in self.attributes so we can access it later
+        self.attributes["priority_ranking"] = priority_listbox
+
+        # Add some space
+        spacer = tk.Label(scroll_frame, text="", bg="#7A8B9C")
+        spacer.pack(pady=20)
+
+        # Add status label for validation messages
+        self.status_label = tk.Label(scroll_frame, text="", font=("Arial", 14, "bold"), 
+                                fg="#E74C3C", bg="#7A8B9C")
         self.status_label.pack(pady=10)
+
+        # Add submit button
+        submit_button = tk.Button(scroll_frame, text="Create Profile", font=("Arial", 18, "bold"),
+                            bg="#2ECC71", fg="black", padx=30, pady=15,
+                            command=self.submit_user_profile)
+        submit_button.pack(pady=(20, 40))
+
+        # Add another spacer at the bottom for better scrolling
+        bottom_spacer = tk.Label(scroll_frame, text="", bg="#7A8B9C")
+        bottom_spacer.pack(pady=50)
     
-    def add_user_to_network(self, new_user, user_list):
+    def add_user_to_network(self, new_user, user_list, prioritized_attributes):
         """
         Add the newly created user to the existing user network.
         """
         # Add the user to the list
         user_list.append(new_user)
-        num_interested = 20
         
-        # TODO: Handle matches with tree implementation
+        # Define prioritized_attributes here - this was missing!
+        # Get attribute priorities from the listbox
+        attribute_priorities = []
+        for i in range(self.attributes["priority_ranking"].size()):
+            attribute_priorities.append(self.attributes["priority_ranking"].get(i))
 
-        # Select random users who might be interested in the new user
-        interested_users = random.sample([u for u in user_list if u != new_user], 
-                                        min(num_interested, len(user_list) - 1))
+        # Map UI attribute names to the attribute keys used in the tree module
+        priority_mapping = {
+            "MBTI": "mbti",
+            "Interests": "interests", 
+            "Ethnicity": "ethnicity",
+            "Politics": "political_interests",
+            "Religion": "religion",
+            "Major": "major",
+            "Language": "language",
+            "Pets": "likes_pets",
+            "Outdoor Activities": "likes_outdoor_activities",
+            "Movies": "enjoys_watching_movies"
+        }
+
+        # Create the prioritized attributes list
+        prioritized_attributes = [priority_mapping.get(attr, attr.lower()) for attr in attribute_priorities]
         
-        # Add the new user to their interested_friend lists
-        for user in interested_users:
-            if new_user not in user.interested_friend:
-                user.interested_friend.append(new_user)
-        
-        # Assign random users to the new user's interested_friend list
-        interested_friend_size = min(50, len(user_list) - 1)  # More realistic number
-        new_user.interested_friend = random.sample([u for u in user_list if u != new_user], interested_friend_size)
-        
-        # Update social connections based on matches
-        new_user.social_current = [u for u in new_user.interested_friend if new_user in u.interested_friend]  # Start with matches
-        
-        # Add some additional social connections that aren't matches
-        additional_connections = random.randint(5, 15)
-        potential_connections = [u for u in user_list if u != new_user and u not in new_user.social_current]
-        if potential_connections:
-            additional_social = random.sample(potential_connections, 
-                                            min(additional_connections, len(potential_connections)))
-            new_user.social_current.extend(additional_social)
+        # Use the tree module to find matches based on user priorities
+        preference_tree = tree.BinaryTree("")
+        for existing_user in user_list:
+            if existing_user != new_user:
+                # Create matches data based on attribute comparisons
+                match_data = []
+                
+                # Compare attributes based on priority
+                for attr in prioritized_attributes:
+                    if attr == "mbti":
+                        # MBTI similarity (1 if same, 0 if different)
+                        match_data.append(1 if existing_user.characteristics.mbti == new_user.characteristics.mbti else 0)
+                    elif attr == "interests":
+                        # Interest overlap (1 if any shared interests, 0 otherwise)
+                        shared = set(existing_user.characteristics.interests) & set(new_user.characteristics.interests)
+                        match_data.append(1 if shared else 0)
+                    elif attr in ["likes_pets", "likes_outdoor_activities", "enjoys_watching_movies"]:
+                        # Boolean attributes (1 if same preference, 0 if different)
+                        new_val = getattr(new_user.characteristics, attr)
+                        existing_val = getattr(existing_user.characteristics, attr)
+                        match_data.append(1 if new_val == existing_val else 0)
+                    else:
+                        # Other string attributes (1 if same, 0 if different)
+                        new_val = getattr(new_user.characteristics, attr, None)
+                        existing_val = getattr(existing_user.characteristics, attr, None)
+                        match_data.append(1 if new_val == existing_val else 0)
+                
+                # Add the user name at the end
+                match_data.append(existing_user.name)
+                
+                # Insert the sequence into the preference tree
+                preference_tree.insert_sequence(match_data)
             
-            # Make connections bidirectional
-            for connection in new_user.social_current:
-                if new_user not in connection.social_current:
-                    connection.social_current.append(new_user)
+        # Get recommendations from the tree
+        recommendations = preference_tree.run_preference_tree()
+        print(f"Top recommendations for {new_user.name}: {recommendations[:10]}")
+
+        # Connect the user with their top recommendations
+        for rec_name in recommendations[:10]:
+            rec_user = next((u for u in user_list if u.name == rec_name), None)
+            if rec_user:
+                # Add to social connections
+                if rec_user not in new_user.social_current:
+                    new_user.social_current.append(rec_user)
+                if new_user not in rec_user.social_current:
+                    rec_user.social_current.append(new_user)
+
+
+        # # Select random users who might be interested in the new user
+        # interested_users = random.sample([u for u in user_list if u != new_user], 
+        #                                 min(num_interested, len(user_list) - 1))
+        
+        # # Add the new user to their interested_friend lists
+        # for user in interested_users:
+        #     if new_user not in user.interested_friend:
+        #         user.interested_friend.append(new_user)
+        
+        # # Assign random users to the new user's interested_friend list
+        # interested_friend_size = min(50, len(user_list) - 1)  # More realistic number
+        # new_user.interested_friend = random.sample([u for u in user_list if u != new_user], interested_friend_size)
+        
+        # # Update social connections based on matches
+        # new_user.social_current = [u for u in new_user.interested_friend if new_user in u.interested_friend]  # Start with matches
+        
+        # # Add some additional social connections that aren't matches
+        # additional_connections = random.randint(5, 15)
+        # potential_connections = [u for u in user_list if u != new_user and u not in new_user.social_current]
+        # if potential_connections:
+        #     additional_social = random.sample(potential_connections, 
+        #                                     min(additional_connections, len(potential_connections)))
+        #     new_user.social_current.extend(additional_social)
+            
+        #     # Make connections bidirectional
+        #     for connection in new_user.social_current:
+        #         if new_user not in connection.social_current:
+        #             connection.social_current.append(new_user)
         
         # Update the social_degree attribute
         new_user.update_social_degree()
@@ -605,7 +752,6 @@ class DestinyApp:
         
         print(f"Added user {new_user.name} with {len(new_user.social_current)} social connections")
         
-        # Return the updated list
         return user_list
 
     def submit_user_profile(self):
@@ -666,6 +812,27 @@ class DestinyApp:
             likes_outdoor_activities = self.attributes["likes_outdoor_activities"].get()
             enjoys_watching_movies = self.attributes["enjoys_watching_movies"].get()
             
+            attribute_priorities = []
+            for i in range(self.attributes["priority_ranking"].size()):
+                attribute_priorities.append(self.attributes["priority_ranking"].get(i))
+
+            # Map UI attribute names to the attribute keys used in the tree module
+            priority_mapping = {
+                "MBTI": "mbti",
+                "Interests": "interests", 
+                "Ethnicity": "ethnicity",
+                "Politics": "political_interests",
+                "Religion": "religion",
+                "Major": "major",
+                "Language": "language",
+                "Pets": "likes_pets",
+                "Outdoor Activities": "likes_outdoor_activities",
+                "Movies": "enjoys_watching_movies"
+            }
+
+            # Create the prioritized attributes list
+            prioritized_attributes = [priority_mapping.get(attr, attr.lower()) for attr in attribute_priorities]
+
             # Create the user object
             user = User(
             name=name,
@@ -698,7 +865,7 @@ class DestinyApp:
                 print(f"Generated initial user list with {len(self.user_list)} users")
             
             # Add the user to the network
-            self.user_list = self.add_user_to_network(user, self.user_list)
+            self.user_list = self.add_user_to_network(user, self.user_list, prioritized_attributes)
 
             # Print debug information to terminal
             self.print_user_list_debug()
