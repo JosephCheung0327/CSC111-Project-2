@@ -69,6 +69,8 @@ def generate_users_with_class(list_size: int, interested_friend_simulation_size:
         )
         user_list.append(user)
     
+    # TODO: use tree methods without attribute ranking
+    
     # Assign top matches for each user (Simulation)
     for user in user_list:
         user.interested_friend = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
