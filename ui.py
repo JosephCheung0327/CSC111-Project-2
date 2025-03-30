@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import sys
 import random
+import importlib
 
 # Import the add_user() function from user_network.py
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -894,14 +895,22 @@ class DestinyApp:
         recommendation_names = preference_tree.run_preference_tree()
 
         user_keypair = {user.name: user for user in self.user_list}
-    
+        
         # Create recommendations dictionary
         self.recommendations_dict = {}
         self.recommendations = []
         
+        # Filter out users who already have romantic partners if looking for romance
         for name in recommendation_names:
             if name in user_keypair:
                 user = user_keypair[name]
+                
+                # Skip users who already have a romantic partner if we're looking for a romantic partner
+                if dating_goal != "Meeting new friends":
+                    if hasattr(user, 'romantic_current') and user.romantic_current is not None:
+                        print(f"Skipping {user.name} - already has a romantic partner: {user.romantic_current.name}")
+                        continue
+                
                 self.recommendations_dict[name] = {
                     'user': user,
                     'status': 'pending'  # Can be 'pending', 'matched', 'rejected'
@@ -1036,95 +1045,191 @@ class DestinyApp:
             
             self.display_current_recommendation()
 
+    # def match_current_recommendation(self):
+    #     """
+    #     Match with the current recommendation and show the next one.
+    #     """
+    #     # Get the current recommendation
+    #     if not self.recommendations:
+    #         return
+        
+    #     matched_user = self.recommendations[0]
+    #     matched_name = matched_user.name
+    #     dating_goal = self.current_user.dating_goal
+        
+    #     # Update recommendation status in dictionary
+    #     if matched_name in self.recommendations_dict:
+    #         # Handle based on dating goal
+    #         if dating_goal == "Meeting new friends":
+    #             # Mark as matched in our dictionary
+    #             self.recommendations_dict[matched_name]['status'] = 'matched'
+                
+    #             # Create bidirectional friendship connection
+    #             if matched_user not in self.current_user.social_current:
+    #                 self.current_user.social_current.append(matched_user)
+    #             if self.current_user not in matched_user.social_current:
+    #                 matched_user.social_current.append(self.current_user)
+                
+    #             # Update social degree
+    #             self.current_user.update_social_degree()
+    #             matched_user.update_social_degree()
+                
+    #             # Show success message
+    #             success_text = f"You've connected with {matched_user.name}!"
+    #             self.show_temporary_message(success_text, "#2ECC71")
+                
+    #             # Increment match counter
+    #             self.matches_made += 1
+                
+    #             # Remove from the list
+    #             self.recommendations.pop(0)
+                
+    #             if not self.recommendations:
+    #                 # No more recommendations
+    #                 self.root.after(200, self.show_matching_summary)
+    #                 return
+                
+    #             # Display next recommendation after a short delay
+    #             self.root.after(200, self.display_current_recommendation)
+
+    #         else:
+    #             if hasattr(matched_user, 'romantic_current') and matched_user.romantic_current is not None:
+    #                 # The matched user already has a romantic partner, show error and skip
+    #                 partner_name = matched_user.romantic_current.name if hasattr(matched_user.romantic_current, 'name') else "someone"
+    #                 error_text = f"{matched_user.name} is already in a relationship with {partner_name}!"
+                    
+    #                 self.show_temporary_message(error_text, "#E74C3C")
+                    
+    #                 # Skip to next recommendation
+    #                 self.recommendations.pop(0)
+
+    #                 if not self.recommendations:
+    #                     self.root.after(2000, self.show_matching_summary)
+    #                     return
+                    
+    #                 self.root.after(2000, self.display_current_recommendation)
+    #                 return
+                
+    #             # IMPORTANT: Code for successful match is only reached if the partner check passed
+    #             # Continue with successful romantic match
+    #             self.recommendations_dict[matched_name]['status'] = 'matched'
+    #             self.recommendations.pop(0)
+                
+    #             # Create bidirectional romantic connection
+    #             self.current_user.romantic_current = matched_user
+    #             matched_user.romantic_current = self.current_user
+                
+    #             # Show success message
+    #             success_text = f"You've matched with {matched_user.name}!"
+    #             self.show_temporary_message(success_text, "#E74C3C")
+                
+    #             # Increment match counter and go to summary
+    #             self.matches_made += 1
+    #             self.root.after(1500, self.show_matching_summary)
+
+
+    def refresh_state(self):
+        """
+        Fully reload user_network to get the most up-to-date user objects,
+        then update self.user_list.
+        """
+        import user_network
+        importlib.reload(user_network)  # force a reload so changes are reflected
+        self.user_list = user_network.user_list
+
     def match_current_recommendation(self):
         """
         Match with the current recommendation and show the next one.
+        This version refreshes user objects from the up-to-date global state.
         """
-        # Get the current recommendation
         if not self.recommendations:
             return
-        
-        matched_user = self.recommendations[0]
+
+        # Refresh global user state.
+        self.refresh_state()
+        user_keypair = {user.name: user for user in self.user_list}
+
+        # Update current_user and candidate (matched_user) from the fresh state.
+        self.current_user = user_keypair.get(self.current_user.name, self.current_user)
+        original_candidate = self.recommendations[0]
+        matched_user = user_keypair.get(original_candidate.name, original_candidate)
         matched_name = matched_user.name
         dating_goal = self.current_user.dating_goal
-        
-        # Update recommendation status in dictionary
+
+        print(f"DEBUG: Attempting romantic match for current user {self.current_user.name} (partner: {self.current_user.romantic_current})")
+        print(f"DEBUG: Candidate {matched_user.name} (partner: {matched_user.romantic_current})")
+
+        # Only run partner-checks for romantic matching.
+        if dating_goal != "Meeting new friends":
+            # Check if the current user already has a partner.
+            if self.current_user.romantic_current is not None:
+                error_text = f"You already have a partner: {self.current_user.romantic_current.name}!"
+                print("DEBUG: Current user already partnered:", error_text)
+                self.show_temporary_message(error_text, "#E74C3C")
+                self.recommendations.pop(0)
+                # Optionally, remove this candidate from the global romantic list:
+                try:
+                    from user_network import user_looking_for_love
+                    user_looking_for_love.remove(matched_user)
+                except ValueError:
+                    pass
+                self.refresh_state()  # make sure state reflects removal
+                if not self.recommendations:
+                    self.root.after(2000, self.show_matching_summary)
+                    return
+                self.root.after(2000, self.display_current_recommendation)
+                return
+
+            # Check if the candidate already has a partner.
+            if matched_user.romantic_current is not None:
+                error_text = f"{matched_user.name} already has a partner: {matched_user.romantic_current.name}!"
+                print("DEBUG: Matched user already partnered:", error_text)
+                self.show_temporary_message(error_text, "#E74C3C")
+                self.recommendations.pop(0)
+                # Remove the candidate from the global romantic list, if present.
+                try:
+                    from user_network import user_looking_for_love
+                    user_looking_for_love.remove(matched_user)
+                except ValueError:
+                    pass
+                self.refresh_state()  # refresh state after removal
+                if not self.recommendations:
+                    self.root.after(2000, self.show_matching_summary)
+                    return
+                self.root.after(2000, self.display_current_recommendation)
+                return
+
+        # Final safety-check.
+        if dating_goal != "Meeting new friends":
+            if (self.current_user.romantic_current is not None or matched_user.romantic_current is not None):
+                print("DEBUG: Final safety-check failed. Aborting match.")
+                return
+
+        # If partner check has passed, proceed to create the connection.
         if matched_name in self.recommendations_dict:
-            # Handle based on dating goal
             if dating_goal == "Meeting new friends":
-                # Mark as matched in our dictionary
                 self.recommendations_dict[matched_name]['status'] = 'matched'
-                
-                # Create bidirectional friendship connection
                 if matched_user not in self.current_user.social_current:
                     self.current_user.social_current.append(matched_user)
                 if self.current_user not in matched_user.social_current:
                     matched_user.social_current.append(self.current_user)
-                
-                # Update social degree
                 self.current_user.update_social_degree()
                 matched_user.update_social_degree()
-                
-                # Show success message
                 success_text = f"You've connected with {matched_user.name}!"
                 self.show_temporary_message(success_text, "#2ECC71")
-                
-                # Increment match counter
                 self.matches_made += 1
-                
-                # Remove from the list
                 self.recommendations.pop(0)
-                
                 if not self.recommendations:
-                    # No more recommendations
                     self.root.after(200, self.show_matching_summary)
                     return
-                
-                # Display next recommendation after a short delay
                 self.root.after(200, self.display_current_recommendation)
             else:
-                # Check if either user already has a romantic partner
-                current_user_has_partner = (hasattr(self.current_user, 'romantic_current') and 
-                                        self.current_user.romantic_current is not None)
-                matched_user_has_partner = (hasattr(matched_user, 'romantic_current') and 
-                                        matched_user.romantic_current is not None)
-                
-                if current_user_has_partner or matched_user_has_partner:
-                    # Mark as failed in our dictionary
-                    self.recommendations_dict[matched_name]['status'] = 'failed'
-                    
-                    # Handle error message
-                    if current_user_has_partner:
-                        partner_name = self.current_user.romantic_current.name if hasattr(self.current_user.romantic_current, 'name') else "someone"
-                        error_text = f"You are already in a relationship with {partner_name}!"
-                    else:
-                        partner_name = matched_user.romantic_current.name if hasattr(matched_user.romantic_current, 'name') else "someone"
-                        error_text = f"{matched_user.name} is already in a relationship with {partner_name}!"
-                    
-                    self.show_temporary_message(error_text, "#E74C3C")
-                    
-                    # Skip to next recommendation
-                    self.recommendations.pop(0)
-                    if not self.recommendations:
-                        self.root.after(2000, self.show_matching_summary)
-                        return
-                    
-                    self.root.after(2000, self.display_current_recommendation)
-                    return
-                
-                # Continue with successful romantic match
                 self.recommendations_dict[matched_name]['status'] = 'matched'
                 self.recommendations.pop(0)
-                
-                # Create bidirectional romantic connection
                 self.current_user.romantic_current = matched_user
                 matched_user.romantic_current = self.current_user
-                
-                # Show success message
                 success_text = f"You've matched with {matched_user.name}!"
                 self.show_temporary_message(success_text, "#E74C3C")
-                
-                # Increment match counter and go to summary
                 self.matches_made += 1
                 self.root.after(1500, self.show_matching_summary)
 
@@ -1206,7 +1311,6 @@ class DestinyApp:
         else:
             # Romantic match summary
             if self.matches_made > 0:
-                # Fix this line - romantic_current is a single user object, not a list
                 matched_user = self.current_user.romantic_current
                 results_text = f"Congratulations! You've matched with {matched_user.name}!"
                 
@@ -1218,6 +1322,7 @@ class DestinyApp:
                                     text=f"{matched_user.age} • {matched_user.gender} • {matched_user.characteristics.mbti}",
                                     font=("Arial", 16), fg="white", bg="#7A8B9C")
                 match_details.pack(pady=10)
+
             else:
                 results_text = "You didn't make any romantic connections."
                 
