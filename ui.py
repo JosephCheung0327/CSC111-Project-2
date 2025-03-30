@@ -2,7 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import sys
 
-from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love
+from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love, simulate_connections
 
 class DestinyApp:
     """
@@ -74,7 +74,6 @@ class DestinyApp:
         # Generate users locally
         self.user_list = generate_users_with_class(200, 25, 1234)
         
-        # CRITICAL FIX: Update the global lists in user_network.py
         import user_network
         user_network.user_list = self.user_list  # Make sure global list has all users
         
@@ -863,6 +862,7 @@ class DestinyApp:
         Show a page where users can swipe through recommended matches and connect with them.
         """
         import tree
+        import user_network
         # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
 
@@ -910,16 +910,16 @@ class DestinyApp:
             if name in user_keypair:
                 user = user_keypair[name]
                 
-                # Skip users who already have a romantic partner if we're looking for a romantic partner
-                if dating_goal != "Meeting new friends":
-                    if hasattr(user, 'romantic_current') and user.romantic_current is not None:
-                        print(f"Skipping {user.name} - already has a romantic partner: {user.romantic_current.name}")
-                        continue
+                # # Skip users who already have a romantic partner if we're looking for a romantic partner
+                # if dating_goal != "Meeting new friends":
+                #     if hasattr(user, 'romantic_current') and user.romantic_current is not None:
+                #         print(f"Skipping {user.name} - already has a romantic partner: {user.romantic_current.name}")
+                #         continue
                 
-                self.recommendations_dict[name] = {
-                    'user': user,
-                    'status': 'pending'  # Can be 'pending', 'matched', 'rejected'
-                }
+                # self.recommendations_dict[name] = {
+                #     'user': user,
+                #     'status': 'pending'  # Can be 'pending', 'matched', 'rejected'
+                # }
                 self.recommendations.append(user)
         
         if not self.recommendations:
@@ -1081,50 +1081,56 @@ class DestinyApp:
         self.root.after(3000, overlay.destroy)
 
     def match_current_recommendation(self):
-        """Match with the current recommendation and show the next one."""
+        """
+        Match with the current recommendation and show the next one.
+        """
+        from user_network import user_list, user_looking_for_friends, user_looking_for_love
+
         if not self.recommendations:
             return
 
-        # Get candidate name from recommendations
-        candidate_name = self.recommendations[0].name
+        candidate = self.recommendations[0]
         dating_goal = self.current_user.dating_goal
+
+        # Get the most up-to-date version of the candidate from the global list
+        candidate_updated = None
+        for user in user_list:
+            if user.name == candidate.name:
+                candidate_updated = user
+                break
         
-        try:
-            from user_network import user_list, user_looking_for_friends, user_looking_for_love
-            
-            # Check if candidate has a partner in ANY of the three lists
-            candidate_partnered = False
+        # Use the updated version if found, otherwise use the original
+        candidate = candidate_updated if candidate_updated else candidate
+
+        if dating_goal != "Meeting new friends":
+            # Check if candidate has a romantic partner in ANY list
+            has_partner = False
             partner_name = None
             
-            # Function to check any list for partnerships
-            def check_list_for_partnership(user_list_to_check):
-                nonlocal candidate_partnered, partner_name
-                # Check direct partnership (user has partner)
-                for user in user_list_to_check:
-                    if user.name == candidate_name and user.romantic_current is not None:
-                        return True, user.romantic_current.name
-                    
-                    # Check reverse partnership (user is someone's partner)
-                    if user.romantic_current is not None and hasattr(user.romantic_current, 'name'):
-                        if user.romantic_current.name == candidate_name:
-                            return True, user.name
-                return False, None
-            
-            # Check all three lists
+            # Check in all three lists
             for check_list in [user_list, user_looking_for_friends, user_looking_for_love]:
-                is_partnered, found_partner = check_list_for_partnership(check_list)
-                if is_partnered:
-                    candidate_partnered = True
-                    partner_name = found_partner
+                for user in check_list:
+                    # Check if this user is our candidate and has a partner
+                    if user.name == candidate.name and user.romantic_current is not None:
+                        has_partner = True
+                        partner_name = user.romantic_current.name
+                        break
+                        
+                    # Check if candidate is someone's partner
+                    if user.romantic_current is not None and hasattr(user.romantic_current, 'name'):
+                        if user.romantic_current.name == candidate.name:
+                            has_partner = True
+                            partner_name = user.name
+                            break
+                
+                if has_partner:
                     break
-            
-            # For romantic matching, prevent partnered matches
-            if dating_goal != "Meeting new friends" and candidate_partnered:
-                error_text = f"{candidate_name} is already in a relationship with {partner_name}!"
+                    
+            if has_partner:
+                error_text = f"{candidate.name} is already in a relationship with {partner_name}!"
                 self.show_blocking_error(error_text)
                 self.recommendations.pop(0)
-                
-                # Schedule next action
+
                 def show_next():
                     if not self.recommendations:
                         self.show_matching_summary()
@@ -1133,14 +1139,19 @@ class DestinyApp:
                 
                 self.root.after(200, show_next)
                 return
-            
-            matched_user = self.recommendations[0]
-
-            if dating_goal == "Meeting new friends":
+        
+            else:
+                print("wrong condition")
+                self.current_user.match(candidate)
+                success_text = f"You've matched with {candidate.name}!"
+                self.show_temporary_message(success_text, "#E74C3C")
+                self.matches_made += 1
+                self.recommendations.pop(0)
+                self.show_matching_summary()
+        else:
                 # Friend matching
-                self.recommendations_dict[candidate_name]['status'] = 'matched'
-                self.current_user.socialize(matched_user)
-                success_text = f"You've connected with {matched_user.name}!"
+                self.current_user.socialize(candidate)
+                success_text = f"You've connected with {candidate.name}!"
                 self.show_temporary_message(success_text, "#2ECC71")
                 self.matches_made += 1
                 self.recommendations.pop(0)
@@ -1148,19 +1159,7 @@ class DestinyApp:
                     self.root.after(1500, self.show_matching_summary)
                 else:
                     self.root.after(200, self.display_current_recommendation)
-            else:
-                # Romantic matching
-                self.recommendations_dict[candidate_name]['status'] = 'matched'
-                self.current_user.match(matched_user)
-                success_text = f"You've matched with {matched_user.name}!"
-                self.show_temporary_message(success_text, "#E74C3C")
-                self.matches_made += 1
-                self.recommendations.pop(0)
-                self.show_matching_summary()
-                
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
+
 
     def show_temporary_message(self, message, color="#2ECC71"):
         """
@@ -1343,7 +1342,7 @@ class DestinyApp:
                 import user_network
                 
                 app = graph.create_app(
-                    user_list=self.user_list,
+                    user_list=user_network.user_list,
                     user_looking_for_friends=user_network.user_looking_for_friends,
                     user_looking_for_love=user_network.user_looking_for_love
                 )

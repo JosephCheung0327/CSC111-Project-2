@@ -281,21 +281,21 @@ class User:
             print(f"Matching failed. {self} and {user1} are already couples.")
 
 
-    def unmatch(self, user1: User) -> None:
-        """Unmatch self and user1 romantic relationship.
-        Preconditions:
-        - (self not in user1.romantic_current and user1 not in self.romantic_current) 
-            or (self in user1.romantic_current and user1 in self.romantic_current)
-        """
-        if self is user1.romantic_current and user1 is self.romantic_current:
-            self.romantic_current = None
-            user1.romantic_current = None
-            self.romantic_ex.append(user1)
-            user1.romantic_ex.append(self)
-            self.romantic_degree -= 1
-            user1.romantic_degree -= 1
-        else:
-            print(f"Unmatch failed. {self} and {user1} are not couples.")
+    # def unmatch(self, user1: User) -> None:
+    #     """Unmatch self and user1 romantic relationship.
+    #     Preconditions:
+    #     - (self not in user1.romantic_current and user1 not in self.romantic_current) 
+    #         or (self in user1.romantic_current and user1 in self.romantic_current)
+    #     """
+    #     if self is user1.romantic_current and user1 is self.romantic_current:
+    #         self.romantic_current = None
+    #         user1.romantic_current = None
+    #         self.romantic_ex.append(user1)
+    #         user1.romantic_ex.append(self)
+    #         self.romantic_degree -= 1
+    #         user1.romantic_degree -= 1
+    #     else:
+    #         print(f"Unmatch failed. {self} and {user1} are not couples.")
 
 
     def socialize(self, user1: User) -> None:
@@ -312,21 +312,21 @@ class User:
         else:
             print(f"Friend add failed. {self} and {user1} are already friends.")
 
-    def unsocialize(self, user1: User) -> None:
-        """Create self and user1 friendship.
-        Preconditions:
-        - (self not in user1.romantic_current and user1 not in self.romantic_current) 
-            or (self in user1.romantic_current and user1 in self.romantic_current)
-        """
-        if self in user1.romantic_current and user1 in self.romantic_current:
-            self.social_current.remove(user1)
-            user1.social_current.remove(user1)
-            self.social_degree -= 1
-            user1.social_degree -= 1
-            self.social_ex.append(user1)
-            user1.social_ex.append(self)
-        else:
-            print(f"Unfriend failed. {self} and {user1} are not friends.")
+    # def unsocialize(self, user1: User) -> None:
+    #     """Create self and user1 friendship.
+    #     Preconditions:
+    #     - (self not in user1.romantic_current and user1 not in self.romantic_current) 
+    #         or (self in user1.romantic_current and user1 in self.romantic_current)
+    #     """
+    #     if self in user1.romantic_current and user1 in self.romantic_current:
+    #         self.social_current.remove(user1)
+    #         user1.social_current.remove(user1)
+    #         self.social_degree -= 1
+    #         user1.social_degree -= 1
+    #         self.social_ex.append(user1)
+    #         user1.social_ex.append(self)
+    #     else:
+    #         print(f"Unfriend failed. {self} and {user1} are not friends.")
 
     def get_romantic_degree(self, user: User) -> int:
         return user.romantic_degree

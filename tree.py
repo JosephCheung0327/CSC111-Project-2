@@ -9,9 +9,9 @@ import json
 from python_ta.contracts import check_contracts
 
 
-users_list = user_network.users
+# users_list = user_network.users
 
-char1 = users_list[-1].characteristics
+# char1 = users_list[-1].characteristics
 
 
 def filter_user_by_dating_goal (users:List[user_network.User], user:user_network.User) -> list[user_network.User]:
@@ -54,8 +54,8 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
         print(f"Error: {e}")
         return add_priority(Characteristics)
         
-def data_wrangling(current_user: user_network.User, user_characteristics: list | None | user_network.Characteristics = char1,
-                    users_list: List[user_network.User] = users_list, file_name: Optional[str] = "data.csv") -> None:
+def data_wrangling(current_user: user_network.User, user_characteristics: list | None | user_network.Characteristics,
+                    users_list: List[user_network.User], file_name: Optional[str] = "data.csv") -> None:
     """
     Creates a CSV file containing user data, including their characteristics and potential matches.
 
