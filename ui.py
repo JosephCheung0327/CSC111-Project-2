@@ -1,17 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageTk
-from pathlib import Path
-import os
 import sys
-import random
-import importlib
-
-# # Import the add_user() function from user_network.py
-# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-# try:
-#     from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love
-# except ImportError:
-#     print("Error importing from user_network.py")
 
 from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love
 
@@ -1091,37 +1080,6 @@ class DestinyApp:
         # Auto-remove after 3 seconds
         self.root.after(3000, overlay.destroy)
 
-    def sync_user_with_global_version(self, user_name):
-        """Ensures we have the latest version of a specific user from the global list"""
-        from user_network import user_list as global_user_list
-        
-        # Find the user in the global list
-        global_user = next((u for u in global_user_list if u.name == user_name), None)
-        
-        if global_user:
-            # Log the user's current state
-            partner_info = "No partner"
-            if global_user.romantic_current is not None:
-                partner_name = global_user.romantic_current.name
-                partner_info = f"has partner: {partner_name}"
-                
-            print(f"CRITICAL SYNC: {user_name} from global list (ID={id(global_user)}) {partner_info}")
-            
-            # Update in recommendations list
-            for i, user in enumerate(self.recommendations):
-                if user.name == user_name:
-                    self.recommendations[i] = global_user
-                    print(f"Updated {user_name} in recommendations list")
-                    break
-                    
-            # Also sync the current recommendation dictionary
-            if user_name in self.recommendations_dict:
-                self.recommendations_dict[user_name]['user'] = global_user
-                print(f"Updated {user_name} in recommendations dictionary")
-                
-        else:
-            print(f"WARNING: {user_name} not found in global user list during sync")
-
     def match_current_recommendation(self):
         """Match with the current recommendation and show the next one."""
         if not self.recommendations:
@@ -1132,7 +1090,6 @@ class DestinyApp:
         dating_goal = self.current_user.dating_goal
         
         try:
-            # CRITICAL: Check ALL three lists for partnerships
             from user_network import user_list, user_looking_for_friends, user_looking_for_love
             
             # Check if candidate has a partner in ANY of the three lists
@@ -1159,11 +1116,7 @@ class DestinyApp:
                 if is_partnered:
                     candidate_partnered = True
                     partner_name = found_partner
-                    print(f"FOUND PARTNERSHIP: {candidate_name} with {partner_name}")
                     break
-            
-            print(f"DEBUG: About to match with {candidate_name}")
-            print(f"DEBUG: Partnered status after checking all lists: {candidate_partnered}")
             
             # For romantic matching, prevent partnered matches
             if dating_goal != "Meeting new friends" and candidate_partnered:
@@ -1178,21 +1131,15 @@ class DestinyApp:
                     else:
                         self.display_current_recommendation()
                 
-                self.root.after(3000, show_next)
+                self.root.after(200, show_next)
                 return
             
-            # FIXED INDENTATION: Continue with the match as normal - this needs to be outside the if block
             matched_user = self.recommendations[0]
 
             if dating_goal == "Meeting new friends":
                 # Friend matching
                 self.recommendations_dict[candidate_name]['status'] = 'matched'
-                if matched_user not in self.current_user.social_current:
-                    self.current_user.social_current.append(matched_user)
-                if self.current_user not in matched_user.social_current:
-                    matched_user.social_current.append(self.current_user)
-                self.current_user.update_social_degree()
-                matched_user.update_social_degree()
+                self.current_user.socialize(matched_user)
                 success_text = f"You've connected with {matched_user.name}!"
                 self.show_temporary_message(success_text, "#2ECC71")
                 self.matches_made += 1
@@ -1202,10 +1149,9 @@ class DestinyApp:
                 else:
                     self.root.after(200, self.display_current_recommendation)
             else:
-                # Romantic matching - create the partnership
+                # Romantic matching
                 self.recommendations_dict[candidate_name]['status'] = 'matched'
-                self.current_user.romantic_current = matched_user
-                matched_user.romantic_current = self.current_user
+                self.current_user.match(matched_user)
                 success_text = f"You've matched with {matched_user.name}!"
                 self.show_temporary_message(success_text, "#E74C3C")
                 self.matches_made += 1
@@ -1391,38 +1337,13 @@ class DestinyApp:
             
             port = find_available_port()
             
-            # SYNC THE USER OBJECTS - this is the critical change
-            def sync_user_objects():
-                """Fix the mismatch between graph and UI by ensuring only one Joseph Cheung instance exists"""
-                from user_network import user_list as global_user_list
-                
-                # Find Joseph Cheung in the global user list
-                joseph = next((u for u in global_user_list if u.name == "Joseph Cheung"), None)
-                
-                # Print the state of Joseph Cheung
-                if joseph:
-                    partner_info = "No partner"
-                    if joseph.romantic_current is not None:
-                        partner_info = f"{joseph.romantic_current.name}"
-                    print(f"SYNCING USERS: Found Joseph Cheung (ID={id(joseph)}) with partner={partner_info}")
-                    
-                    # Update self.user_list to use this exact instance
-                    for i, user in enumerate(self.user_list):
-                        if user.name == "Joseph Cheung":
-                            print(f"Replacing Joseph Cheung (ID={id(user)}) with global version")
-                            self.user_list[i] = joseph
-            
-            # Call the sync function
-            sync_user_objects()
-            
             # Define a function to run the Dash app in a separate thread
             def run_dash_app():
                 # Add this import statement
                 import user_network
                 
-                # Use the SYNCED user list
                 app = graph.create_app(
-                    user_list=self.user_list,  # This now contains the synced Joseph instance
+                    user_list=self.user_list,
                     user_looking_for_friends=user_network.user_looking_for_friends,
                     user_looking_for_love=user_network.user_looking_for_love
                 )
