@@ -82,6 +82,7 @@ class DestinyApp:
         self.user_list = generate_users_with_class(200, 25, 1234)
         add_fixed_users(self.user_list)
         add_fixed_users(user_looking_for_friends)
+        add_fixed_users(user_looking_for_love)
         print(f"Generated initial user list with {len(self.user_list)} users")
     
     def create_welcome_page(self, image_path):
@@ -686,6 +687,21 @@ class DestinyApp:
         # Add the user to the list
         user_list.append(new_user)
 
+        for friend in new_user.social_current:
+            # Add test to friend's social_current list (make bidirectional)
+            if new_user not in friend.social_current:
+                friend.social_current.append(new_user)
+                print(f"Added bidirectional connection from {friend.name} to {new_user.name}")
+            
+            # Ensure friend is in the correct user list
+            if friend.dating_goal == "Meeting new friends" and friend not in user_looking_for_friends:
+                user_looking_for_friends.append(friend)
+                print(f"Added {friend.name} to user_looking_for_friends")
+
+            elif friend.dating_goal != "Meeting new friends" and friend not in user_looking_for_love:
+                user_looking_for_love.append(friend)
+                print(f"Added {friend.name} to user_looking_for_love")
+
         print(f"Added user {new_user.name}.")
         
         return user_list
@@ -776,10 +792,14 @@ class DestinyApp:
             
             # Add the user to the network
             self.user_list = self.add_user_to_network(user, self.user_list)
+            
+            # Make sure user is added to the correct list based on dating goal
             if user.dating_goal == "Meeting new friends":
-                self.user_list_friend = self.add_user_to_network(user, user_looking_for_friends)
+                user_looking_for_friends.append(user)  # Make sure to add to this list
+                print(f"Added {user.name} to user_looking_for_friends list")
             else:
-                self.user_list_love = self.add_user_to_network(user, user_looking_for_love)
+                user_looking_for_love.append(user)
+                print(f"Added {user.name} to user_looking_for_love list")
 
             # Print debug information to terminal
             self.print_user_list_debug()
@@ -872,14 +892,30 @@ class DestinyApp:
         tree.data_wrangling(current_user=self.current_user, user_characteristics=self.priority_attributes, users_list=self.user_list)
         preference_tree = tree.build_preference_tree("data.csv")
         recommendation_names = preference_tree.run_preference_tree()
-        
-        # TODO: use dict
-        # Convert names to user objects
+
+        user_keypair = {user.name: user for user in self.user_list}
+    
+        # Create recommendations dictionary
+        self.recommendations_dict = {}
         self.recommendations = []
+        
         for name in recommendation_names:
-            user = next((u for u in self.user_list if u.name == name), None)
-            if user:
+            if name in user_keypair:
+                user = user_keypair[name]
+                self.recommendations_dict[name] = {
+                    'user': user,
+                    'status': 'pending'  # Can be 'pending', 'matched', 'rejected'
+                }
                 self.recommendations.append(user)
+                
+        
+        # # TODO: use dict
+        # # Convert names to user objects
+        # self.recommendations = []
+        # for name in recommendation_names:
+        #     user = next((u for u in self.user_list if u.name == name), None)
+        #     if user:
+        #         self.recommendations.append(user)
         
         if not self.recommendations:
             # No recommendations
@@ -992,7 +1028,15 @@ class DestinyApp:
         Skip the current recommendation and show the next one.
         """
         if self.recommendations:
-            self.recommendations.pop(0)  # Remove the current recommendation
+            current_user = self.recommendations[0]
+            current_name = current_user.name
+            
+            # Update recommendation status in dictionary
+            if current_name in self.recommendations_dict:
+                self.recommendations_dict[current_name]['status'] = 'rejected'
+            
+            # Remove from list
+            self.recommendations.pop(0)
             
             if not self.recommendations:
                 # No more recommendations, go to the summary page
@@ -1009,50 +1053,89 @@ class DestinyApp:
         if not self.recommendations:
             return
         
-        matched_user = self.recommendations.pop(0)  # Remove and get the current recommendation
+        matched_user = self.recommendations[0]
+        matched_name = matched_user.name
         dating_goal = self.current_user.dating_goal
         
-        # Add connection based on dating goal
-        if dating_goal == "Meeting new friends":
-            # Add social connection
-            if matched_user not in self.current_user.social_current:
-                self.current_user.social_current.append(matched_user)
-            if self.current_user not in matched_user.social_current:
-                matched_user.social_current.append(self.current_user)
-            
-            # Update social degree
-            self.current_user.update_social_degree()
-            matched_user.update_social_degree()
-            
-            # Show success message
-            success_text = f"You've connected with {matched_user.name}!"
-            self.show_temporary_message(success_text, "#2ECC71")
-            
-            # Increment match counter
-            self.matches_made += 1
-            
-            if not self.recommendations:
-                # No more recommendations
-                self.root.after(200, self.show_matching_summary)
-                return
-            
-            # Display next recommendation after a short delay
-            self.root.after(200, self.display_current_recommendation)
-            
-        else:
+        # Update recommendation status in dictionary
+        if matched_name in self.recommendations_dict:
+            # Handle based on dating goal
+            if dating_goal == "Meeting new friends":
+                # Mark as matched in our dictionary
+                self.recommendations_dict[matched_name]['status'] = 'matched'
                 
-            self.current_user.romantic_current.append(matched_user)
-            matched_user.romantic_current.append(self.current_user)
-            
-            # Show success message
-            success_text = f"You've matched with {matched_user.name}!"
-            self.show_temporary_message(success_text, "#E74C3C")
-            
-            # Increment match counter
-            self.matches_made += 1
-            
-            # For romantic connections, immediately go to summary after one match
-            self.root.after(200, self.show_matching_summary)
+                # Create bidirectional friendship connection
+                if matched_user not in self.current_user.social_current:
+                    self.current_user.social_current.append(matched_user)
+                if self.current_user not in matched_user.social_current:
+                    matched_user.social_current.append(self.current_user)
+                
+                # Update social degree
+                self.current_user.update_social_degree()
+                matched_user.update_social_degree()
+                
+                # Show success message
+                success_text = f"You've connected with {matched_user.name}!"
+                self.show_temporary_message(success_text, "#2ECC71")
+                
+                # Increment match counter
+                self.matches_made += 1
+                
+                # Remove from the list
+                self.recommendations.pop(0)
+                
+                if not self.recommendations:
+                    # No more recommendations
+                    self.root.after(200, self.show_matching_summary)
+                    return
+                
+                # Display next recommendation after a short delay
+                self.root.after(200, self.display_current_recommendation)
+            else:
+                # Check if either user already has a romantic partner
+                current_user_has_partner = (hasattr(self.current_user, 'romantic_current') and 
+                                        self.current_user.romantic_current is not None)
+                matched_user_has_partner = (hasattr(matched_user, 'romantic_current') and 
+                                        matched_user.romantic_current is not None)
+                
+                if current_user_has_partner or matched_user_has_partner:
+                    # Mark as failed in our dictionary
+                    self.recommendations_dict[matched_name]['status'] = 'failed'
+                    
+                    # Handle error message
+                    if current_user_has_partner:
+                        partner_name = self.current_user.romantic_current.name if hasattr(self.current_user.romantic_current, 'name') else "someone"
+                        error_text = f"You are already in a relationship with {partner_name}!"
+                    else:
+                        partner_name = matched_user.romantic_current.name if hasattr(matched_user.romantic_current, 'name') else "someone"
+                        error_text = f"{matched_user.name} is already in a relationship with {partner_name}!"
+                    
+                    self.show_temporary_message(error_text, "#E74C3C")
+                    
+                    # Skip to next recommendation
+                    self.recommendations.pop(0)
+                    if not self.recommendations:
+                        self.root.after(2000, self.show_matching_summary)
+                        return
+                    
+                    self.root.after(2000, self.display_current_recommendation)
+                    return
+                
+                # Continue with successful romantic match
+                self.recommendations_dict[matched_name]['status'] = 'matched'
+                self.recommendations.pop(0)
+                
+                # Create bidirectional romantic connection
+                self.current_user.romantic_current = matched_user
+                matched_user.romantic_current = self.current_user
+                
+                # Show success message
+                success_text = f"You've matched with {matched_user.name}!"
+                self.show_temporary_message(success_text, "#E74C3C")
+                
+                # Increment match counter and go to summary
+                self.matches_made += 1
+                self.root.after(1500, self.show_matching_summary)
 
     def show_temporary_message(self, message, color="#2ECC71"):
         """
@@ -1132,7 +1215,8 @@ class DestinyApp:
         else:
             # Romantic match summary
             if self.matches_made > 0:
-                matched_user = self.current_user.romantic_current[0]
+                # Fix this line - romantic_current is a single user object, not a list
+                matched_user = self.current_user.romantic_current
                 results_text = f"Congratulations! You've matched with {matched_user.name}!"
                 
                 results = tk.Label(frame, text=results_text,
@@ -1175,19 +1259,10 @@ class DestinyApp:
                     font=("Arial", 24), fg="white", bg="#7A8B9C")
         label.pack(pady=20)
         
-        # TODO: 
-
-        # # Show the current user's matches
-        # match_count = len(self.current_user.match)
-        # match_text = f"You have {match_count} matches!" if match_count > 0 else "No matches yet"
-        
-        # matches_label = tk.Label(frame, text=match_text,
-        #                     font=("Arial", 18), fg="white", bg="#7A8B9C")
-        # matches_label.pack(pady=10)
-        
         # Show social connections
         social_count = len(self.current_user.social_current)
-        romantic_count = len(self.current_user.romantic_current)
+        # Fix this line - romantic_current is not a list
+        romantic_count = 1 if self.current_user.romantic_current is not None else 0
         connections_text = f"You have {social_count} friends. You have {romantic_count} romantic partner."
         
         connections_label = tk.Label(frame, text=connections_text,
@@ -1244,7 +1319,7 @@ class DestinyApp:
             def run_dash_app():
                 # Create the Dash app instance with our user list
                 print(f"Creating graph visualization with {len(self.user_list)} users on port {port}")
-                app = graph.create_app(self.user_list)
+                app = graph.create_app(self.user_list, user_looking_for_friends, user_looking_for_love)
                 
                 # Configure the server to run without automatically opening the browser
                 app.run(debug=False, port=port)
@@ -1268,7 +1343,7 @@ class DestinyApp:
             browser_thread.start()
             
             # Remove the temporary message after a delay
-            self.root.after(200, lambda: temp_label.destroy())
+            self.root.after(1500, lambda: temp_label.destroy())
             
             # Keep the main window responsive
             self.update_status_message("Graph launching in browser. Close browser tab when done.")

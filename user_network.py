@@ -69,8 +69,6 @@ def generate_users_with_class(list_size: int, interested_friend_simulation_size:
             
         )
         user_list.append(user)
-    
-
 
     return user_list
 
@@ -80,7 +78,6 @@ def simulate_connections(user_list: list[User]) -> tuple:
     """
     from tree import data_wrangling, build_preference_tree, generate_10_people_list
     
-    # Create user name-to-object mapping INSIDE the function
     user_keypair = {user.name: user for user in user_list}
     
     users_looking_for_friends = [user for user in user_list if user.dating_goal == "Meeting new friends"]
@@ -91,6 +88,7 @@ def simulate_connections(user_list: list[User]) -> tuple:
                           "likes_outdoor_activities", "enjoys_watching_movies"]
     
     print(f"Processing {len(users_looking_for_friends)} friend seekers")
+
     for user in users_looking_for_friends:
         try:
             data_wrangling(user, characteristics_default_rank, users_looking_for_friends, "friends.csv")
@@ -109,6 +107,7 @@ def simulate_connections(user_list: list[User]) -> tuple:
             print(f"Error generating friends for {user.name}: {e}")
 
     print(f"Processing {len(users_looking_for_love)} romantic seekers")
+
     for user in users_looking_for_love:
         try:
             data_wrangling(user, characteristics_default_rank, users_looking_for_love, "love.csv")
@@ -150,16 +149,6 @@ def simulate_connections(user_list: list[User]) -> tuple:
 
         user.update_romantic_degree()
 
-    social_connections = sum(1 for u in users_looking_for_friends if u.social_current)
-    romantic_connections = sum(1 for u in users_looking_for_love if u.romantic_current is not None)
-
-    print(f"Tree-based matching created {social_connections} social connections and {romantic_connections} romantic connections")
-    print(f"Social network examples:")
-    for user in users_looking_for_friends[:3]:
-        if user.social_current:
-            print(f"  {user.name} is friends with: {[friend.name for friend in user.social_current]}")
-        else:
-            print(f"  {user.name} has no friends")
 
     return users_looking_for_friends, users_looking_for_love
     
