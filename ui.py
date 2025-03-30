@@ -2,7 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import sys
 
-from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love, simulate_connections
+from user_network import User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love
 
 class DestinyApp:
     """
@@ -1141,7 +1141,6 @@ class DestinyApp:
                 return
         
             else:
-                print("wrong condition")
                 self.current_user.match(candidate)
                 success_text = f"You've matched with {candidate.name}!"
                 self.show_temporary_message(success_text, "#E74C3C")

@@ -149,21 +149,7 @@ def simulate_connections(user_list: list[User]) -> tuple:
 
         user.update_romantic_degree()
 
-
     return users_looking_for_friends, users_looking_for_love
-    
-    # # Assign top matches for each user (Simulation)
-    # for user in user_list:
-    #     user.interested_friend = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
-    #     user.interested_romantic = random.sample([u for u in user_list if u != user], interested_friend_simulation_size)
-
-
-    # for user in user_list:
-    #     user.social_current = [social_current for social_current in user.interested_friend if user in social_current.interested_friend]
-    #     if user.interested_romantic and user.interested_romantic[0].interested_romantic[0] == user:
-    #         user.romantic_current = user.interested_romantic[0]
-
-
 
 class Characteristics:
     """Class representing user characteristics that influence a user's preference.
@@ -340,102 +326,9 @@ class User:
     def get_social_current(self, user: User) -> Optional[User]:
         return user.social_current
 
-
-    
-
-
-
-# class DatingApp:
-#     """A class for managing user connections
-#     Instance Attributes:
-#     - users: a list of User. 
-
-#     Representation invariants:
-#     - users != []
-#     """
-#     users: list[User]
-
-#     def __init__(self, users: list[User]):
-#         self.users = users
-
-#     def match(self, self: User, user1: User) -> None:
-#         """Match self with user1 as romantic relationship.
-#         Preconditions:
-#         - (self not in user1.romantic_current and user1 not in self.romantic_current) 
-#             or (self in user1.romantic_current and user1 in self.romantic_current)
-#         """
-#         if self not in user1.romantic_current and user1 not in self.romantic_current:
-#             self.romantic_current.append(user1)
-#             user1.romantic_current.append(self)
-#             self.romantic_degree += 1
-#             user1.romantic_degree += 1
-#         else:
-#             print(f"Matching failed. {self} and {user1} are already couples.")
-
-
-#     def unmatch(self, self: User, user1: User) -> None:
-#         """Unmatch self and user1 romantic relationship.
-#         Preconditions:
-#         - (self not in user1.romantic_current and user1 not in self.romantic_current) 
-#             or (self in user1.romantic_current and user1 in self.romantic_current)
-#         """
-#         if self in user1.romantic_current and user1 in self.romantic_current:
-#             self.romantic_current.remove(user1)
-#             user1.romantic_current.remove(user1)
-#             self.romantic_ex.append(user1)
-#             user1.romantic_ex.append(self)
-#             self.romantic_degree -= 1
-#             user1.romantic_degree -= 1
-#         else:
-#             print(f"Unmatch failed. {self} and {user1} are not couples.")
-
-
-#     def socialize(self, self: User, user1: User) -> None:
-#         """Create self and user1 friendship.
-#         Preconditions:
-#         - (self not in user1.social_current and user1 not in self.social_current) 
-#             or (self in user1.social_current and user1 in self.social_current)
-#         """
-#         if self not in user1.romantic_current and user1 not in self.romantic_current:
-#             self.social_current.append(user1)
-#             user1.social_current.append(self)
-#             self.social_degree += 1
-#             user1.social_degree += 1
-#         else:
-#             print(f"Friend add failed. {self} and {user1} are already friends.")
-
-#     def unsocialize(self, self: User, user1: User) -> None:
-#         """Create self and user1 friendship.
-#         Preconditions:
-#         - (self not in user1.romantic_current and user1 not in self.romantic_current) 
-#             or (self in user1.romantic_current and user1 in self.romantic_current)
-#         """
-#         if self in user1.romantic_current and user1 in self.romantic_current:
-#             self.social_current.remove(user1)
-#             user1.social_current.remove(user1)
-#             self.social_degree -= 1
-#             user1.social_degree -= 1
-#             self.social_ex.append(user1)
-#             user1.social_ex.append(self)
-#         else:
-#             print(f"Unfriend failed. {self} and {user1} are not friends.")
-
-#     def get_romantic_degree(self, user: User) -> int:
-#         return user.romantic_degree
-
-#     def get_social_degree(self, user: User) -> int:
-#         return user.social_degree
-
-#     def get_romantic_current(self, user: User) -> Optional[User]:
-#         return user.romantic_current
-
-#     def get_social_current(self, user: User) -> Optional[User]:
-#         return user.social_current
-    
-
-
 def add_fixed_users(users: list[dict]) -> None:
-    """Adding the creators into the user list. Creators also want to play!
+    """
+    Adding the creators into the user list. Creators also want to play!
     """
     fixed_users = [
         User(
@@ -552,10 +445,10 @@ def add_fixed_users(users: list[dict]) -> None:
     
     # Add fixed users to the list
     users.extend(fixed_users)
-        
 
 def add_user(users: list[dict]) -> None:
-    """Asks the user to input their information and parse the data into User object to be added to the user list.
+    """
+    Asks the user to input their information and parse the data into User object to be added to the user list.
     Used when the app is run without the ui.py.
     """
     name = input("Enter Name: ").capitalize()
@@ -673,16 +566,4 @@ def add_user(users: list[dict]) -> None:
 
 users = generate_users_with_class(200, 25, 1234)
 add_fixed_users(users)
-# user_keypair = dict()
-# for user in users:
-#     if user.name not in user_keypair:
-#         user_keypair[user.name] = user
-#     else:
-#         continue
 user_looking_for_friends, user_looking_for_love = simulate_connections(users)
-
-if __name__ == "__main__":
-    # import graph
-    # Use a different port when running from user_network.py
-    # graph.app.run_server(debug=True, port=8051)
-    add_user(users)
