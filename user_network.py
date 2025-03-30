@@ -312,21 +312,6 @@ class User:
         else:
             print(f"Friend add failed. {self} and {user1} are already friends.")
 
-
-    def socialize(self, user1: User) -> None:
-        """Create self and user1 friendship.
-        Preconditions:
-        - (self not in user1.social_current and user1 not in self.social_current) 
-            or (self in user1.social_current and user1 in self.social_current)
-        """
-        if self not in user1.romantic_current and user1 not in self.romantic_current:
-            self.social_current.append(user1)
-            user1.social_current.append(self)
-            self.social_degree += 1
-            user1.social_degree += 1
-        else:
-            print(f"Friend add failed. {self} and {user1} are already friends.")
-
     def unsocialize(self, user1: User) -> None:
         """Create self and user1 friendship.
         Preconditions:

@@ -6,12 +6,14 @@ import sys
 import random
 import importlib
 
-# Import the add_user() function from user_network.py
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-try:
-    from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love
-except ImportError:
-    print("Error importing from user_network.py")
+# # Import the add_user() function from user_network.py
+# sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# try:
+#     from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love
+# except ImportError:
+#     print("Error importing from user_network.py")
+
+from user_network import add_user, User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, user_looking_for_love
 
 class DestinyApp:
     """
@@ -80,10 +82,18 @@ class DestinyApp:
         
         self.create_welcome_page(image_path)
 
+        # Generate users locally
         self.user_list = generate_users_with_class(200, 25, 1234)
+        
+        # CRITICAL FIX: Update the global lists in user_network.py
+        import user_network
+        user_network.user_list = self.user_list  # Make sure global list has all users
+        
+        # Now add fixed users to both your local and global lists
         add_fixed_users(self.user_list)
         add_fixed_users(user_looking_for_friends)
         add_fixed_users(user_looking_for_love)
+        
         print(f"Generated initial user list with {len(self.user_list)} users")
     
     def create_welcome_page(self, image_path):
@@ -791,16 +801,22 @@ class DestinyApp:
             romantic_current = None
         )
             
-            # Add the user to the network
-            self.user_list = self.add_user_to_network(user, self.user_list)
+                # DIRECTLY import the global lists
+            from user_network import user_list as global_user_list
+            from user_network import user_looking_for_friends
+            from user_network import user_looking_for_love
             
-            # Make sure user is added to the correct list based on dating goal
+            # Add the user to the GLOBAL network list
+            global_user_list.append(user)
+            self.user_list = global_user_list  # Update local reference
+            
+            # Make sure user is added to the correct GLOBAL list
             if user.dating_goal == "Meeting new friends":
-                user_looking_for_friends.append(user)  # Make sure to add to this list
-                print(f"Added {user.name} to user_looking_for_friends list")
+                if user not in user_looking_for_friends:
+                    user_looking_for_friends.append(user)
             else:
-                user_looking_for_love.append(user)
-                print(f"Added {user.name} to user_looking_for_love list")
+                if user not in user_looking_for_love:
+                    user_looking_for_love.append(user)
 
             # Print debug information to terminal
             self.print_user_list_debug()
@@ -1045,170 +1061,132 @@ class DestinyApp:
             
             self.display_current_recommendation()
 
-    # def match_current_recommendation(self):
-    #     """
-    #     Match with the current recommendation and show the next one.
-    #     """
-    #     # Get the current recommendation
-    #     if not self.recommendations:
-    #         return
+    def show_blocking_error(self, message):
+        """Show a very visible blocking error message that can't be missed"""
+        # Create a full-screen semi-transparent overlay
+        overlay = tk.Frame(self.root, bg="#000000")
+        overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
         
-    #     matched_user = self.recommendations[0]
-    #     matched_name = matched_user.name
-    #     dating_goal = self.current_user.dating_goal
+        # Create an error box
+        error_frame = tk.Frame(overlay, bg="#E74C3C", padx=30, pady=30)
+        error_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         
-    #     # Update recommendation status in dictionary
-    #     if matched_name in self.recommendations_dict:
-    #         # Handle based on dating goal
-    #         if dating_goal == "Meeting new friends":
-    #             # Mark as matched in our dictionary
-    #             self.recommendations_dict[matched_name]['status'] = 'matched'
-                
-    #             # Create bidirectional friendship connection
-    #             if matched_user not in self.current_user.social_current:
-    #                 self.current_user.social_current.append(matched_user)
-    #             if self.current_user not in matched_user.social_current:
-    #                 matched_user.social_current.append(self.current_user)
-                
-    #             # Update social degree
-    #             self.current_user.update_social_degree()
-    #             matched_user.update_social_degree()
-                
-    #             # Show success message
-    #             success_text = f"You've connected with {matched_user.name}!"
-    #             self.show_temporary_message(success_text, "#2ECC71")
-                
-    #             # Increment match counter
-    #             self.matches_made += 1
-                
-    #             # Remove from the list
-    #             self.recommendations.pop(0)
-                
-    #             if not self.recommendations:
-    #                 # No more recommendations
-    #                 self.root.after(200, self.show_matching_summary)
-    #                 return
-                
-    #             # Display next recommendation after a short delay
-    #             self.root.after(200, self.display_current_recommendation)
+        # Error title
+        title = tk.Label(error_frame, text="CANNOT MATCH", 
+                    font=("Arial", 24, "bold"), fg="white", bg="#E74C3C")
+        title.pack(pady=(0, 20))
+        
+        # Error message
+        msg = tk.Label(error_frame, text=message,
+                    font=("Arial", 18), fg="white", bg="#E74C3C",
+                    wraplength=400)
+        msg.pack()
+        
+        # OK button
+        ok_button = tk.Button(error_frame, text="OK", font=("Arial", 16),
+                        bg="white", fg="#E74C3C", padx=30, pady=10,
+                        command=overlay.destroy)
+        ok_button.pack(pady=(30, 0))
+        
+        # Auto-remove after 3 seconds
+        self.root.after(3000, overlay.destroy)
 
-    #         else:
-    #             if hasattr(matched_user, 'romantic_current') and matched_user.romantic_current is not None:
-    #                 # The matched user already has a romantic partner, show error and skip
-    #                 partner_name = matched_user.romantic_current.name if hasattr(matched_user.romantic_current, 'name') else "someone"
-    #                 error_text = f"{matched_user.name} is already in a relationship with {partner_name}!"
+    def sync_user_with_global_version(self, user_name):
+        """Ensures we have the latest version of a specific user from the global list"""
+        from user_network import user_list as global_user_list
+        
+        # Find the user in the global list
+        global_user = next((u for u in global_user_list if u.name == user_name), None)
+        
+        if global_user:
+            # Log the user's current state
+            partner_info = "No partner"
+            if global_user.romantic_current is not None:
+                partner_name = global_user.romantic_current.name
+                partner_info = f"has partner: {partner_name}"
+                
+            print(f"CRITICAL SYNC: {user_name} from global list (ID={id(global_user)}) {partner_info}")
+            
+            # Update in recommendations list
+            for i, user in enumerate(self.recommendations):
+                if user.name == user_name:
+                    self.recommendations[i] = global_user
+                    print(f"Updated {user_name} in recommendations list")
+                    break
                     
-    #                 self.show_temporary_message(error_text, "#E74C3C")
-                    
-    #                 # Skip to next recommendation
-    #                 self.recommendations.pop(0)
-
-    #                 if not self.recommendations:
-    #                     self.root.after(2000, self.show_matching_summary)
-    #                     return
-                    
-    #                 self.root.after(2000, self.display_current_recommendation)
-    #                 return
+            # Also sync the current recommendation dictionary
+            if user_name in self.recommendations_dict:
+                self.recommendations_dict[user_name]['user'] = global_user
+                print(f"Updated {user_name} in recommendations dictionary")
                 
-    #             # IMPORTANT: Code for successful match is only reached if the partner check passed
-    #             # Continue with successful romantic match
-    #             self.recommendations_dict[matched_name]['status'] = 'matched'
-    #             self.recommendations.pop(0)
-                
-    #             # Create bidirectional romantic connection
-    #             self.current_user.romantic_current = matched_user
-    #             matched_user.romantic_current = self.current_user
-                
-    #             # Show success message
-    #             success_text = f"You've matched with {matched_user.name}!"
-    #             self.show_temporary_message(success_text, "#E74C3C")
-                
-    #             # Increment match counter and go to summary
-    #             self.matches_made += 1
-    #             self.root.after(1500, self.show_matching_summary)
-
-
-    def refresh_state(self):
-        """
-        Fully reload user_network to get the most up-to-date user objects,
-        then update self.user_list.
-        """
-        import user_network
-        importlib.reload(user_network)  # force a reload so changes are reflected
-        self.user_list = user_network.user_list
+        else:
+            print(f"WARNING: {user_name} not found in global user list during sync")
 
     def match_current_recommendation(self):
-        """
-        Match with the current recommendation and show the next one.
-        This version refreshes user objects from the up-to-date global state.
-        """
+        """Match with the current recommendation and show the next one."""
         if not self.recommendations:
             return
 
-        # Refresh global user state.
-        self.refresh_state()
-        user_keypair = {user.name: user for user in self.user_list}
-
-        # Update current_user and candidate (matched_user) from the fresh state.
-        self.current_user = user_keypair.get(self.current_user.name, self.current_user)
-        original_candidate = self.recommendations[0]
-        matched_user = user_keypair.get(original_candidate.name, original_candidate)
-        matched_name = matched_user.name
+        # Get candidate name from recommendations
+        candidate_name = self.recommendations[0].name
         dating_goal = self.current_user.dating_goal
-
-        print(f"DEBUG: Attempting romantic match for current user {self.current_user.name} (partner: {self.current_user.romantic_current})")
-        print(f"DEBUG: Candidate {matched_user.name} (partner: {matched_user.romantic_current})")
-
-        # Only run partner-checks for romantic matching.
-        if dating_goal != "Meeting new friends":
-            # Check if the current user already has a partner.
-            if self.current_user.romantic_current is not None:
-                error_text = f"You already have a partner: {self.current_user.romantic_current.name}!"
-                print("DEBUG: Current user already partnered:", error_text)
-                self.show_temporary_message(error_text, "#E74C3C")
+        
+        try:
+            # CRITICAL: Check ALL three lists for partnerships
+            from user_network import user_list, user_looking_for_friends, user_looking_for_love
+            
+            # Check if candidate has a partner in ANY of the three lists
+            candidate_partnered = False
+            partner_name = None
+            
+            # Function to check any list for partnerships
+            def check_list_for_partnership(user_list_to_check):
+                nonlocal candidate_partnered, partner_name
+                # Check direct partnership (user has partner)
+                for user in user_list_to_check:
+                    if user.name == candidate_name and user.romantic_current is not None:
+                        return True, user.romantic_current.name
+                    
+                    # Check reverse partnership (user is someone's partner)
+                    if user.romantic_current is not None and hasattr(user.romantic_current, 'name'):
+                        if user.romantic_current.name == candidate_name:
+                            return True, user.name
+                return False, None
+            
+            # Check all three lists
+            for check_list in [user_list, user_looking_for_friends, user_looking_for_love]:
+                is_partnered, found_partner = check_list_for_partnership(check_list)
+                if is_partnered:
+                    candidate_partnered = True
+                    partner_name = found_partner
+                    print(f"FOUND PARTNERSHIP: {candidate_name} with {partner_name}")
+                    break
+            
+            print(f"DEBUG: About to match with {candidate_name}")
+            print(f"DEBUG: Partnered status after checking all lists: {candidate_partnered}")
+            
+            # For romantic matching, prevent partnered matches
+            if dating_goal != "Meeting new friends" and candidate_partnered:
+                error_text = f"{candidate_name} is already in a relationship with {partner_name}!"
+                self.show_blocking_error(error_text)
                 self.recommendations.pop(0)
-                # Optionally, remove this candidate from the global romantic list:
-                try:
-                    from user_network import user_looking_for_love
-                    user_looking_for_love.remove(matched_user)
-                except ValueError:
-                    pass
-                self.refresh_state()  # make sure state reflects removal
-                if not self.recommendations:
-                    self.root.after(2000, self.show_matching_summary)
-                    return
-                self.root.after(2000, self.display_current_recommendation)
+                
+                # Schedule next action
+                def show_next():
+                    if not self.recommendations:
+                        self.show_matching_summary()
+                    else:
+                        self.display_current_recommendation()
+                
+                self.root.after(3000, show_next)
                 return
+            
+            # FIXED INDENTATION: Continue with the match as normal - this needs to be outside the if block
+            matched_user = self.recommendations[0]
 
-            # Check if the candidate already has a partner.
-            if matched_user.romantic_current is not None:
-                error_text = f"{matched_user.name} already has a partner: {matched_user.romantic_current.name}!"
-                print("DEBUG: Matched user already partnered:", error_text)
-                self.show_temporary_message(error_text, "#E74C3C")
-                self.recommendations.pop(0)
-                # Remove the candidate from the global romantic list, if present.
-                try:
-                    from user_network import user_looking_for_love
-                    user_looking_for_love.remove(matched_user)
-                except ValueError:
-                    pass
-                self.refresh_state()  # refresh state after removal
-                if not self.recommendations:
-                    self.root.after(2000, self.show_matching_summary)
-                    return
-                self.root.after(2000, self.display_current_recommendation)
-                return
-
-        # Final safety-check.
-        if dating_goal != "Meeting new friends":
-            if (self.current_user.romantic_current is not None or matched_user.romantic_current is not None):
-                print("DEBUG: Final safety-check failed. Aborting match.")
-                return
-
-        # If partner check has passed, proceed to create the connection.
-        if matched_name in self.recommendations_dict:
             if dating_goal == "Meeting new friends":
-                self.recommendations_dict[matched_name]['status'] = 'matched'
+                # Friend matching
+                self.recommendations_dict[candidate_name]['status'] = 'matched'
                 if matched_user not in self.current_user.social_current:
                     self.current_user.social_current.append(matched_user)
                 if self.current_user not in matched_user.social_current:
@@ -1220,18 +1198,23 @@ class DestinyApp:
                 self.matches_made += 1
                 self.recommendations.pop(0)
                 if not self.recommendations:
-                    self.root.after(200, self.show_matching_summary)
-                    return
-                self.root.after(200, self.display_current_recommendation)
+                    self.root.after(1500, self.show_matching_summary)
+                else:
+                    self.root.after(200, self.display_current_recommendation)
             else:
-                self.recommendations_dict[matched_name]['status'] = 'matched'
-                self.recommendations.pop(0)
+                # Romantic matching - create the partnership
+                self.recommendations_dict[candidate_name]['status'] = 'matched'
                 self.current_user.romantic_current = matched_user
                 matched_user.romantic_current = self.current_user
                 success_text = f"You've matched with {matched_user.name}!"
                 self.show_temporary_message(success_text, "#E74C3C")
                 self.matches_made += 1
-                self.root.after(1500, self.show_matching_summary)
+                self.recommendations.pop(0)
+                self.show_matching_summary()
+                
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
 
     def show_temporary_message(self, message, color="#2ECC71"):
         """
@@ -1337,12 +1320,14 @@ class DestinyApp:
         continue_button.pack(pady=30)
     
     def launch_main_app(self):
-        """
-        Launch the main app (graph visualization or other main functionality).
-        """
+        """Launch the main app (graph visualization or other main functionality)."""
         # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
-
+        
+        # Re-get the global user list
+        from user_network import user_list as global_user_list
+        self.user_list = global_user_list  # Refresh local reference
+        
         # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -1350,11 +1335,11 @@ class DestinyApp:
         frame = tk.Frame(self.root, bg="#7A8B9C")
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
         
-        # Show info about the user list
+        # Show info about the user list - now using the refreshed global list
         label = tk.Label(frame, text=f"User network has {len(self.user_list)} users",
                     font=("Arial", 24), fg="white", bg="#7A8B9C")
         label.pack(pady=20)
-        
+
         # Show social connections
         social_count = len(self.current_user.social_current)
         # Fix this line - romantic_current is not a list
@@ -1382,10 +1367,7 @@ class DestinyApp:
         close_button.pack(side=tk.LEFT, padx=10)
 
     def view_network_graph(self):
-        """
-        Show the network graph visualization.
-        """
-        # Import graph module here to avoid circular imports
+        """Show the network graph visualization."""
         try:
             import graph
             import webbrowser
@@ -1395,30 +1377,58 @@ class DestinyApp:
             
             # Create a temporary message
             temp_label = tk.Label(self.root, text="Loading network graph...",
-                                font=("Arial", 24), fg="white", bg="#7A8B9C")
+                            font=("Arial", 24), fg="white", bg="#7A8B9C")
             temp_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
             self.root.update()
             
             # Find an available port
             def find_available_port(start=8050, max_attempts=10):
-                """Find an available port starting from start_port"""
                 for port in range(start, start + max_attempts):
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         if s.connect_ex(('localhost', port)) != 0:
                             return port
-                return start + 100  # If no port found, try a higher number
+                return start + 100
             
-            # Choose a port
             port = find_available_port()
+            
+            # SYNC THE USER OBJECTS - this is the critical change
+            def sync_user_objects():
+                """Fix the mismatch between graph and UI by ensuring only one Joseph Cheung instance exists"""
+                from user_network import user_list as global_user_list
+                
+                # Find Joseph Cheung in the global user list
+                joseph = next((u for u in global_user_list if u.name == "Joseph Cheung"), None)
+                
+                # Print the state of Joseph Cheung
+                if joseph:
+                    partner_info = "No partner"
+                    if joseph.romantic_current is not None:
+                        partner_info = f"{joseph.romantic_current.name}"
+                    print(f"SYNCING USERS: Found Joseph Cheung (ID={id(joseph)}) with partner={partner_info}")
+                    
+                    # Update self.user_list to use this exact instance
+                    for i, user in enumerate(self.user_list):
+                        if user.name == "Joseph Cheung":
+                            print(f"Replacing Joseph Cheung (ID={id(user)}) with global version")
+                            self.user_list[i] = joseph
+            
+            # Call the sync function
+            sync_user_objects()
             
             # Define a function to run the Dash app in a separate thread
             def run_dash_app():
-                # Create the Dash app instance with our user list
-                print(f"Creating graph visualization with {len(self.user_list)} users on port {port}")
-                app = graph.create_app(self.user_list, user_looking_for_friends, user_looking_for_love)
+                # Add this import statement
+                import user_network
                 
-                # Configure the server to run without automatically opening the browser
+                # Use the SYNCED user list
+                app = graph.create_app(
+                    user_list=self.user_list,  # This now contains the synced Joseph instance
+                    user_looking_for_friends=user_network.user_looking_for_friends,
+                    user_looking_for_love=user_network.user_looking_for_love
+                )
+                
                 app.run(debug=False, port=port)
+
             
             # Define a function to open the browser after a short delay
             def open_browser():

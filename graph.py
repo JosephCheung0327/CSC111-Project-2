@@ -1,10 +1,10 @@
-from user_network import generate_users_with_class, add_fixed_users, User, user_looking_for_friends, user_looking_for_love
+from user_network import generate_users_with_class, add_fixed_users, User
 
 import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output, State, callback_context
 import networkx as nx
 
-def get_romantic_count(user):
+def get_romantic_count(user, user_looking_for_love):
     """Get accurate romantic connection count considering both directions."""
     # Direct check first
     if hasattr(user, 'romantic_current') and user.romantic_current is not None:
@@ -359,7 +359,7 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
     initial_romantic_fig, romantic_node_positions = plot_romantic_connections(user_looking_for_love)
     
     # Create the Dash app
-    app = Dash(__name__, suppress_callback_exceptions=True)
+    app = Dash(__name__)
     
     # Define the layout with tabs
     app.layout = html.Div([
@@ -477,7 +477,7 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
             
             if selected_user:
                 friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
-                romantic_count = get_romantic_count(selected_user)
+                romantic_count = get_romantic_count(selected_user, user_looking_for_love)
                 
                 output_text = html.Div([
                     html.Div([
@@ -518,7 +518,7 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
                         
                         if selected_user:
                             friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
-                            romantic_count = get_romantic_count(selected_user)
+                            romantic_count = get_romantic_count(selected_user, user_looking_for_love)
                             
                             output_text = html.Div([
                                 html.Div([
@@ -574,7 +574,7 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
                         
                         if selected_user:
                             friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
-                            romantic_count = get_romantic_count(selected_user)
+                            romantic_count = get_romantic_count(selected_user, user_looking_for_love)
                             
                             output_text = html.Div([
                                 html.Div([

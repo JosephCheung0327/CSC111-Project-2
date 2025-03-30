@@ -14,7 +14,7 @@ users_list = user_network.users
 char1 = users_list[-1].characteristics
 
 
-def filter_user_by_dating_goal (users:List[user_network.User],user:user_network.User) -> list[user_network.User]:
+def filter_user_by_dating_goal (users:List[user_network.User], user:user_network.User) -> list[user_network.User]:
     """Filters users who have the same dating goal as the given user, excluding themselves"""
 
     return [u for u in users if u.dating_goal == user.dating_goal and u!= user]
