@@ -91,14 +91,11 @@ class DestinyApp:
         """
         Create the initial welcome page with image and username input.
         """
-        # Unbind any mousewheel events first
-
-
         # Clear any existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.root.configure(bg="#7A8B9C") # Set background color
+        self.root.configure(bg="#7A8B9C")  # Set background color
 
         # Create two frames, one for the image (top half) and one for username input (bottom half)
         top_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height // 2, bg="#7A8B9C")
@@ -127,7 +124,7 @@ class DestinyApp:
             # Always resize to fit the top half
             new_width = int(img_width * scale_factor)
             new_height = int(img_height * scale_factor)
-            img = img.resize((new_width, new_height), Image.LANCZOS)  # Use LANCZOS filter for high-quality downsampling
+            img = img.resize((new_width, new_height))
 
             photo = ImageTk.PhotoImage(img)  # Convert the image to PhotoImage format
 
@@ -135,12 +132,11 @@ class DestinyApp:
             image_label = tk.Label(top_frame, image=photo, bg="#7A8B9C")
             image_label.image = photo  # Keep a reference to prevent garbage collection
 
-            image_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER) # Center the image in the top frame
+            image_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)  # Center the image in the top frame
 
         except Exception as e:
             # Show error message instead
-            error_label = tk.Label(top_frame, text=f"Error loading image: {e}",
-                                  fg="white", bg="#7A8B9C", padx=20, pady=20, font=("Arial", 16))
+            error_label = tk.Label(top_frame, text=f"Error loading image: {e}", fg="white", bg="#7A8B9C", padx=20, pady=20, font=("Arial", 16))
             error_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # Add heading and create the username input field in the bottom frame
@@ -149,8 +145,7 @@ class DestinyApp:
         heading.pack(pady=(50, 20))
 
         # Add description
-        description = tk.Label(bottom_frame, text="Please enter your name to continue",
-                             font=("Arial", 18), fg="white", bg="#7A8B9C")
+        description = tk.Label(bottom_frame, text="Please enter your name to continue", font=("Arial", 18), fg="white", bg="#7A8B9C")
         description.pack(pady=(0, 40))
 
         # Create a frame for the input field to control its width
@@ -165,14 +160,11 @@ class DestinyApp:
         self.username_entry.pack(side=tk.LEFT)
         self.username_entry.focus_set()  # Set cursor focus to this field
 
-        submit_button = tk.Button(bottom_frame, text="Continue", font=("Arial", 16),
-                                 bg="#4CAF50", fg="black", padx=20, pady=10,
-                                 command=self.handle_username_submit)
+        submit_button = tk.Button(bottom_frame, text="Continue", font=("Arial", 16), bg="#4CAF50", fg="black", padx=20, pady=10, command=self.handle_username_submit)
         submit_button.pack(pady=20)
 
         # Result label to show feedback
-        self.result_label = tk.Label(bottom_frame, text="", font=("Arial", 14),
-                              fg="white", bg="#7A8B9C")
+        self.result_label = tk.Label(bottom_frame, text="", font=("Arial", 14), fg="white", bg="#7A8B9C")
         self.result_label.pack(pady=10)
 
         self.root.bind('<Return>', lambda event: self.handle_username_submit())  # Handle Enter key press to advance
@@ -1150,16 +1142,16 @@ class DestinyApp:
                 self.recommendations.pop(0)
                 self.show_matching_summary()
         else:
-                # Friend matching
-                self.current_user.socialize(candidate)
-                success_text = f"You've connected with {candidate.name}!"
-                self.show_temporary_message(success_text, "#2ECC71")
-                self.matches_made += 1
-                self.recommendations.pop(0)
-                if not self.recommendations:
-                    self.root.after(1500, self.show_matching_summary)
-                else:
-                    self.root.after(200, self.display_current_recommendation)
+            # Friend matching
+            self.current_user.socialize(candidate)
+            success_text = f"You've connected with {candidate.name}!"
+            self.show_temporary_message(success_text, "#2ECC71")
+            self.matches_made += 1
+            self.recommendations.pop(0)
+            if not self.recommendations:
+                self.root.after(1500, self.show_matching_summary)
+            else:
+                self.root.after(200, self.display_current_recommendation)
 
 
     def show_temporary_message(self, message, color="#2ECC71"):
@@ -1454,7 +1446,7 @@ if __name__ == "__main__":
     app.run()
 
     python_ta.check_all(config={
-    'extra-imports': ["tkinter", "PIL"],  # the names (strs) of imported modules
+    'extra-imports': ["tkinter", "PIL", "sys", "user_network", "traceback", "tree", "common", "graph", "threading", "time", "socket", "webbrowser"],  # the names (strs) of imported modules
     'allowed-io': [],     # the names (strs) of functions that call print/open/input
     'max-line-length': 120
     })
