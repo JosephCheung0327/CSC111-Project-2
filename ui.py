@@ -3,9 +3,13 @@ The program handling the GUI for the dating app.
 """
 
 import tkinter as tk
+
 import python_ta
 from PIL import Image, ImageTk
+from typing import Union
+from dash import Dash
 import sys
+import traceback
 
 from user_network import User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, \
     user_looking_for_love
@@ -14,21 +18,6 @@ from user_network import User, Characteristics, generate_users_with_class, add_f
 class DestinyApp:
     """
     A dating app interface that allows users to create profiles and visualize social networks.
-
-    root: tk.Tk
-    window_width: int
-    window_height: int
-    image_path: str
-    username: str
-    username_entry: tk.Entry
-    attributes: dict[str, Union[tk.StringVar, tk.BooleanVar, dict[str, tk.BooleanVar]]]
-    status_label: tk.Label
-    result_label: tk.Label
-    user_list: list[User]
-    user_list_friends: list[User]
-    user_list_love: list[User]
-    current_user: User
-
 
     Instance Attributes:
         - root: The tkinter root window for the application interface
@@ -64,8 +53,28 @@ class DestinyApp:
         - if hasattr(self, 'status_label'): isinstance(self.status_label, tk.Label)
         - if hasattr(self, 'result_label'): isinstance(self.result_label, tk.Label)
     """
+    root: tk.Tk
+    window_width: int
+    window_height: int
+    image_path: str
+    username: str
+    username_entry: tk.Entry
+    attributes: dict[str, Union[tk.StringVar, tk.BooleanVar, dict[str, tk.BooleanVar]]]
+    status_label: tk.Label
+    result_label: tk.Label
+    user_list: list[User]
+    user_list_friends: list[User]
+    user_list_love: list[User]
+    current_user: User
+    priority_attributes: list[str]
+    recommendations_dict: dict[str, list[User]]
+    recommendations: list[User]
+    match_frame: tk.Frame
+    matches_made: list[str]
+    counter_label: tk.Label
+    network_graph: Dash
 
-    def __init__(self, image_path, window_width=720, window_height=720):
+    def __init__(self, image_path: str, window_width: int = 720, window_height: int = 720) -> None:
         self.root = tk.Tk()
         self.root.title("Destiny App")
         self.root.geometry(f"{window_width}x{window_height}")
@@ -75,8 +84,11 @@ class DestinyApp:
         self.window_height = window_height
 
         self.image_path = image_path
-
         self.create_welcome_page(image_path)
+
+        self.priority_attributes = []
+        self.recommendations_dict = {}
+        self.recommendations = []
 
         # Generate users locally
         self.user_list = generate_users_with_class(200, 25, 1234)
@@ -91,7 +103,7 @@ class DestinyApp:
 
         print(f"Generated initial user list with {len(self.user_list)} users")
 
-    def create_welcome_page(self, image_path):
+    def create_welcome_page(self, image_path: str) -> None:
         """
         Create the initial welcome page with image and username input.
         """
@@ -176,7 +188,7 @@ class DestinyApp:
 
         self.root.bind('<Return>', lambda event: self.handle_username_submit())  # Handle Enter key press to advance
 
-    def handle_username_submit(self):
+    def handle_username_submit(self) -> None:
         """
         Handle the username submission and transition to appropriate page.
         """
@@ -193,7 +205,7 @@ class DestinyApp:
         else:
             self.create_attributes_page()  # Regular user, proceed to attributes page
 
-    def create_admin_page(self):
+    def create_admin_page(self) -> None:
         """
         Create the admin page with direct access to the network graph.
         """
@@ -239,7 +251,7 @@ class DestinyApp:
                                   command=lambda: self.create_welcome_page(self.image_path))
         logout_button.pack(pady=20)
 
-    def configure_dropdown(self, dropdown, width=29):
+    def configure_dropdown(self, dropdown: tk.OptionMenu, width: int = 29) -> None:
         """
         Apply simple consistent styling to a dropdown menu.
         """
@@ -263,7 +275,7 @@ class DestinyApp:
             font=("Arial", 14)
         )
 
-    def create_attributes_page(self):
+    def create_attributes_page(self) -> None:
         """
         Create the page with input fields for all user attributes.
         """
@@ -294,14 +306,14 @@ class DestinyApp:
         scrollbar.pack(side="right", fill="y")
 
         # Define mousewheel event handlers first before using them
-        def _bound_to_mousewheel(event):
+        def _bound_to_mousewheel(event: tk.Event) -> None:
             # Bind scrolling when mouse enters the canvas
             if sys.platform == 'darwin':  # macOS
                 canvas.bind_all("<MouseWheel>", _on_scrollwheel)
             else:  # Windows and others
                 canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
-        def _unbound_to_mousewheel(event):
+        def _unbound_to_mousewheel(event: tk.Event) -> None:
             # Unbind scrolling when mouse leaves the canvas
             if sys.platform == 'darwin':  # macOS
                 canvas.unbind_all("<MouseWheel>")
@@ -309,7 +321,7 @@ class DestinyApp:
                 canvas.unbind_all("<MouseWheel>")
 
         # Enable mousewheel/trackpad scrolling
-        def _on_mousewheel(event):
+        def _on_mousewheel(event: tk.Event) -> None:
             # For Windows and macOS
             try:
                 canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -320,7 +332,7 @@ class DestinyApp:
                 else:  # Windows and others
                     self.root.unbind_all("<MouseWheel>")
 
-        def _on_scrollwheel(event):
+        def _on_scrollwheel(event: tk.Event) -> None:
             # For macOS with trackpad
             try:
                 canvas.yview_scroll(-1 * int(event.delta), "units")
@@ -607,7 +619,7 @@ class DestinyApp:
         button_frame = tk.Frame(priority_frame, bg="#7A8B9C")
         button_frame.pack(side="left", padx=10)
 
-        def move_up():
+        def move_up() -> None:
             selected_idx = priority_listbox.curselection()
             if not selected_idx or selected_idx[0] == 0:
                 return
@@ -619,7 +631,7 @@ class DestinyApp:
             priority_listbox.selection_set(idx - 1)
             priority_listbox.activate(idx - 1)
 
-        def move_down():
+        def move_down() -> None:
             selected_idx = priority_listbox.curselection()
             if not selected_idx or selected_idx[0] == priority_listbox.size() - 1:
                 return
@@ -641,7 +653,6 @@ class DestinyApp:
                                 activebackground="#C0392B", activeforeground="white")
         down_button.pack()
 
-        self.priority_attributes = []
         for i in range(priority_listbox.size()):
             self.priority_attributes.append(priority_listbox.get(i))
 
@@ -683,7 +694,7 @@ class DestinyApp:
         bottom_spacer = tk.Label(scroll_frame, text="", bg="#7A8B9C")
         bottom_spacer.pack(pady=50)
 
-    def add_user_to_network(self, new_user, user_list):
+    def add_user_to_network(self, new_user: User, user_list: list[User]) -> list[User]:
         """
         Add the newly created user to the existing user network.
         """
@@ -709,7 +720,7 @@ class DestinyApp:
 
         return user_list
 
-    def submit_user_profile(self):
+    def submit_user_profile(self) -> None:
         """
         Collect all the input values and create a new user.
         """
@@ -823,11 +834,10 @@ class DestinyApp:
             self.root.after(200, self.show_success_page)
 
         except Exception as e:
-            import traceback
             traceback.print_exc()
             self.status_label.config(text=f"Error: {str(e)}")
 
-    def show_success_page(self):
+    def show_success_page(self) -> None:
         """
         Show a success page after profile creation.
         """
@@ -860,7 +870,7 @@ class DestinyApp:
                                     command=self.show_matching_page)
         continue_button.pack(pady=30)
 
-    def show_matching_page(self):
+    def show_matching_page(self) -> None:
         """
         Show a page where users can swipe through recommended matches and connect with them.
         """
@@ -904,10 +914,6 @@ class DestinyApp:
         recommendation_names = preference_tree.run_preference_tree()
 
         user_keypair = {user.name: user for user in self.user_list}
-
-        # Create recommendations dictionary
-        self.recommendations_dict = {}
-        self.recommendations = []
 
         # Filter out users who already have romantic partners if looking for romance
         for name in recommendation_names:
@@ -977,7 +983,7 @@ class DestinyApp:
                                       font=("Arial", 14), fg="white", bg="#7A8B9C")
         self.counter_label.pack(pady=(20, 0))
 
-    def display_current_recommendation(self):
+    def display_current_recommendation(self) -> None:
         """
         Display the current recommendation in the match frame.
         """
@@ -1032,7 +1038,7 @@ class DestinyApp:
             # If counter_label doesn't exist or has been destroyed, create a new one
             pass
 
-    def pass_current_recommendation(self):
+    def pass_current_recommendation(self) -> None:
         """
         Skip the current recommendation and show the next one.
         """
@@ -1054,7 +1060,7 @@ class DestinyApp:
 
             self.display_current_recommendation()
 
-    def show_blocking_error(self, message):
+    def show_blocking_error(self, message: str) -> None:
         """Show a very visible blocking error message that can't be missed"""
         # Create a full-screen semi-transparent overlay
         overlay = tk.Frame(self.root, bg="#000000")
@@ -1084,7 +1090,7 @@ class DestinyApp:
         # Auto-remove after 3 seconds
         self.root.after(3000, overlay.destroy)
 
-    def match_current_recommendation(self):
+    def match_current_recommendation(self) -> None:
         """
         Match with the current recommendation and show the next one.
         """
@@ -1135,7 +1141,7 @@ class DestinyApp:
                 self.show_blocking_error(error_text)
                 self.recommendations.pop(0)
 
-                def show_next():
+                def show_next() -> None:
                     if not self.recommendations:
                         self.show_matching_summary()
                     else:
@@ -1146,6 +1152,7 @@ class DestinyApp:
 
             else:
                 self.current_user.match(candidate)
+                self.update_network_graph()
                 success_text = f"You've matched with {candidate.name}!"
                 self.show_temporary_message(success_text, "#E74C3C")
                 self.matches_made += 1
@@ -1163,7 +1170,7 @@ class DestinyApp:
             else:
                 self.root.after(200, self.display_current_recommendation)
 
-    def show_temporary_message(self, message, color="#2ECC71"):
+    def show_temporary_message(self, message: str, color: str = "#2ECC71") -> None:
         """
         Show a temporary message overlay on the match frame.
         """
@@ -1179,7 +1186,7 @@ class DestinyApp:
         # Remove overlay after 1.5 seconds
         self.root.after(1500, overlay.destroy)
 
-    def show_matching_summary(self):
+    def show_matching_summary(self) -> None:
         """
         Show a summary of the user's matches.
         """
@@ -1267,7 +1274,7 @@ class DestinyApp:
                                     command=self.launch_main_app)
         continue_button.pack(pady=30)
 
-    def launch_main_app(self):
+    def launch_main_app(self) -> None:
         """Launch the main app (graph visualization or other main functionality)."""
         # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
@@ -1305,7 +1312,7 @@ class DestinyApp:
         # Add a button to return to home page
         home_button = tk.Button(button_frame, text="Return to Home", font=("Arial", 16),
                                 bg="#3498DB", fg="black", padx=20, pady=10,
-                                command=lambda: self.create_welcome_page(image_path))
+                                command=lambda: self.create_welcome_page(self.image_path))
         home_button.pack(side=tk.LEFT, padx=10)
 
         # Add a close button
@@ -1314,7 +1321,7 @@ class DestinyApp:
                                  command=self.root.destroy)
         close_button.pack(side=tk.LEFT, padx=10)
 
-    def view_network_graph(self):
+    def view_network_graph(self) -> None:
         """Show the network graph visualization."""
         try:
             import graph
@@ -1330,7 +1337,7 @@ class DestinyApp:
             self.root.update()
 
             # Find an available port
-            def find_available_port(start=8050, max_attempts=10):
+            def find_available_port(start: int = 8050, max_attempts: int = 10) -> int:
                 for port in range(start, start + max_attempts):
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         if s.connect_ex(('localhost', port)) != 0:
@@ -1340,7 +1347,7 @@ class DestinyApp:
             port = find_available_port()
 
             # Define a function to run the Dash app in a separate thread
-            def run_dash_app():
+            def run_dash_app() -> None:
                 # Add this import statement
                 import user_network
 
@@ -1353,7 +1360,7 @@ class DestinyApp:
                 app.run(debug=False, port=port)
 
             # Define a function to open the browser after a short delay
-            def open_browser():
+            def open_browser() -> None:
                 time.sleep(3)  # Wait for the server to start
                 url = f'http://127.0.0.1:{port}/'
                 print(f"Opening browser to {url}")
@@ -1383,7 +1390,27 @@ class DestinyApp:
                                    font=("Arial", 16), fg="white", bg="#7A8B9C")
             error_label.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
 
-    def update_status_message(self, message):
+    def update_network_graph(self) -> None:
+        """
+        Refresh the network graph display by recalculating the subset of romantic users.
+        """
+        # Import the global user_list from the user_network module.
+        from user_network import user_list
+
+        # Recompute the list of users looking for romantic connections based on current state.
+        updated_user_looking_for_love = [
+            user for user in user_list if user.dating_goal != "Meeting new friends"
+        ]
+
+        # Rebuild the graph using the updated lists.
+        from graph import create_app
+        self.network_graph = create_app(
+            user_list=user_list,
+            user_looking_for_friends=[user for user in user_list if user.dating_goal == "Meeting new friends"],
+            user_looking_for_love=updated_user_looking_for_love
+        )
+
+    def update_status_message(self, message: str) -> None:
         """
         Update status message at the bottom of the window.
         """
@@ -1403,7 +1430,7 @@ class DestinyApp:
                                 padx=10, pady=5)
         status_label.pack(fill=tk.X)
 
-    def print_user_list_debug(self):
+    def print_user_list_debug(self) -> None:
         """
         Print debug information about all users in the network to the terminal.
         """
@@ -1443,7 +1470,7 @@ class DestinyApp:
 
         print("\n==========================================")
 
-    def run(self):
+    def run(self) -> None:
         """
         Run the application.
         """
@@ -1451,14 +1478,16 @@ class DestinyApp:
 
 
 if __name__ == "__main__":
-    image_path = "destiny_home_page.png"  # The path to the PNG image for home page
-    app = DestinyApp(image_path)
+    home_image_path = "destiny_home_page.png"  # The path to the PNG image for home page
+    app = DestinyApp(home_image_path)
     app.run()
 
     python_ta.check_all(config={
         'extra-imports': ["tkinter", "PIL", "sys", "user_network", "traceback", "tree", "common", "graph", "threading",
-                          "time", "socket", "webbrowser"],  # the names (strs) of imported modules
+                          "time", "socket", "webbrowser", "dash"],  # the names (strs) of imported modules
         'allowed-io': [],  # the names (strs) of functions that call print/open/input
         'max-line-length': 120,
-        'max-module-lines': 1500
+        'max-module-lines': 1500,
+        'max-attributes': 20,
+        'disable': ['C0415']
     })
