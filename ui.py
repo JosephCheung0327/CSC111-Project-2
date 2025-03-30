@@ -81,6 +81,7 @@ class DestinyApp:
 
         self.user_list = generate_users_with_class(200, 25, 1234)
         add_fixed_users(self.user_list)
+        add_fixed_users(user_looking_for_friends)
         print(f"Generated initial user list with {len(self.user_list)} users")
     
     def create_welcome_page(self, image_path):
@@ -769,20 +770,16 @@ class DestinyApp:
             dating_goal=dating_goal,
             interested_friend=[],
             social_current=[],
-            interested_romantic=[]
+            interested_romantic=[],
+            romantic_current = None
         )
-        
-            # Generate the initial user list if it hasn't been created yet
-            if not hasattr(self, 'user_list'):
-                self.user_list = generate_users_with_class(200, 25, 1234)
-                add_fixed_users(self.user_list)
-                print(f"Generated initial user list with {len(self.user_list)} users")
             
             # Add the user to the network
             self.user_list = self.add_user_to_network(user, self.user_list)
-            add_fixed_users(user_looking_for_friends)
-            self.user_list_friend = self.add_user_to_network(user, user_looking_for_friends)
-            self.user_list_love = self.add_user_to_network(user, user_looking_for_love)
+            if user.dating_goal == "Meeting new friends":
+                self.user_list_friend = self.add_user_to_network(user, user_looking_for_friends)
+            else:
+                self.user_list_love = self.add_user_to_network(user, user_looking_for_love)
 
             # Print debug information to terminal
             self.print_user_list_debug()
@@ -794,7 +791,7 @@ class DestinyApp:
             self.current_user = user
             
             # Show success page after a short delay
-            self.root.after(1500, self.show_success_page)
+            self.root.after(200, self.show_success_page)
         
         except Exception as e:
             import traceback
@@ -872,10 +869,11 @@ class DestinyApp:
                             font=("Arial", 16), fg="white", bg="#7A8B9C")
         description.pack(pady=(0, 20))
 
-        tree.data_wrangling(currentUser=self.current_user, user_characteristics=self.priority_attributes, users_list=self.user_list)
+        tree.data_wrangling(current_user=self.current_user, user_characteristics=self.priority_attributes, users_list=self.user_list)
         preference_tree = tree.build_preference_tree("data.csv")
         recommendation_names = preference_tree.run_preference_tree()
         
+        # TODO: use dict
         # Convert names to user objects
         self.recommendations = []
         for name in recommendation_names:
@@ -1042,12 +1040,6 @@ class DestinyApp:
             self.root.after(200, self.display_current_recommendation)
             
         else:
-            # Add romantic connection
-            if not hasattr(self.current_user, 'romantic_current') or self.current_user.romantic_current is None:
-                self.current_user.romantic_current = []
-                
-            if not hasattr(matched_user, 'romantic_current') or matched_user.romantic_current is None:
-                matched_user.romantic_current = []
                 
             self.current_user.romantic_current.append(matched_user)
             matched_user.romantic_current.append(self.current_user)

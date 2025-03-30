@@ -54,7 +54,7 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
         print(f"Error: {e}")
         return add_priority(Characteristics)
         
-def data_wrangling(currentUser: user_network.User, user_characteristics: list | None | user_network.Characteristics = char1,
+def data_wrangling(current_user: user_network.User, user_characteristics: list | None | user_network.Characteristics = char1,
                     users_list: List[user_network.User] = users_list, file_name: Optional[str] = "data.csv") -> None:
     """
     Creates a CSV file containing user data, including their characteristics and potential matches.
@@ -73,9 +73,9 @@ def data_wrangling(currentUser: user_network.User, user_characteristics: list | 
         heading = user_characteristics
     else:
         heading = add_priority(user_characteristics)
-        currentUser = users_list[-1]
+        current_user = users_list[-1]
 
-    potential_users = filter_user_by_dating_goal(users_list, currentUser)
+    potential_users = filter_user_by_dating_goal(users_list, current_user)
 
     data = {"name":[]}
 
@@ -85,8 +85,8 @@ def data_wrangling(currentUser: user_network.User, user_characteristics: list | 
     for attribute in heading:
         answer = []
         for person in potential_users:
-            # print(currentUser.characteristics.religion)
-            current_user_value = getattr(currentUser.characteristics, attribute)
+            # print(current_user.characteristics.religion)
+            current_user_value = getattr(current_user.characteristics, attribute)
             potential_user_value = getattr(person.characteristics, attribute)
 
             if current_user_value == potential_user_value:

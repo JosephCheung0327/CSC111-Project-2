@@ -74,10 +74,15 @@ def generate_users_with_class(list_size: int, interested_friend_simulation_size:
 
     return user_list
 
-def simulate_connections(user_list: list[User]) -> tuple(list[User], list[User]):
-        # TODO: use tree methods without attribute ranking
-    from tree import data_wrangling, build_preference_tree, BinaryTree, generate_10_people_list
-        
+def simulate_connections(user_list: list[User]) -> tuple:
+    """
+    Create social and romantic connections between users based on compatibility.
+    """
+    from tree import data_wrangling, build_preference_tree, generate_10_people_list
+    
+    # Create user name-to-object mapping INSIDE the function
+    user_keypair = {user.name: user for user in user_list}
+    
     users_looking_for_friends = [user for user in user_list if user.dating_goal == "Meeting new friends"]
     users_looking_for_love = [user for user in user_list if user.dating_goal != "Meeting new friends"]
 
@@ -85,27 +90,78 @@ def simulate_connections(user_list: list[User]) -> tuple(list[User], list[User])
                           "religion", "major", "year", "language", "likes_pets",
                           "likes_outdoor_activities", "enjoys_watching_movies"]
     
+    print(f"Processing {len(users_looking_for_friends)} friend seekers")
     for user in users_looking_for_friends:
-        data_wrangling(user, characteristics_default_rank, users_looking_for_friends, "friends.csv")
-        t = build_preference_tree('friends.csv') # Build decision tree
-        result = t.run_preference_tree() # Run the decision tree 
-        user.interested_friend = generate_10_people_list(t,result)
-        user.interested_friend = [user_keypair[nameString] for nameString in user.interested_friend]
-        user.update_social_degree()
+        try:
+            data_wrangling(user, characteristics_default_rank, users_looking_for_friends, "friends.csv")
+            t = build_preference_tree('friends.csv')
+            result = t.run_preference_tree()
+            name_list = generate_10_people_list(t, result)
+            
+            # Convert name strings to User objects with error checking
+            user.interested_friend = []
+            for nameString in name_list:
+                if nameString in user_keypair:
+                    user.interested_friend.append(user_keypair[nameString])
+                else:
+                    print(f"Warning: User '{nameString}' not found for {user.name}")
+        except Exception as e:
+            print(f"Error generating friends for {user.name}: {e}")
 
+    print(f"Processing {len(users_looking_for_love)} romantic seekers")
     for user in users_looking_for_love:
-        data_wrangling(user, characteristics_default_rank, users_looking_for_love, "love.csv")
-        t = build_preference_tree('love.csv') # Build decision tree
-        result = t.run_preference_tree() # Run the decision tree 
-        user.interested_romantic = generate_10_people_list(t,result)
-        user.interested_romantic = [user_keypair[nameString] for nameString in user.interested_romantic]
-        user.update_romantic_degree()
+        try:
+            data_wrangling(user, characteristics_default_rank, users_looking_for_love, "love.csv")
+            t = build_preference_tree('love.csv')
+            result = t.run_preference_tree()
+            name_list = generate_10_people_list(t, result)
+            
+            # Convert name strings to User objects with error checking
+            user.interested_romantic = []
+            for nameString in name_list:
+                if nameString in user_keypair:
+                    user.interested_romantic.append(user_keypair[nameString])
+                else:
+                    print(f"Warning: User '{nameString}' not found for {user.name}")
+        except Exception as e:
+            print(f"Error generating romantic interests for {user.name}: {e}")
+        
     
     for user in users_looking_for_friends:
         user.social_current = [social_current for social_current in user.interested_friend if user in social_current.interested_friend]
+        user.update_social_degree()
+    
     for user in users_looking_for_love:
-        if user.interested_romantic and user.interested_romantic[0].interested_romantic[0] == user:
-            user.romantic_current = user.interested_romantic[0]
+        # Skip users with no romantic interests
+        if not user.interested_romantic:
+            continue
+            
+        # Get the user's top romantic interest
+        top_match = user.interested_romantic[0]
+        
+        # Check if it's a mutual top match (they also have the user as their top interest)
+        if (hasattr(top_match, 'interested_romantic') and 
+                top_match.interested_romantic and 
+                top_match.interested_romantic[0] == user):
+            
+            # Create mutual romantic connection
+            user.romantic_current = top_match
+            top_match.romantic_current = user
+
+        user.update_romantic_degree()
+
+    social_connections = sum(1 for u in users_looking_for_friends if u.social_current)
+    romantic_connections = sum(1 for u in users_looking_for_love if u.romantic_current is not None)
+
+    print(f"Tree-based matching created {social_connections} social connections and {romantic_connections} romantic connections")
+    print(f"Social network examples:")
+    for user in users_looking_for_friends[:3]:
+        if user.social_current:
+            print(f"  {user.name} is friends with: {[friend.name for friend in user.social_current]}")
+        else:
+            print(f"  {user.name} has no friends")
+
+    return users_looking_for_friends, users_looking_for_love
     
     # # Assign top matches for each user (Simulation)
     # for user in user_list:
@@ -118,7 +174,6 @@ def simulate_connections(user_list: list[User]) -> tuple(list[User], list[User])
     #     if user.interested_romantic and user.interested_romantic[0].interested_romantic[0] == user:
     #         user.romantic_current = user.interested_romantic[0]
 
-    return users_looking_for_friends, users_looking_for_love
 
 
 class Characteristics:
@@ -403,12 +458,6 @@ class User:
 #     def get_social_current(self, user: User) -> Optional[User]:
 #         return user.social_current
     
-    
-
-    
-class DecisionTree:
-    pass
-    
 
 
 def add_fixed_users(users: list[dict]) -> None:
@@ -648,27 +697,14 @@ def add_user(users: list[dict]) -> None:
     users.append(user)
     print("User added successfully!")
 
-def add_priority():
-    attributes = {"Ethnicity": 1, "Interests": 2, "MBTI": 3, "Communication Type": 4, "Political Interests": 5, \
-    "Religion": 6, "Major": 7, "Year": 8, "Language": 9, "Likes Pets": 10, "Likes Outdoor Activities": 11,\
-    "Enjoys Watching Movies": 12}
-
-    print("Please rank the following criteria in order of importance (from most to least important):")
-    for key, value in attributes.items():
-        print(f"({value}) {key.replace('_', ' ').title()}")
-
-    ranking = input("Enter the numbers in order (e.g., 3 1 4 2 5 6 7 8 10 11 9 12): ").split()
-
-    #based on ranking, create decision tree (helper function)
-    
-
 users = generate_users_with_class(200, 25, 1234)
-user_keypair = dict()
-for user in users:
-    if user.name not in user_keypair:
-        user_keypair[user.name] = user
-    else:
-        continue
+add_fixed_users(users)
+# user_keypair = dict()
+# for user in users:
+#     if user.name not in user_keypair:
+#         user_keypair[user.name] = user
+#     else:
+#         continue
 user_looking_for_friends, user_looking_for_love = simulate_connections(users)
 
 if __name__ == "__main__":
