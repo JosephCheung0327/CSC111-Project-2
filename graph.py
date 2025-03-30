@@ -4,21 +4,39 @@ import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output, State, callback_context
 import networkx as nx
 
-def plot_user_connections(users: list, search_name: str = None, positions = None) -> go.Figure:
+def plot_user_connections(users: list, search_name: str = None, positions = None) -> tuple:
+    """Create a graph visualization showing social connections between users"""
     G = nx.Graph()
 
-    # Add all users as nodes
+    # First add all users as nodes without edges
     for user in users:
-        G.add_node(user.name, size = max(1, user.social_degree))
+        try:
+            # Get size from social_degree or social_current
+            size = 1  # Default size
+            if hasattr(user, 'social_degree') and user.social_degree is not None:
+                size = max(1, user.social_degree)
+            elif hasattr(user, 'social_current') and user.social_current:
+                size = max(1, len(user.social_current))
+        except Exception as e:
+            print(f"Error calculating size for {user.name}: {e}")
+            size = 1  # Default size on error
+            
+        # Add node with explicit size attribute
+        G.add_node(user.name, size=size, type="user")
     
-    # Add all edges based on social_current connections
+    # Then add all edges after nodes are created
     for user in users:
-        for friend in user.social_current:
-            G.add_edge(user.name, friend.name)
+        try:
+            if hasattr(user, 'social_current') and user.social_current:
+                for friend in user.social_current:
+                    if friend and friend.name in G.nodes:  # Safety check
+                        G.add_edge(user.name, friend.name)
+        except Exception as e:
+            print(f"Error adding edges for {user.name}: {e}")
 
     # Get positions for the nodes in the graph
     if positions is None:
-        pos = nx.spring_layout(G, k = 0.3, seed = 1234)
+        pos = nx.spring_layout(G, k=0.3, seed=1234)
     else:
         pos = positions
     
@@ -32,17 +50,13 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
     actual_search_name = None
     if search_name:
         search_name_lower = search_name.lower()
-        # Print search info for debugging
-        print(f"Searching for: {search_name_lower}")
-        
-        # Case-insensitive search for the node
         for node in G.nodes():
             if node.lower() == search_name_lower:
                 actual_search_name = node
                 print(f"Found matching node: {actual_search_name}")
                 break
     
-    # Add edges to appropriate traces
+    # Add edges to traces
     for edge in G.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
@@ -54,6 +68,19 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
             edge_x.extend([x0, x1, None])
             edge_y.extend([y0, y1, None])
 
+    # Create traces for the graph
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        line=dict(width=1, color='#888'),
+        hoverinfo='none',
+        mode='lines')
+    
+    highlight_edge_trace = go.Scatter(
+        x=highlight_edge_x, y=highlight_edge_y,
+        line=dict(width=2, color='#E74C3C'),
+        hoverinfo='none',
+        mode='lines')
+
     # Create node traces
     node_x = []
     node_y = []
@@ -62,50 +89,58 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
     hover_text = []
     node_color = []
     
-    # Add nodes to traces
+    # Add nodes to traces with safe access to size attribute
     for node in G.nodes():
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
-        node_size.append(G.nodes[node]["size"] * 3 + 5)
-        node_text.append(node if G.nodes[node]["size"] > 5 else "")
+        
+        # Safely access the size attribute with a default value
+        try:
+            size_value = G.nodes[node].get('size', 1)  # Use .get() with default value
+            node_size.append(size_value * 3 + 5)  # Scale size for visibility
+        except Exception as e:
+            print(f"Error accessing size for node {node}: {e}")
+            node_size.append(8)  # Default size
+            
+        # Node text and color
+        node_text.append(node)  # Always show node name
         hover_text.append(node)
         
-        if actual_search_name:
-            if node == actual_search_name:
-                node_color.append("red")  # The searched node
-            elif node in G.neighbors(actual_search_name):
-                node_color.append("blue")  # Connected nodes
-            else:
-                node_color.append("rgba(200,200,200,0.5)")  # Other nodes faded out
+        # Highlight the searched node
+        if node == actual_search_name:
+            node_color.append('#E74C3C')  # Red for searched node
         else:
-            node_color.append("#888")  # Default color when not searching
+            # Color gradient based on connections
+            try:
+                size_value = G.nodes[node].get('size', 1)
+                node_color.append(size_value)
+            except:
+                node_color.append(1)  # Default color value
     
-    # Create traces
-    edge_trace = go.Scatter(
-        x = edge_x, y = edge_y,
-        line = dict(width = 0.5, color = "#888"),
-        hoverinfo = "none",
-        mode = "lines")
-    
-    highlight_edge_trace = go.Scatter(
-        x = highlight_edge_x, y = highlight_edge_y,
-        line = dict(width = 1.5, color = "red"),
-        hoverinfo = "none",
-        mode = "lines")
-    
+    # Create the node trace
     node_trace = go.Scatter(
-        x = node_x, y = node_y,
-        mode = "markers+text",
-        text = node_text,
-        textposition = "top center",
-        textfont = dict(size = 12),
-        hoverinfo = "text",
-        hovertext = hover_text,
-        marker = dict(
-            color = node_color,
-            size = node_size,
-            line = dict(width = 1, color = "#444")))
+        x=node_x, y=node_y,
+        mode='markers+text',
+        text=node_text,
+        hovertext=hover_text,
+        hoverinfo='text',
+        marker=dict(
+            showscale=True,
+            colorscale='YlGnBu',
+            reversescale=True,
+            color=node_color,
+            size=node_size,
+            colorbar=dict(
+                thickness=15,
+                title='Friend Count',
+                xanchor='left',
+                titleside='right'
+            ),
+            line=dict(width=2, color='DarkSlateGrey')
+        ),
+        textposition="top center"
+    )
     
     # Create figure
     fig = go.Figure(data = [edge_trace, highlight_edge_trace, node_trace],
@@ -146,29 +181,28 @@ def plot_user_connections(users: list, search_name: str = None, positions = None
     
     return fig, pos
 
-def plot_romantic_connections(users: list, search_name: str = None, positions = None) -> go.Figure:
-    """
-    Create a graph visualization showing only romantic connections between users.
-    """
+def plot_romantic_connections(users: list, search_name: str = None, positions = None) -> tuple:
+    """Create a graph visualization showing romantic connections between users"""
     G = nx.Graph()
 
-    # Add all users as nodes - FIXED to handle None values
+    # First add all users as nodes with default size
     for user in users:
-        G.add_node(user.name, gender=user.gender)
+        G.add_node(user.name, gender=user.gender if hasattr(user, 'gender') else 'Unknown', size=10)
     
-    # Add edges (romantic connections between users)
+    # Then add edges for romantic connections
     for user in users:
-        if hasattr(user, 'romantic_current') and user.romantic_current:
-            # Make sure romantic_current is a list
-            if isinstance(user.romantic_current, list):
-                # Add an edge for each romantic connection
-                for romantic_partner in user.romantic_current:
-                    # Only add edges in one direction to avoid duplicates
-                    if user.name < romantic_partner.name:
-                        G.add_edge(user.name, romantic_partner.name)
-            else:
-                # Handle the case where romantic_current might be a single user object
-                G.add_edge(user.name, user.romantic_current.name)
+        try:
+            if hasattr(user, 'romantic_current') and user.romantic_current is not None:
+                # Handle both single object and list cases
+                if isinstance(user.romantic_current, list):
+                    for partner in user.romantic_current:
+                        if partner and partner.name in G.nodes:  # Safety check
+                            G.add_edge(user.name, partner.name)
+                else:
+                    if user.romantic_current and user.romantic_current.name in G.nodes:  # Safety check
+                        G.add_edge(user.name, user.romantic_current.name)
+        except Exception as e:
+            print(f"Error adding romantic edges for {user.name}: {e}")
 
     if positions is None:
         pos = nx.spring_layout(G, k = 0.3, seed = 1234)
@@ -220,16 +254,8 @@ def plot_romantic_connections(users: list, search_name: str = None, positions = 
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
-        # Calculate node size based on number of romantic connections
-        user = next((u for u in users if u.name == node), None)
-        romantic_count = 0
-        if user and user.romantic_current is not None:
-            romantic_count = 1
-        
-        node_size.append(romantic_count * 5 + 8)  # Adjust size calculation for romantic connections
-        
-        node_text.append(node if romantic_count > 0 else "")
-        hover_text.append(f"{node}\nRomantic connections: {romantic_count}")
+        hover_text.append(f"{node}")
+        node_size.append(15)
         
         # Use different color scheme for romantic graph (reds/pinks instead of blues)
         if actual_search_name:
@@ -307,6 +333,20 @@ def plot_romantic_connections(users: list, search_name: str = None, positions = 
             )
     
     return fig, pos
+
+def count_romantic_connections(user):
+    """
+    Helper function to correctly count romantic connections.
+    """
+    if not hasattr(user, 'romantic_current') or user.romantic_current is None:
+        return 0
+        
+    # Check if it's a list (should be a single object but just in case)
+    if isinstance(user.romantic_current, list):
+        return len(user.romantic_current)
+    else:
+        # It's a single object (or should be)
+        return 1 if user.romantic_current else 0
 
 def create_app(user_list=None):
     """Create and return a Dash app instance with multiple tabs for different network views
@@ -451,12 +491,18 @@ def create_app(user_list=None):
             # Find user with case-insensitive search
             selected_user = next(
                 (u for u in user_looking_for_friends if u.name.lower() == search_name.lower()), 
-                None
+                next(
+                    (u for u in user_looking_for_love if u.name.lower() == search_name.lower()),
+                    None
+                )
             )
             
             if selected_user:
-                friend_count = selected_user.social_degree
-                romantic_count = selected_user.romantic_degree
+                # Calculate friend count based directly on social_current
+                friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
+                
+                # Use the helper function for romantic count
+                romantic_count = count_romantic_connections(selected_user)
                 
                 output_text = html.Div([
                     html.Div([
@@ -467,12 +513,6 @@ def create_app(user_list=None):
                         html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
                         html.Span(f"Romantic partners: {romantic_count}")
                     ], style={'marginTop': '5px', 'fontSize': '16px'})
-                ])
-            else:
-                output_text = html.Div([
-                    "Searched for: ",
-                    html.Span(search_name, style={'color': '#f44336'}),
-                    html.Div("User not found", style={'marginTop': '5px', 'fontSize': '16px', 'color': '#999'})
                 ])
         
         # Handle node click in social graph
@@ -500,24 +540,30 @@ def create_app(user_list=None):
                         social_fig, _ = plot_user_connections(user_looking_for_friends, clicked_node, social_node_positions)
                         romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node, romantic_node_positions)
                         
-                        # Find the clicked user in our list to get their stats
-                        selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
+                        # Find user with case-insensitive search
+                        selected_user = next(
+                            (u for u in user_looking_for_friends if u.name == clicked_node), 
+                            next(
+                                (u for u in user_looking_for_love if u.name == clicked_node),
+                                None
+                            )
+                        )
+                        
                         if selected_user:
-                            friend_count = selected_user.social_degree
+                            # Calculate friend count based directly on social_current
+                            friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
                             
-                            # Safely handle romantic count
-                            romantic_count = 0
-                            if selected_user.romantic_current is not None:
-                                romantic_count = len(selected_user.romantic_current)
+                            # Use the helper function for romantic count
+                            romantic_count = count_romantic_connections(selected_user)
                             
                             output_text = html.Div([
                                 html.Div([
-                                    "Clicked on: ",
-                                    html.Span(clicked_node, style={'color': '#3498DB'})
+                                    "Found user: ",
+                                    html.Span(selected_user.name, style={'color': '#4CAF50', 'fontWeight': 'bold'})
                                 ]),
                                 html.Div([
                                     html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
-                                    html.Span(f"Romantic connections: {romantic_count}")
+                                    html.Span(f"Romantic partners: {romantic_count}")
                                 ], style={'marginTop': '5px', 'fontSize': '16px'})
                             ])
                         else:
@@ -567,24 +613,30 @@ def create_app(user_list=None):
                         social_fig, _ = plot_user_connections(user_looking_for_friends, clicked_node, social_node_positions)
                         romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node, romantic_node_positions)
                         
-                        # Find the user data
-                        selected_user = next((u for u in initial_user_list if u.name == clicked_node), None)
+                        # Find user with case-insensitive search
+                        selected_user = next(
+                            (u for u in user_looking_for_friends if u.name == clicked_node), 
+                            next(
+                                (u for u in user_looking_for_love if u.name == clicked_node),
+                                None
+                            )
+                        )
+                        
                         if selected_user:
-                            friend_count = selected_user.social_degree
+                            # Calculate friend count based directly on social_current
+                            friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
                             
-                            # Safely handle romantic count
-                            romantic_count = 0
-                            if selected_user.romantic_current is not None:
-                                romantic_count = len(selected_user.romantic_current)
+                            # Use the helper function for romantic count
+                            romantic_count = count_romantic_connections(selected_user)
                             
                             output_text = html.Div([
                                 html.Div([
-                                    "Clicked on: ",
-                                    html.Span(clicked_node, style={'color': '#E74C3C'})
+                                    "Found user: ",
+                                    html.Span(selected_user.name, style={'color': '#4CAF50', 'fontWeight': 'bold'})
                                 ]),
                                 html.Div([
                                     html.Span(f"Social connections: {friend_count}", style={'marginRight': '20px'}),
-                                    html.Span(f"Romantic connections: {romantic_count}", style={'color': '#E74C3C'})
+                                    html.Span(f"Romantic partners: {romantic_count}")
                                 ], style={'marginTop': '5px', 'fontSize': '16px'})
                             ])
                         else:
