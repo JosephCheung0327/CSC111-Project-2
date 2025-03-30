@@ -4,50 +4,6 @@ import plotly.graph_objects as go
 from dash import Dash, html, dcc, Input, Output, State, callback_context
 import networkx as nx
 
-# def fix_romantic_connections():
-#     """Fix romantic connections for fixed users."""
-#     fixed_count = 0
-    
-#     # Check each user in the romantic connections graph
-#     for user in user_looking_for_love:
-#         if hasattr(user, 'romantic_current') and user.romantic_current is not None:
-#             partner = user.romantic_current
-            
-#             # Ensure partner points back to this user
-#             if not hasattr(partner, 'romantic_current') or partner.romantic_current != user:
-#                 partner.romantic_current = user
-#                 fixed_count += 1
-
-# def sync_graph_with_objects(users):
-#     """
-#     Ensure romantic connections displayed on the graph are reflected in user objects.
-#     """
-#     # Build a graph of connections
-#     G = nx.Graph()
-    
-#     # Add edges from the user objects
-#     for user in users:
-#         if hasattr(user, 'romantic_current') and user.romantic_current is not None:
-#             if hasattr(user.romantic_current, 'name'):
-#                 G.add_edge(user.name, user.romantic_current.name)
-    
-#     # Fix any users without romantic_current but with edges in the graph
-#     fixed_count = 0
-#     for user in users:
-#         name = user.name
-        
-#         if name in G and list(G.neighbors(name)):
-#             partner_name = list(G.neighbors(name))[0]
-            
-#             if not hasattr(user, 'romantic_current') or user.romantic_current is None:
-#                 partner_user = next((u for u in users if u.name == partner_name), None)
-                
-#                 if partner_user:
-#                     user.romantic_current = partner_user
-#                     fixed_count += 1
-    
-#     return fixed_count
-
 def get_romantic_count(user):
     """Get accurate romantic connection count considering both directions."""
     # Direct check first
@@ -62,15 +18,15 @@ def get_romantic_count(user):
     
     return 0
 
-def plot_social_connections(users: list, users_social: list, search_name: str = None, positions = None) -> tuple:
+def plot_social_connections(users_social: list, search_name: str = None, positions = None) -> tuple:
     """Create a graph visualization showing social connections between users"""
     G = nx.Graph()
 
     # First create a mapping of all users by name
-    user_dict = {user.name: user for user in users}
+    user_dict = {user.name: user for user in users_social}
     
     # Add all users from user_looking_for_friends as nodes
-    for user in users:
+    for user in users_social:
         # Get size based on actual social connections that exist
         if hasattr(user, 'social_current') and user.social_current:
             # Only count valid friends that are in the same graph
@@ -82,9 +38,8 @@ def plot_social_connections(users: list, users_social: list, search_name: str = 
             
         G.add_node(user.name, size=size, type="user")
 
-    for user in users_social:
-           for friend in user.social_current: 
-               G.add_edge(user.name, friend.name)
+        for friend in user.social_current: 
+            G.add_edge(user.name, friend.name)
 
     # Get positions for the nodes in the graph
     if positions is None:
@@ -233,16 +188,14 @@ def plot_social_connections(users: list, users_social: list, search_name: str = 
     
     return fig, pos
 
-def plot_romantic_connections(users: list, users_love: list, search_name: str = None, positions = None) -> tuple:
+def plot_romantic_connections(users_love: list, search_name: str = None, positions = None) -> tuple:
     """Create a graph visualization showing romantic connections between users"""
     G = nx.Graph()
 
     # Add all users as nodes with default size
-    for user in users:
+    for user in users_love:
         G.add_node(user.name, gender=user.gender if hasattr(user, 'gender') else 'Unknown', size=10)
     
-    # Add edges for romantic connections
-    for user in users_love:
         try:
             if hasattr(user, 'romantic_current') and user.romantic_current is not None:
                 if user.romantic_current.name in G.nodes:  # Safety check
@@ -402,8 +355,8 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
         add_fixed_users(initial_user_list)
     
     # Generate the initial graph and node positions for social connections 
-    initial_social_fig, social_node_positions = plot_social_connections(initial_user_list, user_looking_for_friends)
-    initial_romantic_fig, romantic_node_positions = plot_romantic_connections(initial_user_list, user_looking_for_love)
+    initial_social_fig, social_node_positions = plot_social_connections(user_looking_for_friends)
+    initial_romantic_fig, romantic_node_positions = plot_romantic_connections(user_looking_for_love)
     
     # Create the Dash app
     app = Dash(__name__, suppress_callback_exceptions=True)
@@ -501,8 +454,8 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
         
         # Handle reset button click
         if button_id == "reset-button":
-            social_fig, _ = plot_social_connections(initial_user_list, user_looking_for_friends, positions=social_node_positions)
-            romantic_fig, _ = plot_romantic_connections(initial_user_list, user_looking_for_love, positions=romantic_node_positions)
+            social_fig, _ = plot_social_connections(user_looking_for_friends, positions=social_node_positions)
+            romantic_fig, _ = plot_romantic_connections(user_looking_for_love, positions=romantic_node_positions)
             output_text = ""
         
         # Handle search button click
@@ -510,8 +463,8 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
             search_name = search_name.strip()
             
             # Generate figures with the search term
-            social_fig, _ = plot_social_connections(initial_user_list, user_looking_for_friends, search_name, social_node_positions)
-            romantic_fig, _ = plot_romantic_connections(initial_user_list, user_looking_for_love, search_name, romantic_node_positions)
+            social_fig, _ = plot_social_connections(user_looking_for_friends, search_name, social_node_positions)
+            romantic_fig, _ = plot_romantic_connections(user_looking_for_love, search_name, romantic_node_positions)
             
             # Find user with case-insensitive search
             selected_user = next(
@@ -551,8 +504,8 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
                         clicked_node = point['customdata']
                     
                     if clicked_node:
-                        social_fig, _ = plot_social_connections(initial_user_list, user_looking_for_friends, clicked_node, social_node_positions)
-                        romantic_fig, _ = plot_romantic_connections(initial_user_list, user_looking_for_love, clicked_node, romantic_node_positions)
+                        social_fig, _ = plot_social_connections(user_looking_for_friends, clicked_node, social_node_positions)
+                        romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node, romantic_node_positions)
                         
                         # Find user with case-insensitive search
                         selected_user = next(
@@ -607,8 +560,8 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
                     
                     if clicked_node:
                         # Update both graphs
-                        social_fig, _ = plot_social_connections(initial_user_list, user_looking_for_friends, clicked_node, social_node_positions)
-                        romantic_fig, _ = plot_romantic_connections(initial_user_list, user_looking_for_love, clicked_node, romantic_node_positions)
+                        social_fig, _ = plot_social_connections(user_looking_for_friends, clicked_node, social_node_positions)
+                        romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node, romantic_node_positions)
                         
                         # Find user with case-insensitive search
                         selected_user = next(

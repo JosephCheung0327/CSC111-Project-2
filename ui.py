@@ -907,15 +907,6 @@ class DestinyApp:
                     'status': 'pending'  # Can be 'pending', 'matched', 'rejected'
                 }
                 self.recommendations.append(user)
-                
-        
-        # # TODO: use dict
-        # # Convert names to user objects
-        # self.recommendations = []
-        # for name in recommendation_names:
-        #     user = next((u for u in self.user_list if u.name == name), None)
-        #     if user:
-        #         self.recommendations.append(user)
         
         if not self.recommendations:
             # No recommendations
