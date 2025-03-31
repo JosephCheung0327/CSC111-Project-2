@@ -14,7 +14,6 @@ def get_romantic_count(user: User, user_looking_for_love: list[User]) -> int:
     """
     Get the number of romantic connections for a user in the network.
     """
-    # Direct check first
     if hasattr(user, 'romantic_current') and user.romantic_current is not None:
         return 1
 
@@ -41,7 +40,6 @@ def plot_social_connections(users_social: list, search_name: str = None,
     for user in users_social:
         # Get size based on actual social connections that exist
         if hasattr(user, 'social_current') and user.social_current:
-            # Only count valid friends that are in the same graph
             valid_friends = [f for f in user.social_current
                              if hasattr(f, 'name') and f.name in user_dict]
             size = max(1, len(valid_friends))
@@ -113,20 +111,19 @@ def plot_social_connections(users_social: list, search_name: str = None,
         node_x.append(x)
         node_y.append(y)
 
-        # Safely access the size attribute with a default value
         try:
-            size_value = graph.nodes[node].get('size', 1)  # Use .get() with default value
-            node_size.append(size_value * 3 + 5)  # Scale size for visibility
+            size_value = graph.nodes[node].get('size', 1)
+            node_size.append(size_value * 3 + 5)  # Scale size
         except:
             node_size.append(8)  # Default size
 
         # Node text and color
-        node_text.append(node)  # Always show node name
+        node_text.append(node)
         hover_text.append(node)
 
         # Highlight the searched node
         if node == actual_search_name:
-            node_color.append('#E74C3C')  # Red for searched node
+            node_color.append('#E74C3C')
         else:
             # Color gradient based on connections
             try:
@@ -151,8 +148,8 @@ def plot_social_connections(users_social: list, search_name: str = None,
             colorbar=dict(
                 thickness=15,
                 title='Friend Count',
-                titlefont=dict(size=20),  # Title font size
-                tickfont=dict(size=18),  # Add this line to change the tick number font size
+                titlefont=dict(size=20),
+                tickfont=dict(size=18),
                 xanchor='left',
                 titleside='right'
             ),
@@ -230,7 +227,6 @@ def plot_romantic_connections(users_love: list, search_name: str = None,
     highlight_edge_x = []
     highlight_edge_y = []
 
-    # Find the actual node name in case-insensitive way
     actual_search_name = None
     if search_name:
         search_name_lower = search_name.lower()
@@ -270,27 +266,26 @@ def plot_romantic_connections(users_love: list, search_name: str = None,
         hover_text.append(f"{node}")
         node_size.append(15)
 
-        # Use different color scheme for romantic graph (reds/pinks instead of blues)
         if actual_search_name:
             if node == actual_search_name:
-                node_color.append("#E74C3C")  # Red for the searched node
+                node_color.append("#E74C3C")
             elif node in graph_romantic.neighbors(actual_search_name):
-                node_color.append("#FF85A2")  # Pink for connected nodes
+                node_color.append("#FF85A2")
             else:
-                node_color.append("rgba(200,200,200,0.5)")  # Other nodes faded out
+                node_color.append("rgba(200,200,200,0.5)")
         else:
-            node_color.append("#F5A9BC")  # Light pink default
+            node_color.append("#F5A9BC")
 
     # Create traces
     edge_trace = go.Scatter(
         x=edge_x, y=edge_y,
-        line=dict(width=0.7, color="#FF85A2"),  # Pink edges for romantic
+        line=dict(width=0.7, color="#FF85A2"),
         hoverinfo="none",
         mode="lines")
 
     highlight_edge_trace = go.Scatter(
         x=highlight_edge_x, y=highlight_edge_y,
-        line=dict(width=2.0, color="#E74C3C"),  # Red highlight for romantic
+        line=dict(width=2.0, color="#E74C3C"),
         hoverinfo="none",
         mode="lines")
 
@@ -305,7 +300,7 @@ def plot_romantic_connections(users_love: list, search_name: str = None,
         marker=dict(
             color=node_color,
             size=node_size,
-            line=dict(width=1, color="#440000")))  # Darker border for romantic nodes
+            line=dict(width=1, color="#440000")))
 
     # Create figure with romantic theme colors
     fig = go.Figure(data=[edge_trace, highlight_edge_trace, node_trace],
@@ -313,7 +308,7 @@ def plot_romantic_connections(users_love: list, search_name: str = None,
                         showlegend=False,
                         hovermode="closest",
                         margin=dict(b=20, l=5, r=5, t=40),
-                        plot_bgcolor="#FFF9F9",  # Very light pink background
+                        plot_bgcolor="#FFF9F9",
                         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
 
@@ -330,7 +325,7 @@ def plot_romantic_connections(users_love: list, search_name: str = None,
             x_min, x_max = min(x_coords), max(x_coords)
             y_min, y_max = min(y_coords), max(y_coords)
 
-            padding = 0.2  # More padding for better view
+            padding = 0.2
             x_range = [x_min - padding, x_max + padding]
             y_range = [y_min - padding, y_max + padding]
 
@@ -339,7 +334,6 @@ def plot_romantic_connections(users_love: list, search_name: str = None,
                 yaxis=dict(range=y_range, showgrid=False, zeroline=False, showticklabels=False)
             )
 
-            # Add title indicating the romantic search
             fig.update_layout(
                 title=f"Showing romantic connections for: {actual_search_name}",
                 titlefont=dict(size=16, color="#E74C3C")
@@ -353,18 +347,14 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
     """
     Create and return a Dash app instance with multiple tabs for different network views.
     """
-    # Import the necessary modules at the function level
-    # This prevents circular imports
     from dash import Dash, html, dcc, Input, Output, State, callback_context
 
-    # Store the provided user list in a globally scoped variable
     global initial_user_list, node_positions, initial_fig
 
     # Use provided user list or generate a new one
     if user_list is not None:
         initial_user_list = user_list
     else:
-        # Import the user network functions here to avoid circular imports
         from user_network import generate_users_with_class, add_fixed_users
         initial_user_list = generate_users_with_class(200, 1234)
         add_fixed_users(initial_user_list)
@@ -373,8 +363,7 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
     initial_social_fig, social_node_positions = plot_social_connections(user_looking_for_friends)
     initial_romantic_fig, romantic_node_positions = plot_romantic_connections(user_looking_for_love)
 
-    # Create the Dash app
-    app = Dash(__name__)
+    app = Dash(__name__)  # Create the Dash app
 
     # Define the layout with tabs
     app.layout = html.Div([
