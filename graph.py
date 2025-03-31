@@ -1,5 +1,7 @@
 """
 This program handles the generation of graphs for all users in the network.
+Generative AI was used for generating sample templates of implementing visual elements in the web interface.
+We modified the generated templates to complete this program.
 """
 import python_ta
 import plotly.graph_objects as go

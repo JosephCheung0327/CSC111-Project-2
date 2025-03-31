@@ -1,5 +1,7 @@
 """
 The program handling the GUI for the dating app.
+Generative AI was used for generating sample templates of implementing visual elements across the GUI.
+We modified the generated templates to complete this program.
 """
 
 import tkinter as tk
@@ -96,7 +98,6 @@ class DestinyApp:
         import user_network
         user_network.user_list = self.user_list  # Make sure global list has all users
 
-        # Now add fixed users to both your local and global lists
         add_fixed_users(self.user_list)
         add_fixed_users(user_looking_for_friends)
         add_fixed_users(user_looking_for_love)
