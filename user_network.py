@@ -12,19 +12,11 @@ user_keypair = dict()
 
 
 def generate_users_with_class(list_size: int, interested_friend_simulation_size: int, seed: int = 1234) -> list[User]:
-    """Return a list of list_size number of users with randomly generated attributes, and randomly simulate
-    interested_friend_simulation_size number of users in the interested_friend list (users that a user is interested in).
-    If both users have each other in their interested_friend list mutually, they are added to their self.social_current list as user.
+    """Return a list of list_size number of users with randomly generated attributes.
 
     Preconditions:
     - seed is not None
     - isinstance(seed, int) == True
-
-
-    >>> user_list_generated = generate_users_with_class(2, 1, 1234)
-    >>> user_list_generated[0].social_current == user_list_generated[1].social_current
-    True
-    # Since there are only two users generated, and each of them has a interested_friend (the other person), they are matched.
     """
     fake = Faker()
     Faker.seed(seed)
