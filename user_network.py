@@ -98,7 +98,7 @@ def simulate_connections(user_list: list[User]) -> tuple:
             data_wrangling(user, characteristics_default_rank, users_looking_for_friends, "friends.csv")
             t = build_preference_tree('friends.csv')
             result = t.run_preference_tree()
-            name_list = generate_10_people_list(t, result)
+            name_list = generate_10_people_list(result)
 
             # Convert name strings to User objects with error checking
             user.interested_friend = []
@@ -117,7 +117,7 @@ def simulate_connections(user_list: list[User]) -> tuple:
             data_wrangling(user, characteristics_default_rank, users_looking_for_love, "love.csv")
             t = build_preference_tree('love.csv')
             result = t.run_preference_tree()
-            name_list = generate_10_people_list(t, result)
+            name_list = generate_10_people_list(result)
 
             # Convert name strings to User objects with error checking
             user.interested_romantic = []
