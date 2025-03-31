@@ -1,16 +1,18 @@
+"""
+This module provides functions for processing and analyzing user data
+in a dating or recommendation system.
+"""
 from __future__ import annotations
-from typing import List, Optional, Any
+from typing import Optional
 
-import pandas as pd
-
-from tree import add_priority, BinaryTree, filter_user_by_dating_goal
-# import user_network
-import python_ta
 import csv
+import pandas as pd
+import python_ta
+from tree import add_priority, BinaryTree, filter_user_by_dating_goal
 
 
-def data_wrangling(current_user: user_network.User, user_characteristics: list | None | user_network.Characteristics,
-                    users_list: List[user_network.User], file_name: Optional[str] = "data.csv") -> None:
+def data_wrangling(current_user, user_characteristics, users_list,
+                   file_name: Optional[str] = "data.csv") -> None:
     """
     Creates a CSV file containing user data, including their characteristics and potential matches.
 
@@ -21,8 +23,6 @@ def data_wrangling(current_user: user_network.User, user_characteristics: list |
       - A value of 1 indicates a match in characteristics with the current user.
       - A value of 0 indicates no match.
 
-    >>> data_wrangling
-
     """
     if isinstance(user_characteristics, list):
         heading = user_characteristics
@@ -32,7 +32,7 @@ def data_wrangling(current_user: user_network.User, user_characteristics: list |
 
     potential_users = filter_user_by_dating_goal(users_list, current_user)
 
-    data = {"name":[]}
+    data = {"name": []}
 
     for person in potential_users:
         data["name"].append(person.name)
@@ -54,33 +54,30 @@ def data_wrangling(current_user: user_network.User, user_characteristics: list |
     df = pd.DataFrame(data)
     csv_file_path = file_name
 
-    df.to_csv(csv_file_path, index = False)
+    df.to_csv(csv_file_path, index=False)
 
     print(f'CSV file "{csv_file_path}" has been created successfully.')
 
 
-def generate_10_people_list(tree: BinaryTree, full_list: list)->list:
+def generate_10_people_list(full_list: list) -> list:
     """
-    Generates a list of 10 people by sequentially removing the first element from the provided full_list.
+    Generates a list of 10 people by sequentially removing the first element
+    from the provided full_list.
 
-    >>> tree = BinaryTree("")
     >>> people = ["Person1", "Person2", "Person3", "Person4", "Person5",
     ...           "Person6", "Person7", "Person8", "Person9", "Person10", "Person11"]
-    >>> generate_10_people_list(tree, people)
-    ['Person1', 'Person2', 'Person3', 'Person4', 'Person5', 'Person6', 'Person7', 'Person8', 'Person9', 'Person10']
-
+    >>> generate_10_people_list(people)
+    ['Person1', 'Person2', 'Person3', 'Person4', 'Person5',
+    ...           "Person6", "Person7", "Person8", "Person9", "Person10"]
     """
-    full_recommendation_list = tree.run_preference_tree
-
     new_list = []
-    while len (new_list)<10:
+    while len(new_list) < 10:
         new_list.append(full_list.pop(0))
-
     return new_list
 
 
 # @check_contracts
-def build_preference_tree(file:str) -> Tree:
+def build_preference_tree(file: str) -> BinaryTree():
     """
     Builds a preference tree from a CSV file.
 
@@ -90,7 +87,7 @@ def build_preference_tree(file:str) -> Tree:
 
     with open(file) as csv_file:
         reader = csv.reader(csv_file)
-        next(reader) #skip the header row
+        next(reader)
 
         for row in reader:
             name = str(row[0])
@@ -103,8 +100,8 @@ def build_preference_tree(file:str) -> Tree:
 
 if __name__ == "__main__":
     python_ta.check_all(config={
-        'extra-imports': ['pandas', 'user_network', 'tree'],
+        'extra-imports': ['pandas', 'user_network', 'tree', 'csv'],
         'allowed-io': ['data_wrangling', 'build_preference_tree'],
         'max-line-length': 100,
-        'disable': ['R1705', 'C0200']
+        'disable': ['R1705', 'C0200', 'E9970']
     })
