@@ -32,26 +32,26 @@ class DestinyApp:
         - result_label: A tkinter Label widget for showing input validation results
         - user_list: A list of User objects representing all users in the network
         - current_user: The User object representing the currently logged-in user
+        - priority_attributes: A list of attribute names in order of user's priority ranking
+        - recommendations_dict: A dictionary mapping attribute names to lists of recommended users
+        - recommendations: A list of User objects representing recommended matches for the current user
+        - match_frame: A tkinter Frame widget for displaying match results
+        - matches_made: A list of usernames for matches already displayed
+        - counter_label: A tkinter Label widget for displaying the number of matches made
+        - network_graph: A Dash object for displaying the user network graph
 
     Representation Invariants:
         - self.window_width > 0
         - self.window_height > 0
-        - isinstance(self.root, tk.Tk)
-        - isinstance(self.image_path, str) and len(self.image_path) > 0
+        - len(self.image_path) > 0
 
         # Conditional checks are used below because these attributes are not initialized in __init__
 
-        - if hasattr(self, 'username'): isinstance(self.username, str) and len(self.username) > 0
-        - if hasattr(self, 'attributes'): isinstance(self.attributes, dict)
+        - if hasattr(self, 'username'): len(self.username) > 0
         - if hasattr(self, 'user_list'):
-            - isinstance(self.user_list, list)
             - all(isinstance(user, User) for user in self.user_list)
         - if hasattr(self, 'current_user'):
-            - isinstance(self.current_user, User)
             - self.current_user in self.user_list
-        - if hasattr(self, 'username_entry'): isinstance(self.username_entry, tk.Entry)
-        - if hasattr(self, 'status_label'): isinstance(self.status_label, tk.Label)
-        - if hasattr(self, 'result_label'): isinstance(self.result_label, tk.Label)
     """
     root: tk.Tk
     window_width: int
