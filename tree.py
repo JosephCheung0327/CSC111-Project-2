@@ -196,11 +196,9 @@ class BinaryTree:
         """
         recommendation_list = []
 
-        # If it's a leaf node, append the root value.
         if isinstance(self._root, list):
             recommendation_list.extend(self._root)
 
-        # Otherwise, include the current node and combine with children.
         else:
             if self._left:
                 recommendation_list.extend(self._left.run_preference_tree())
