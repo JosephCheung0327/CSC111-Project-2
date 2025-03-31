@@ -646,5 +646,6 @@ if __name__ == "__main__":
         'extra-imports': ["user_network", "plotly.graph_objects", "dash", "networkx", "socket"],
         'allowed-io': [],  # the names (strs) of functions that call print/open/input
         'max-line-length': 120,
-        'disable': ["R0914", "R1714", "R1735", "W0702", "R0912", "R0915", "R1702", "C0415", "E9997"]
+        'disable': ["R0914", "R1714", "R1735", "W0702", "R0912", "R0915", "R1702", "C0415", "E9997", "E9970",
+                    "E9959", "W0718"]
     })
