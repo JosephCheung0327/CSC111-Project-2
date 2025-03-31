@@ -83,6 +83,72 @@ These two network graphs are created from \texttt{user\_list} (for generating al
 We will generate these interactive graphs using plotly, an interactive graphing Python library (Plotly, 2025).
 Then, as the developers of the application, we can zoom in and out of the graph, and view the detailed information of different users in our system.
 
+This project contains three different Python files: \texttt{user\_network.py}, \texttt{graph.py}, and \texttt{ui.py}. Below is a breakdown of the main components and responsibilities of each.
+
+\section*{File: \texttt{user\_network.py}}
+
+This file contains the core logic of the user system. Important classes and functions are defined here.
+
+\subsection*{Classes}
+
+\subsubsection*{User: Represents a user in the dating app.}
+
+\paragraph{Instance Attributes}
+\begin{itemize}
+    \item \texttt{name}: the name of the user.
+    \item \texttt{age}: the age of the user.
+    \item \texttt{gender}: the gender of the user.
+    \item \texttt{pronouns}: the pronouns of the user.
+    \item \texttt{dating\_goal}: the user's dating goal. Options include: \\
+    ``Meeting new friends'', ``Short-term relationship'', ``Long-term relationship'', or ``Situationship''.
+    \item \texttt{characteristics}: a \texttt{Characteristic} object representing user preferences and traits.
+    \item \texttt{interested\_friend}: a list of users the user is interested in.
+    \item \texttt{romantic\_current}: the user's current romantic partner.
+    \item \texttt{romantic\_ex}: list of user's ex-romantic partners.
+    \item \texttt{social\_current}: list of the user's current friends.
+    \item \texttt{social\_ex}: list of users who were unfriended.
+    \item \texttt{romantic\_degree}: number of romantic relationships (0 or 1).
+    \item \texttt{social\_degree}: number of current friends.
+\end{itemize}
+
+\subsubsection*{Characteristic: Represents user characteristics that influence their preferences.}
+
+
+\paragraph{Instance Attributes}
+\begin{itemize}
+    \item \texttt{ethnicity}: The user's ethnicity.
+    \item \texttt{interests}: List of hobbies or interests.
+    \item \texttt{mbti}: Myers-Briggs personality type (e.g., INFP, ESTJ).
+    \item \texttt{communication\_type}: Preferred communication style (e.g., text, call, in-person).
+    \item \texttt{political\_interests}: Political views or level of engagement.
+    \item \texttt{religion}: Religious belief.
+    \item \texttt{major}: Academic major (e.g., Computer Science, Psychology).
+    \item \texttt{year}: Academic year (e.g., First Year, Junior, Senior).
+    \item \texttt{language}: Primary spoken language.
+    \item \texttt{likes\_pets}: Whether the user likes pets.
+    \item \texttt{likes\_outdoor\_activities}: Whether the user enjoys outdoor activities.
+    \item \texttt{enjoys\_watching\_movies}: Whether the user enjoys watching movies or shows.
+\end{itemize}
+
+\subsection*{Functions}
+
+\subsubsection*{\texttt{generate\_users\_with\_class}}
+- Simulates user generation.
+
+\paragraph{Arguments}
+\begin{itemize}
+    \item \texttt{list\_size}: number of users to generate.
+    \item \texttt{interested\_friend\_simulation\_size}: fixed number of users each user is interested in.
+    \item \texttt{seed}: seed for random generation.
+\end{itemize}
+
+If two users are mutually interested (i.e., both appear in each other's \texttt{interested\_friend} list), they are added to each other's \texttt{social\_current} list. Returns\texttt{list[User]} – a list of generated User objects.
+
+\subsubsection*{\texttt{add\_fixed\_users}}
+- Adds predefined users (e.g., project creators) to the user list. This function mutates the list passed in.
+
+\subsubsection*{\texttt{add\_user}}
+- Interactive function that prompts for user input (like a registration form) and appends a new \texttt{User} object to the user list.
 
 \\ 
 Question 4: 
