@@ -101,8 +101,6 @@ class DestinyApp:
         add_fixed_users(user_looking_for_friends)
         add_fixed_users(user_looking_for_love)
 
-        print(f"Generated initial user list with {len(self.user_list)} users")
-
     def create_welcome_page(self, image_path: str) -> None:
         """
         Create the initial welcome page with image and username input.
@@ -821,9 +819,6 @@ class DestinyApp:
             else:
                 if user not in user_looking_for_love:
                     user_looking_for_love.append(user)
-
-            # Print debug information to terminal
-            self.print_user_list_debug()
 
             # Display success message
             self.status_label.config(text=f"Profile created successfully for {name}!", fg="white")

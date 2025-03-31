@@ -56,8 +56,6 @@ def data_wrangling(current_user, user_characteristics, users_list,
 
     df.to_csv(csv_file_path, index=False)
 
-    print(f'CSV file "{csv_file_path}" has been created successfully.')
-
 
 def generate_10_people_list(full_list: list) -> list:
     """
