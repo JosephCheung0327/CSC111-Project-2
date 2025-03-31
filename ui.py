@@ -91,7 +91,7 @@ class DestinyApp:
         self.recommendations = []
 
         # Generate users locally
-        self.user_list = generate_users_with_class(200, 25, 1234)
+        self.user_list = generate_users_with_class(200, 25,1234)
 
         import user_network
         user_network.user_list = self.user_list  # Make sure global list has all users
