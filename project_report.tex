@@ -4,9 +4,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage[margin=0.75in]{geometry}
 \usepackage{hyperref}
+\usepackage{graphicx}
 \urlstyle{same}
 
-\title{CSC111 Project 2 Proposal: \\ \textbf{“Destiny” - Find Your Next Soulmate Here}}
+\title{CSC111 Project 2: \\ \textbf{“Destiny” - Find Your Next Soulmate Here}}
 \author{Hsin Kuang (Joseph) Cheung \\ Tsz Kan Charlotte Wong \\ Yan Lam \\ Chun Yin Liang}
 \date{\today}
 
@@ -168,40 +169,140 @@ We will provide details on accessing the graph in the next section.
 \\
 Similar to \texttt{graph.py}, we used Generative AI for some parts of \texttt{ui.py} when formatting visual elements.
 Since this GUI is not a core part of the computations done in this project, but more of a quality of life feature for our users, we will not go into detail to discuss the GUI implementation.
-
-\\
 \section{Instructions for running the program}
-Sample demonstration: Run main.py. The app with the UI should then pop up. Enter any name, say, 'Peter' to continue. Then fill in the form to complete a registration. Choose "Meeting new friends" for the Dating Goal. This tells the system that you are looking for friends more than looking for relationships. Rank the features you value the most using at the bottom of the page. Click "Create Profile".
-
-Then click "Find Matches". Here, you can either choose Match or Pass. After you are done matching, press Exit. You will be re-directed back to the main menu.
-
-Now, you can create another profile for another person, say, 'Mary'. But this time, for "Dating Goal", choose the three options other than "Meeting New Friends", for example, "Long-term relationship". Click "Create Profile". Instead of matching friends, you will be brought to a page that helps you match with someone who is also looking for a relationship. After you successfully match a romantic partner, you can press "Return to Home".
-
-Then, this time input "admin" as the name. This would log you into the admin console. For debugging purposes, you can "Print User List to Console". Press "View Network Graph" to view the visualization of the connections of the users in the application. Supposedly, a local web application would pop up in your default browser.
-
-There are two connection maps: Social connections (friends) and Romantic connections (relationships). You can navigate the maps freely to see the connections between users. Try out the searching function by inputting "Peter" in the search box. If a user is found, it will locate that user node in the graph and highlighting his/her connection with red. The function also shows how many connections that person has.
-
-
+Sample demonstration (we will be creating two users, one shown on the social graph, and one on the dating graph):
+\begin{itemize}
+    \item Run \texttt{main.py}. The GUI show be shown as a pop-up window.
+    \item Enter any name, say, ``test” to continue.
+    \item Your screen should look like Figure 1 now.
+\end{itemize}
+\\
+\begin{center}
+\includegraphics[width=0.5\linewidth]{Figure 1.png}
+\\
+\caption{Figure 1}
+\end{center}
+\newpage
+\begin{itemize}
+    \item Then, click ``Continue” to proceed.
+    \item Now, fill in all the attributes as you desire, except for the Dating Goal.
+    \item Please choose ``Meeting new friends” for the Dating Goal. This ensures the first user is added to our social graph. Rank the attributes you value the most at the bottom of the page by selecting an attribute and clicking the arrows.
+    \item Your screen should mostly look like Figure 2, apart from any different attributes you chose.
+\end{itemize}
+\begin{center}
+\includegraphics[width=0.55\linewidth]{Figure 2.png}
+\\
+\caption{Figure 2}
+\end{center}
+\newpage
+\begin{itemize}
+    \item Now scroll down and click ``Create Profile”. Then, click ``Find Matches”.
+    \item Here, you can either choose ``Match” or ``Pass”. We recommend matching with 3 users for testing purposes.
+    \item After you have finished matching, press ``Exit”. Now you will be re-directed back to the main menu. We have added the first user into the app.
+    \item Now, you can create another profile for another user, say, ``test2”.
+    \item Your screen should look like Figure 3.
+\end{itemize}
+\begin{center}
+\includegraphics[width=0.8\linewidth]{Figure 3.png}
+\\
+\caption{Figure 3}
+\end{center}
+\newpage
+\begin{itemize}
+    \item Click ``Continue” to proceed.
+    \item Similarly, fill in all the attributes as you desire, except for the Dating Goal.
+    \item Please choose any of the three options other than ``Meeting new friends” for the Dating Goal. For example, ``Long-term relationship”. This ensures this user is added to our dating graph. Rank the attributes you value the most at the bottom of the page by selecting an attribute and clicking the arrows.
+    \item Your screen should mostly look like Figure 4, apart from any different attributes you chose.
+\end{itemize}
+\begin{center}
+\includegraphics[width=0.55\linewidth]{Figure 4.png}
+\\
+\caption{Figure 4}
+\end{center}
+\newpage
+\begin{itemize}
+    \item Now scroll down and click ``Create Profile”.
+    \item Instead of matching friends, you will be brought to a page that helps you match with someone who is also looking for a relationship.
+    \item Now, click ``Match” until you successfully match with a romantic partner.
+    \item Then, you can press ``Return to Home”.
+    \item Now, input ``admin” as the name, as shown in Figure 5.
+\end{itemize}
+\begin{center}
+\includegraphics[width=0.8\linewidth]{Figure 5.png}
+\\
+\caption{Figure 5}
+\end{center}
+\newpage
+\begin{itemize}
+    \item Click ``Continue” to proceed.
+    \item You should be logged into the admin console now.
+    \item For debugging purposes, you can ``Print User List to Console”.
+    \item Now, press ``View Network Graph” to view the visualization of the connections of the users in the application.
+    \item A local web application would pop up in your default browser.
+    \item Now, your screen should look similar to Figure 6.
+\end{itemize}
+\begin{center}
+\includegraphics[width=0.8\linewidth]{Figure 6.png}
+\\
+\caption{Figure 6}
+\end{center}
+\newpage
+\begin{itemize}
+    \item There are two connection maps: Social connections (friends) and Romantic connections (relationships).
+    \item You can navigate the maps freely to see the connections between users.
+    \item Now, click on the ``Romantic Connections” tab to view the dating graph.
+    \item Your screen should look similar to Figure 7 now.
+\end{itemize}
+\begin{center}
+\includegraphics[width=0.8\linewidth]{Figure 7.png}
+\\
+\caption{Figure 7}
+\end{center}
+\newpage
+\begin{itemize}
+    \item Now, click on the ``Social Connections” tab to return to the social graph.
+    \item Try out the searching function by inputting ``test” in the search box.
+    \item The graph will zoom into the neighborhood that ``test” is in, highlighting the user node and its connections in red.
+    \item You can also view their number of connections on the top of the graph.
+    \item Your screen should look similar to Figure 8 now.
+\end{itemize}
+\begin{center}
+\includegraphics[width=0.8\linewidth]{Figure 8.png}
+\\
+\caption{Figure 8}
+\end{center}
+\newpage
+\begin{itemize}
+    \item Now, click on the ``Romantic Connections” tab again to return to the dating graph.
+    \item Try out the searching function by inputting ``test2” in the search box.
+    \item The graph will zoom into the neighborhood that ``test2” is in, highlighting the user node and its partner in red.
+    \item You can also view their number of connections on the top of the graph.
+    \item Your screen should look similar to Figure 9 now.
+\end{itemize}
+\begin{center}
+\includegraphics[width=0.8\linewidth]{Figure 9.png}
+\\
+\caption{Figure 9}
+\end{center}
+\\
+Great! Our newly added users are reflected correctly on the interactive graphs.
 \\
 \section{Changes to the project plan}
-(tree part): Initially, we implemented the tree using the basic <self.\_root> and <self.\_subtree> structure to align with the format of Exercise 2's animal tree. However, we found that using a binary tree with self.\_root, self.\_left, and self.\_right was more suitable for our recommendation system. This approach is particularly effective because all the 1s in the tree, representing users most relevant to the target user, are positioned along the leftmost branch. By using a binary tree, we can simplify the process of generating a recommendation list by recursively traversing only the leftmost branch.
-
-
-\\
+Initially, we implemented the tree using the basic <self.\_root> and <self.\_subtree> structure to align with the format of Exercise 2's animal tree. However, we found that using a binary tree with self.\_root, self.\_left, and self.\_right was more suitable for our recommendation system. This approach is particularly effective because all the 1s in the tree, representing users most relevant to the target user, are positioned along the leftmost branch. By using a binary tree, we can simplify the process of generating a recommendation list by recursively traversing only the leftmost branch.
 \section{Discussion}
 \ Does the product meet our original goal?
-At this stage, this application does not really help Uoft Students to match their soulmates, since the app right now has no user base and is more like a prototype.
-This is mainly due to time and ability constraints -- we do not have the ability to build a real working app with an interactive UI, since it is out-of-the-scope for our current CSC110/111 curriculum. Yet, we wanted to make the application as real as possible. That is why we did seek help from AI for helping us on unfamilar libraries by generating code, mainly on the UI (ui.py) and (graph.py). This is mainly because we do not want to spend most of the time on understanding how to use a new library, but instead we want to focus on building our own matching algorithms, graph data structures and data generating functions, which is closer to the aim of our course project.
+At this stage, this application does not really help UofT Students to match their soulmates, since the app right now has no user base and is more like a prototype.
+This is mainly due to time and ability constraints -- we do not have the ability to build a real working app with an interactive UI, since it is out-of-the-scope for our current CSC110/111 curriculum. Yet, we wanted to make the application as real as possible. That is why we did seek help from AI for helping us on unfamilar libraries by generating code involving visual elements (\texttt{ui.py}) and (\texttt{graph.py}). This is mainly because we do not want to spend most of the time exploring how to use new libraries to format visual elements, but instead we want to focus on building our own matching algorithms, graph data structures and data generating functions, which is closer to the aim of our course project.
 Although the application is not really a published, usable app, we have built a project that can easily be transformed into a real-time working application. The prototype itself demonstrates the potential of the app and how it leverages tree/graph knowledge we learnt in class for creating this matching algorithm based on user features. The tree structure sets priorities at different levels, enabling the creation of a customized tree and a corresponding recommendation list. The graph effectively visualizes connections between users through edges, allowing us, as editors, to review potential relationships.
 This successfully fulfills our goal of developing a connection-based application.
 
-\subsection{What are some limitations?}
-\ There are quite a few limitations we encountered when making our project.
-\ The main limitation is the deployment of the project as a real application. The project is not a real-time application due to various reasons like the lack of a server host, user base, and experience in making applications.
-\ Apart from that, originally we planned to implement a function that records the past romantic relationships and friendships of all the users. However, it would also imply that we have to generate users with broken friendships and relationships, which can be a bit complicated. We also discussed that this function is not that important since the app shouldn't really be recording past relationships of people, as we mainly just want to help users to know more people. In some sense, recording a person's ex feels like violating their own privacy rights, and such data isn't really needed.
-\ Another limitation would be our use of AI. As mentioned above, we did seek the help of AI to generate code for out-of-scope libraries and rarely used functions due to time constraints.
-\ Data privacy would also be a great concern. Currently, we are not saving any user data into a file when the program is terminated. However, in a real-world setting, the data should be encrypted safely in a server, of course not in our local machine.
-\ Some functions might not be used directly for the UI application, but is rather used in the console, since we did not plan to create a user interface back then during our coding process. For example, add_user() is actually never implemented in the UI application. Another version of it exists as add_user_to_network in ui..py. However, we kept the function since working with the console is essential for creating test cases for new functions and debugging.
+\subsection*{What are some limitations?}
+There are quite a few limitations we encountered when making our project.
+The main limitation is the deployment of the project as a real application. The project is not a real-time application due to various reasons like the lack of a server host, user base, and experience in making applications.
+Apart from that, originally we planned to implement a function that records the past romantic relationships and friendships of all the users. However, it would also imply that we have to generate users with broken friendships and relationships, which can be a bit complicated. We also discussed that this function is not that important since the app shouldn't really be recording past relationships of people, as we mainly just want to help users to know more people. In some sense, recording a person's ex feels like violating their own privacy rights, and such data isn't really needed.
+Another limitation would be our use of AI. As mentioned above, we did seek the help of AI to generate code for out-of-scope libraries and rarely used functions due to time constraints.
+Data privacy would also be a great concern. Currently, we are not saving any user data into a file when the program is terminated. However, in a real-world setting, the data should be encrypted safely in a server, of course not in our local machine.
+Some functions might not be used directly for the UI application, but is rather used in the console, since we did not plan to create a user interface back then during our coding process. For example, \texttt{add\_user()} is actually never implemented in the UI application. Another version of it exists as \texttt{add\_user\_to\_network} in \texttt{ui.py}. However, we kept the function since working with the console is essential for creating test cases for new functions and debugging.
 
 
 
