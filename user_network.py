@@ -23,7 +23,7 @@ def generate_users_with_class(list_size: int, seed: int = 1234) -> list[User]:
     - isinstance(seed, int) == True
 
 
-    >>> user_list_generated = generate_users_with_class(2, 1, 1234)
+    >>> user_list_generated = generate_users_with_class(2, 1234)
     >>> user_list_generated[0].social_current == user_list_generated[1].social_current
     True
     Since there are only two users generated, and each of them has a interested_friend (the other person),
@@ -100,13 +100,13 @@ def simulate_connections(user_list_2: list[User]) -> tuple:
             data_wrangling(user, characteristics_default_rank, users_looking_for_friends, "friends.csv")
             t = build_preference_tree('friends.csv')
             result = t.run_preference_tree()
-            name_list = generate_10_people_list(t, result)
+            name_list = generate_10_people_list(result)
 
             # Convert name strings to User objects with error checking
             user.interested_friend = []
             for namestring in name_list:
                 if namestring in user_keypair_local:
-                    user.interested_friend.append(user_keypair[namestring])
+                    user.interested_friend.append(user_keypair_local[namestring])
                 else:
                     print(f"Warning: User '{namestring}' not found for {user.name}")
         except Exception as e:
@@ -119,7 +119,7 @@ def simulate_connections(user_list_2: list[User]) -> tuple:
             data_wrangling(user, characteristics_default_rank, users_looking_for_love, "love.csv")
             t = build_preference_tree('love.csv')
             result = t.run_preference_tree()
-            name_list = generate_10_people_list(t, result)
+            name_list = generate_10_people_list(result)
 
             # Convert name strings to User objects with error checking
             user.interested_romantic = []
@@ -322,7 +322,7 @@ class User:
         return user.social_current
 
 
-def add_fixed_users(userss: list[User]) -> None:
+def add_fixed_users(users: list[User]) -> None:
     """
     Adding the creators into the user list. Creators also want to play!
     """
@@ -429,7 +429,7 @@ def add_fixed_users(userss: list[User]) -> None:
     # Connect fixed users with some random existing users
     for fixed_user in fixed_users:
         # Select 3-5 random users from the existing list
-        random_connections = random.sample(userss[:20], random.randint(3, 5))
+        random_connections = random.sample(users[:20], random.randint(3, 5))
         for connection in random_connections:
             if connection not in fixed_user.social_current and connection != fixed_user:
                 fixed_user.social_current.append(connection)

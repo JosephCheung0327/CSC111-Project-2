@@ -346,10 +346,8 @@ def plot_romantic_connections(users_love: list, search_name: str = None,
 
 def create_app(user_list: list[User] = None, user_looking_for_friends: list[User] = None,
                user_looking_for_love: list[User] = None) -> go.Figure:
-    """Create and return a Dash app instance with multiple tabs for different network views
-
-    Args:
-        user_list: Optional list of User objects to use instead of generating new ones
+    """
+    Create and return a Dash app instance with multiple tabs for different network views.
     """
     # Import the necessary modules at the function level
     # This prevents circular imports
@@ -364,7 +362,7 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
     else:
         # Import the user network functions here to avoid circular imports
         from user_network import generate_users_with_class, add_fixed_users
-        initial_user_list = generate_users_with_class(200, 25, 1234)
+        initial_user_list = generate_users_with_class(200, 1234)
         add_fixed_users(initial_user_list)
 
     # Generate the initial graph and node positions for social connections
