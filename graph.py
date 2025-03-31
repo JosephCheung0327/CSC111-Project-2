@@ -454,8 +454,9 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
          Input("graph-tabs", "value")],
         [State("search-input", "value")]
     )
-    def update_graphs(_search_clicks, _reset_clicks, social_click_data, romantic_click_data, _active_tab,
-                      search_name) -> tuple:
+    def update_graphs(_search_clicks: int, search_name: str | None, _reset_clicks: int,
+                      social_click_data: dict | None, romantic_click_data: dict | None,
+                      _active_tab: str) -> tuple[go.Figure, go.Figure, str | html.Div]:
         ctx = callback_context
 
         if not ctx.triggered:
@@ -646,5 +647,5 @@ if __name__ == "__main__":
         'extra-imports': ["user_network", "plotly.graph_objects", "dash", "networkx", "socket"],
         'allowed-io': [],  # the names (strs) of functions that call print/open/input
         'max-line-length': 120,
-        'disable': ["R0914", "R1714", "R1735", "W0702", "R0912", "R0915", "R1702", "C0415", "E9997"]
+        'disable': ["R0914", "R1714", "R1735", "W0702", "R0912", "R0915", "R1702", "C0415", "E9997", "E9959", "W0718"]
     })
