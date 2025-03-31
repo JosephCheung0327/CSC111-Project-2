@@ -10,8 +10,10 @@ import python_ta
 
 def filter_user_by_dating_goal(users, user) -> list:
     """Filters users who have the same dating goal as the given user, excluding themselves"""
-
-    return [u for u in users if u.dating_goal == user.dating_goal and u != user]
+    if user.dating_goal == "Meeting new friends":
+        return [u for u in users if u.dating_goal == user.dating_goal and u != user]
+    else:
+        return [u for u in users if u.dating_goal == user.dating_goal and u != user and u.gender != user.gender]
 
 
 def add_priority(characteristics) -> List[str]:
