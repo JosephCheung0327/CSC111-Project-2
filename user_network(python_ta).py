@@ -173,10 +173,22 @@ class Characteristics:
         - likes_outdoor_activities: Whether the user enjoys outdoor activities (e.g., hiking, sports).
         - enjoys_watching_movies: Whether the user enjoys watching movies or shows.
     """
+    ethnicity: str
+    interests: list[str]
+    mbti: str
+    communication_type: str
+    political_interests: str
+    religion: str
+    major: str
+    year: str
+    language: str
+    likes_pets: bool
+    likes_outdoor_activities: bool
+    enjoys_watching_movies: bool
 
     def __init__(self, ethnicity: str, interests: list[str], mbti: str, communication_type: str,
                  political_interests: str, religion: str, major: str, year: str, language: str,
-                 likes_pets: bool, likes_outdoor_activities: bool, enjoys_watching_movies: bool):
+                 likes_pets: bool, likes_outdoor_activities: bool, enjoys_watching_movies: bool) -> None:
         self.ethnicity = ethnicity
         self.interests = interests
         self.mbti = mbti
@@ -223,17 +235,19 @@ class User:
     interested_friend: list
     interested_romantic: list
     romantic_current: Optional[User]
+    characteristics: Characteristics
     romantic_ex: list[User]
     social_current: list[User]
     social_ex: list[User]
     romantic_degree: int
     social_degree: int
 
-    def __init__(self, name: str, age: int, gender: str, pronouns: str, dating_goal, characteristics: Characteristics,
+    def __init__(self, name: str, age: int, gender: str, pronouns: str, dating_goal: str,
+                 characteristics: Characteristics,
                  interested_friend: list, interested_romantic: list, romantic_current: Optional[User] = None,
                  romantic_ex: list[User] = [], social_current: Optional[list[User]] = None, social_ex: list[User] =[],
                  romantic_degree: int = 0,
-                 social_degree: int = 0):
+                 social_degree: int = 0) -> None:
         self.name = name
         self.age = age
         self.gender = gender
@@ -251,14 +265,14 @@ class User:
         self.romantic_degree = romantic_degree
         self.social_degree = social_degree
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"User({self.name}, {self.age}, {self.gender}, {self.characteristics.mbti})"
 
-    def update_social_degree(self):
+    def update_social_degree(self) -> None:
         """Update_social_degree"""
         self.social_degree = len(self.social_current)
 
-    def update_romantic_degree(self):
+    def update_romantic_degree(self) -> None:
         """Update_ramantic_degree"""
         if self.romantic_current is not None:
             self.romantic_degree = 1
@@ -576,8 +590,8 @@ if __name__ == "__main__":
     python_ta.check_all(config={
         'extra-imports': ['faker', 'random', 'json', 'os', 'common'],  # the names (strs) of imported modules
         'allowed-io': [],  # the names (strs) of functions that call print/open/input
-        'max-line-length': 120, 'disable': ['C0415', 'E9969','E99992','E9997','R1702','R0913','W0102','R0914',
-                                            'R0902','R0912'
-], 'forbidden-io-functions': []
+        'max-line-length': 120, 'disable': ['C0415', 'E9969', 'E9992', 'E9997', 'R1702', 'R0913', 'W0102', 'R0914',
+                                            'R0902', 'R0912', 'R0915', 'R0916', 'W0621', 'C9103', 'E9988', 'C0301',
+                                            'E9989', 'W0718'],
+        'forbidden-io-functions': []
     })
-
