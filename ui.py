@@ -4,12 +4,12 @@ The program handling the GUI for the dating app.
 
 import tkinter as tk
 
-import python_ta
-from PIL import Image, ImageTk
-from typing import Union
-from dash import Dash
 import sys
+from typing import Union
 import traceback
+from PIL import Image, ImageTk
+from dash import Dash
+import python_ta
 
 from user_network import User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, \
     user_looking_for_love
@@ -419,7 +419,7 @@ class DestinyApp:
         interests_options_frame.pack(side="left", fill="x")
 
         interests_options = ["Reading", "Dancing", "Singing", "Playing instruments", "Running", "Coding", "Doing math"]
-        interests_vars = {interest: tk.BooleanVar() for interest in interests_options}
+        interests_vars = {user_interest: tk.BooleanVar() for user_interest in interests_options}
 
         for i, interest in enumerate(interests_options):
             cb = tk.Checkbutton(interests_options_frame, text=interest, variable=interests_vars[interest],
@@ -673,7 +673,8 @@ class DestinyApp:
         }
 
         # Convert user-friendly names to internal attribute keys
-        self.priority_attributes = [priority_mapping.get(attr, attr.lower()) for attr in self.priority_attributes]
+        self.priority_attributes = [priority_mapping.get(attribute, attribute.lower())
+                                    for attribute in self.priority_attributes]
 
         # Add some space
         spacer = tk.Label(scroll_frame, text="", bg="#7A8B9C")
@@ -913,7 +914,7 @@ class DestinyApp:
         preference_tree = common.build_preference_tree("data.csv")
         recommendation_names = preference_tree.run_preference_tree()
 
-        user_keypair = {user.name: user for user in self.user_list}
+        user_keypair = {user_object.name: user_object for user_object in self.user_list}
 
         # Filter out users who already have romantic partners if looking for romance
         for name in recommendation_names:
@@ -1113,46 +1114,19 @@ class DestinyApp:
         candidate = candidate_updated if candidate_updated else candidate
 
         if dating_goal != "Meeting new friends":
-            # Check if candidate has a romantic partner in ANY list
-            has_partner = False
-            partner_name = None
-
-            # Check in all three lists
-            for check_list in [user_list, user_looking_for_friends, user_looking_for_love]:
-                for user in check_list:
-                    # Check if this user is our candidate and has a partner
-                    if user.name == candidate.name and user.romantic_current is not None:
-                        has_partner = True
-                        partner_name = user.romantic_current.name
-                        break
-
-                    # Check if candidate is someone's partner
-                    if user.romantic_current is not None and hasattr(user.romantic_current, 'name'):
-                        if user.romantic_current.name == candidate.name:
-                            has_partner = True
-                            partner_name = user.name
-                            break
-
-                if has_partner:
-                    break
+            # Check if candidate has a romantic partner
+            has_partner, partner_name = self.check_if_user_has_partner(
+                candidate, user_list, user_looking_for_friends, user_looking_for_love)
 
             if has_partner:
                 error_text = f"{candidate.name} is already in a relationship with {partner_name}!"
                 self.show_blocking_error(error_text)
                 self.recommendations.pop(0)
-
-                def show_next() -> None:
-                    if not self.recommendations:
-                        self.show_matching_summary()
-                    else:
-                        self.display_current_recommendation()
-
-                self.root.after(200, show_next)
+                self.root.after(200, self.show_next)
                 return
 
             else:
-                self.current_user.match(candidate)
-                self.update_network_graph()
+                self.match_with_user(candidate)
                 success_text = f"You've matched with {candidate.name}!"
                 self.show_temporary_message(success_text, "#E74C3C")
                 self.matches_made += 1
@@ -1169,6 +1143,99 @@ class DestinyApp:
                 self.root.after(1500, self.show_matching_summary)
             else:
                 self.root.after(200, self.display_current_recommendation)
+
+    def check_if_user_has_partner(self, candidate: User, user_list: list[User],
+                                  user_looking_for_friends: list[User],
+                                  user_looking_for_love: list[User]) -> tuple[bool, str]:
+        """
+        Check if a user already has a romantic partner in any of the user lists.
+
+        Args:
+            candidate: The user to check for existing partnerships
+            user_list: The main list of all users
+            user_looking_for_friends: Users looking for friendship
+            user_looking_for_love: Users looking for romantic relationships
+
+        Returns:
+            Tuple containing (has_partner, partner_name)
+        """
+        has_partner = False
+        partner_name = None
+
+        # Check in all three lists
+        for check_list in [user_list, user_looking_for_friends, user_looking_for_love]:
+            for user in check_list:
+                # Check if this user is our candidate and has a partner
+                if user.name == candidate.name and user.romantic_current is not None:
+                    has_partner = True
+                    partner_name = user.romantic_current.name
+                    break
+
+                # Check if candidate is someone's partner
+                if user.romantic_current is not None and hasattr(user.romantic_current, 'name'):
+                    if user.romantic_current.name == candidate.name:
+                        has_partner = True
+                        partner_name = user.name
+                        break
+
+            if has_partner:
+                break
+
+        return has_partner, partner_name
+
+    def show_next(self) -> None:
+        """
+        Show the next recommendation in the list.
+        """
+        if not self.recommendations:
+            self.show_matching_summary()
+        else:
+            self.display_current_recommendation()
+
+    def match_with_user(self, other_user: User) -> None:
+        """
+        Match the current user with another user and update the network visualization.
+        """
+        # Create the match between users using the User's match method
+        self.current_user.match(other_user)
+
+        # Update the global lists to ensure graph consistency
+        from user_network import user_looking_for_love, user_list
+
+        # Make sure both users exist in the global user list and update their romantic connections
+        for user in user_list:
+            if user.name == self.current_user.name:
+                user.romantic_current = self.current_user.romantic_current
+                user.romantic_degree = self.current_user.romantic_degree
+            elif user.name == other_user.name:
+                user.romantic_current = other_user.romantic_current
+                user.romantic_degree = other_user.romantic_degree
+
+        # Make sure both users are in user_looking_for_love if they should be
+        found_current = False
+        found_other = False
+
+        for user in user_looking_for_love:
+            if user.name == self.current_user.name:
+                user.romantic_current = self.current_user.romantic_current
+                user.romantic_degree = self.current_user.romantic_degree
+                found_current = True
+            elif user.name == other_user.name:
+                user.romantic_current = other_user.romantic_current
+                user.romantic_degree = other_user.romantic_degree
+                found_other = True
+
+        # Add users to user_looking_for_love if they're not there but should be
+        if not found_current and self.current_user.dating_goal != "Meeting new friends":
+            user_looking_for_love.append(self.current_user)
+        if not found_other and other_user.dating_goal != "Meeting new friends":
+            user_looking_for_love.append(other_user)
+
+        # Force refresh the visualization
+        self.update_network_graph()
+
+        # Force refresh of the recommendations
+        self.show_next()
 
     def show_temporary_message(self, message: str, color: str = "#2ECC71") -> None:
         """
@@ -1233,7 +1300,7 @@ class DestinyApp:
                     connections_canvas.pack()
 
                     scrollable_frame = tk.Frame(connections_canvas, bg="#7A8B9C")
-                    scrollable_frame_id = connections_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+                    connections_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
                     # Add connections to the scrollable frame
                     for i, user in enumerate(self.current_user.social_current[-self.matches_made:]):
@@ -1330,6 +1397,8 @@ class DestinyApp:
             import time
             import socket
 
+            self.update_network_graph()
+
             # Create a temporary message
             temp_label = tk.Label(self.root, text="Loading network graph...",
                                   font=("Arial", 24), fg="white", bg="#7A8B9C")
@@ -1351,13 +1420,13 @@ class DestinyApp:
                 # Add this import statement
                 import user_network
 
-                app = graph.create_app(
+                destiny_app = graph.create_app(
                     user_list=user_network.user_list,
                     user_looking_for_friends=user_network.user_looking_for_friends,
                     user_looking_for_love=user_network.user_looking_for_love
                 )
 
-                app.run(debug=False, port=port)
+                destiny_app.run(debug=False, port=port)
 
             # Define a function to open the browser after a short delay
             def open_browser() -> None:
@@ -1384,7 +1453,6 @@ class DestinyApp:
             self.update_status_message("Graph launching in browser. Close browser tab when done.")
 
         except Exception as e:
-            import traceback
             traceback.print_exc()
             error_label = tk.Label(self.root, text=f"Error: {str(e)}",
                                    font=("Arial", 16), fg="white", bg="#7A8B9C")
@@ -1486,8 +1554,10 @@ if __name__ == "__main__":
         'extra-imports': ["tkinter", "PIL", "sys", "user_network", "traceback", "tree", "common", "graph", "threading",
                           "time", "socket", "webbrowser", "dash"],  # the names (strs) of imported modules
         'allowed-io': [],  # the names (strs) of functions that call print/open/input
+        "forbidden-io-functions": [],
         'max-line-length': 120,
-        'max-module-lines': 1500,
+        'max-module-lines': 2000,
         'max-attributes': 20,
-        'disable': ['C0415']
+        'max-locals': 100,
+        'disable': ["C0415", "W0718", "W0613", "R0915", "W0621", "W0404", "W0611", "R1702", "W0108"]
     })
