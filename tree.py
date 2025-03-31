@@ -209,18 +209,6 @@ class BinaryTree:
 
 
 if __name__ == "__main__":
-    # import doctest
-    # doctest.testmod(verbose=True)
-    # doctest.testmod()
-    #
-    # data_wrangling()
-    #
-    # print("\nBuilding preference tree...")
-    # t = build_preference_tree('data.csv')
-    #
-    # print("\nFinding recommendations...")
-    # result = t.run_preference_tree()
-    # print(generate_10_people_list(t,result))
 
     python_ta.check_all(config={
         'extra-imports': ["json"],  # the names (strs) of imported modules
