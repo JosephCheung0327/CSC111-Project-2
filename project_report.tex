@@ -139,11 +139,8 @@ This file contains the core logic of the user system. Important classes and func
 \paragraph{Arguments}
 \begin{itemize}
     \item \texttt{list\_size}: number of users to generate.
-    \item \texttt{interested\_friend\_simulation\_size}: fixed number of users each user is interested in.
     \item \texttt{seed}: seed for random generation.
 \end{itemize}
-
-If two users are mutually interested (i.e., both appear in each other's \texttt{interested\_friend} list), they are added to each other's \texttt{social\_current} list. Returns\texttt{list[User]} – a list of generated User objects.
 
 \subsubsection*{\texttt{add\_fixed\_users}}
 - Adds predefined users (e.g., project creators) to the user list. This function mutates the list passed in.
