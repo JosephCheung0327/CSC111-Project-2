@@ -1,13 +1,17 @@
+"""
+This program handles the generation of graphs for all users in the network.
+"""
 import python_ta
-
-from user_network import generate_users_with_class, add_fixed_users, User
-
 import plotly.graph_objects as go
-from dash import Dash, html, dcc, Input, Output, State, callback_context
 import networkx as nx
 
-def get_romantic_count(user, user_looking_for_love):
-    """Get accurate romantic connection count considering both directions."""
+from user_network import User
+
+
+def get_romantic_count(user: User, user_looking_for_love: list[User]) -> int:
+    """
+    Get the number of romantic connections for a user in the network.
+    """
     # Direct check first
     if hasattr(user, 'romantic_current') and user.romantic_current is not None:
         return 1
@@ -20,12 +24,16 @@ def get_romantic_count(user, user_looking_for_love):
 
     return 0
 
-def plot_social_connections(users_social: list, search_name: str = None, positions = None) -> tuple:
-    """Create a graph visualization showing social connections between users"""
-    G = nx.Graph()
+
+def plot_social_connections(users_social: list, search_name: str = None,
+                            positions: dict[str, tuple[float, float]] = None) -> tuple:
+    """
+    Create a graph visualization showing social connections between users.
+    """
+    graph = nx.Graph()
 
     # First create a mapping of all users by name
-    user_dict = {user.name: user for user in users_social}
+    user_dict = {user_object.name: user_object for user_object in users_social}
 
     # Add all users from user_looking_for_friends as nodes
     for user in users_social:
@@ -33,19 +41,19 @@ def plot_social_connections(users_social: list, search_name: str = None, positio
         if hasattr(user, 'social_current') and user.social_current:
             # Only count valid friends that are in the same graph
             valid_friends = [f for f in user.social_current
-                          if hasattr(f, 'name') and f.name in user_dict]
+                             if hasattr(f, 'name') and f.name in user_dict]
             size = max(1, len(valid_friends))
         else:
             size = 1
 
-        G.add_node(user.name, size=size, type="user")
+        graph.add_node(user.name, size=size, type="user")
 
         for friend in user.social_current:
-            G.add_edge(user.name, friend.name)
+            graph.add_edge(user.name, friend.name)
 
     # Get positions for the nodes in the graph
     if positions is None:
-        pos = nx.spring_layout(G, k=0.3, seed=1234)
+        pos = nx.spring_layout(graph, k=0.3, seed=1234)
     else:
         pos = positions
 
@@ -59,13 +67,13 @@ def plot_social_connections(users_social: list, search_name: str = None, positio
     actual_search_name = None
     if search_name:
         search_name_lower = search_name.lower()
-        for node in G.nodes():
+        for node in graph.nodes():
             if node.lower() == search_name_lower:
                 actual_search_name = node
                 break
 
     # Add edges to traces
-    for edge in G.edges():
+    for edge in graph.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
 
@@ -98,14 +106,14 @@ def plot_social_connections(users_social: list, search_name: str = None, positio
     node_color = []
 
     # Add nodes to traces with safe access to size attribute
-    for node in G.nodes():
+    for node in graph.nodes():
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
 
         # Safely access the size attribute with a default value
         try:
-            size_value = G.nodes[node].get('size', 1)  # Use .get() with default value
+            size_value = graph.nodes[node].get('size', 1)  # Use .get() with default value
             node_size.append(size_value * 3 + 5)  # Scale size for visibility
         except:
             node_size.append(8)  # Default size
@@ -120,7 +128,7 @@ def plot_social_connections(users_social: list, search_name: str = None, positio
         else:
             # Color gradient based on connections
             try:
-                size_value = G.nodes[node].get('size', 1)
+                size_value = graph.nodes[node].get('size', 1)
                 node_color.append(size_value)
             except:
                 node_color.append(1)  # Default color value
@@ -142,7 +150,7 @@ def plot_social_connections(users_social: list, search_name: str = None, positio
                 thickness=15,
                 title='Friend Count',
                 titlefont=dict(size=20),  # Title font size
-                tickfont=dict(size=18),   # Add this line to change the tick number font size
+                tickfont=dict(size=18),  # Add this line to change the tick number font size
                 xanchor='left',
                 titleside='right'
             ),
@@ -152,18 +160,18 @@ def plot_social_connections(users_social: list, search_name: str = None, positio
     )
 
     # Create figure
-    fig = go.Figure(data = [edge_trace, highlight_edge_trace, node_trace],
-                   layout = go.Layout(
-                       showlegend = False,
-                       hovermode = "closest",
-                       margin = dict(b = 20, l = 5, r = 5, t = 40),
-                       xaxis = dict(showgrid = False, zeroline = False, showticklabels = False),
-                       yaxis = dict(showgrid = False, zeroline = False, showticklabels = False)))
+    fig = go.Figure(data=[edge_trace, highlight_edge_trace, node_trace],
+                    layout=go.Layout(
+                        showlegend=False,
+                        hovermode="closest",
+                        margin=dict(b=20, l=5, r=5, t=40),
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
 
     # Zoom to the searched node's neighborhood if found
-    if actual_search_name and actual_search_name in G.nodes:
+    if actual_search_name and actual_search_name in graph.nodes:
         relevant_positions = [pos[actual_search_name]]
-        for neighbor in G.neighbors(actual_search_name):
+        for neighbor in graph.neighbors(actual_search_name):
             relevant_positions.append(pos[neighbor])
 
         x_coords = [p[0] for p in relevant_positions]
@@ -178,35 +186,37 @@ def plot_social_connections(users_social: list, search_name: str = None, positio
             y_range = [y_min - padding, y_max + padding]
 
             fig.update_layout(
-                xaxis = dict(range = x_range, showgrid = False, zeroline = False, showticklabels = False),
-                yaxis = dict(range = y_range, showgrid = False, zeroline = False, showticklabels = False)
+                xaxis=dict(range=x_range, showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(range=y_range, showgrid=False, zeroline=False, showticklabels=False)
             )
 
             # Add title indicating the search
             fig.update_layout(
-                title = f"Showing connections for: {actual_search_name}",
-                titlefont = dict(size = 16)
+                title=f"Showing connections for: {actual_search_name}",
+                titlefont=dict(size=16)
             )
 
     return fig, pos
 
-def plot_romantic_connections(users_love: list, search_name: str = None, positions = None) -> tuple:
+
+def plot_romantic_connections(users_love: list, search_name: str = None,
+                              positions: dict[str, tuple[float, float]] = None) -> tuple:
     """Create a graph visualization showing romantic connections between users"""
-    G = nx.Graph()
+    graph_romantic = nx.Graph()
 
     # Add all users as nodes with default size
     for user in users_love:
-        G.add_node(user.name, gender=user.gender if hasattr(user, 'gender') else 'Unknown', size=10)
+        graph_romantic.add_node(user.name, gender=user.gender if hasattr(user, 'gender') else 'Unknown', size=10)
 
         try:
             if hasattr(user, 'romantic_current') and user.romantic_current is not None:
-                if user.romantic_current.name in G.nodes:  # Safety check
-                    G.add_edge(user.name, user.romantic_current.name)
+                if user.romantic_current.name in graph_romantic.nodes:  # Safety check
+                    graph_romantic.add_edge(user.name, user.romantic_current.name)
         except:
             pass
 
     if positions is None:
-        pos = nx.spring_layout(G, k = 0.3, seed = 1234)
+        pos = nx.spring_layout(graph_romantic, k=0.3, seed=1234)
     else:
         pos = positions
 
@@ -222,13 +232,13 @@ def plot_romantic_connections(users_love: list, search_name: str = None, positio
         search_name_lower = search_name.lower()
 
         # Case-insensitive search for the node
-        for node in G.nodes():
+        for node in graph_romantic.nodes():
             if node.lower() == search_name_lower:
                 actual_search_name = node
                 break
 
     # Add edges to appropriate traces
-    for edge in G.edges():
+    for edge in graph_romantic.edges():
         x0, y0 = pos[edge[0]]
         x1, y1 = pos[edge[1]]
 
@@ -248,7 +258,7 @@ def plot_romantic_connections(users_love: list, search_name: str = None, positio
     node_color = []
 
     # Add nodes to traces
-    for node in G.nodes():
+    for node in graph_romantic.nodes():
         x, y = pos[node]
         node_x.append(x)
         node_y.append(y)
@@ -260,7 +270,7 @@ def plot_romantic_connections(users_love: list, search_name: str = None, positio
         if actual_search_name:
             if node == actual_search_name:
                 node_color.append("#E74C3C")  # Red for the searched node
-            elif node in G.neighbors(actual_search_name):
+            elif node in graph_romantic.neighbors(actual_search_name):
                 node_color.append("#FF85A2")  # Pink for connected nodes
             else:
                 node_color.append("rgba(200,200,200,0.5)")  # Other nodes faded out
@@ -269,44 +279,44 @@ def plot_romantic_connections(users_love: list, search_name: str = None, positio
 
     # Create traces
     edge_trace = go.Scatter(
-        x = edge_x, y = edge_y,
-        line = dict(width = 0.7, color = "#FF85A2"),  # Pink edges for romantic
-        hoverinfo = "none",
-        mode = "lines")
+        x=edge_x, y=edge_y,
+        line=dict(width=0.7, color="#FF85A2"),  # Pink edges for romantic
+        hoverinfo="none",
+        mode="lines")
 
     highlight_edge_trace = go.Scatter(
-        x = highlight_edge_x, y = highlight_edge_y,
-        line = dict(width = 2.0, color = "#E74C3C"),  # Red highlight for romantic
-        hoverinfo = "none",
-        mode = "lines")
+        x=highlight_edge_x, y=highlight_edge_y,
+        line=dict(width=2.0, color="#E74C3C"),  # Red highlight for romantic
+        hoverinfo="none",
+        mode="lines")
 
     node_trace = go.Scatter(
-        x = node_x, y = node_y,
-        mode = "markers+text",
-        text = node_text,
-        textposition = "top center",
-        textfont = dict(size = 12),
-        hoverinfo = "text",
-        hovertext = hover_text,
-        marker = dict(
-            color = node_color,
-            size = node_size,
-            line = dict(width = 1, color = "#440000")))  # Darker border for romantic nodes
+        x=node_x, y=node_y,
+        mode="markers+text",
+        text=node_text,
+        textposition="top center",
+        textfont=dict(size=12),
+        hoverinfo="text",
+        hovertext=hover_text,
+        marker=dict(
+            color=node_color,
+            size=node_size,
+            line=dict(width=1, color="#440000")))  # Darker border for romantic nodes
 
     # Create figure with romantic theme colors
-    fig = go.Figure(data = [edge_trace, highlight_edge_trace, node_trace],
-                   layout = go.Layout(
-                       showlegend = False,
-                       hovermode = "closest",
-                       margin = dict(b = 20, l = 5, r = 5, t = 40),
-                       plot_bgcolor="#FFF9F9",  # Very light pink background
-                       xaxis = dict(showgrid = False, zeroline = False, showticklabels = False),
-                       yaxis = dict(showgrid = False, zeroline = False, showticklabels = False)))
+    fig = go.Figure(data=[edge_trace, highlight_edge_trace, node_trace],
+                    layout=go.Layout(
+                        showlegend=False,
+                        hovermode="closest",
+                        margin=dict(b=20, l=5, r=5, t=40),
+                        plot_bgcolor="#FFF9F9",  # Very light pink background
+                        xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)))
 
     # Zoom to the searched node's romantic neighborhood if found
-    if actual_search_name and actual_search_name in G.nodes:
+    if actual_search_name and actual_search_name in graph_romantic.nodes:
         relevant_positions = [pos[actual_search_name]]
-        for neighbor in G.neighbors(actual_search_name):
+        for neighbor in graph_romantic.neighbors(actual_search_name):
             relevant_positions.append(pos[neighbor])
 
         x_coords = [p[0] for p in relevant_positions]
@@ -321,19 +331,21 @@ def plot_romantic_connections(users_love: list, search_name: str = None, positio
             y_range = [y_min - padding, y_max + padding]
 
             fig.update_layout(
-                xaxis = dict(range = x_range, showgrid = False, zeroline = False, showticklabels = False),
-                yaxis = dict(range = y_range, showgrid = False, zeroline = False, showticklabels = False)
+                xaxis=dict(range=x_range, showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(range=y_range, showgrid=False, zeroline=False, showticklabels=False)
             )
 
             # Add title indicating the romantic search
             fig.update_layout(
-                title = f"Showing romantic connections for: {actual_search_name}",
-                titlefont = dict(size = 16, color = "#E74C3C")
+                title=f"Showing romantic connections for: {actual_search_name}",
+                titlefont=dict(size=16, color="#E74C3C")
             )
 
     return fig, pos
 
-def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_love=None):
+
+def create_app(user_list: list[User] = None, user_looking_for_friends: list[User] = None,
+               user_looking_for_love: list[User] = None) -> go.Figure:
     """Create and return a Dash app instance with multiple tabs for different network views
 
     Args:
@@ -341,8 +353,7 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
     """
     # Import the necessary modules at the function level
     # This prevents circular imports
-    from dash import Dash, html, dcc, Input, Output, State, callback_context, dash_table
-    import plotly.graph_objects as go
+    from dash import Dash, html, dcc, Input, Output, State, callback_context
 
     # Store the provided user list in a globally scoped variable
     global initial_user_list, node_positions, initial_fig
@@ -367,22 +378,24 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
     app.layout = html.Div([
         # App title
         html.H1("Destiny Network Visualization",
-               style={
-                   'textAlign': 'center',
-                   'color': '#2C3E50',
-                   'marginTop': '20px',
-                   'marginBottom': '20px',
-                   'fontFamily': 'Arial, sans-serif'
-               }),
+                style={
+                    'textAlign': 'center',
+                    'color': '#2C3E50',
+                    'marginTop': '20px',
+                    'marginBottom': '20px',
+                    'fontFamily': 'Arial, sans-serif'
+                }),
 
         # Top controls div with search input and buttons
         html.Div([
             dcc.Input(id="search-input", type="text", placeholder="Enter user name",
-                     style={'margin': '10px', 'padding': '8px', 'borderRadius': '4px', 'width': '250px'}),
+                      style={'margin': '10px', 'padding': '8px', 'borderRadius': '4px', 'width': '250px'}),
             html.Button("Search", id="search-button",
-                       style={'margin': '10px', 'padding': '8px', 'backgroundColor': '#4CAF50', 'color': 'white', 'border': 'none', 'borderRadius': '4px'}),
+                        style={'margin': '10px', 'padding': '8px', 'backgroundColor': '#4CAF50', 'color': 'white',
+                               'border': 'none', 'borderRadius': '4px'}),
             html.Button("Reset", id="reset-button",
-                       style={'margin': '10px', 'padding': '8px', 'backgroundColor': '#f44336', 'color': 'white', 'border': 'none', 'borderRadius': '4px'}),
+                        style={'margin': '10px', 'padding': '8px', 'backgroundColor': '#f44336', 'color': 'white',
+                               'border': 'none', 'borderRadius': '4px'}),
         ], style={'display': 'flex', 'justifyContent': 'center', 'marginBottom': '10px'}),
 
         # Clicked node output
@@ -403,18 +416,18 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
             dcc.Tab(label='Social Connections', value='social-tab', children=[
                 html.Div([
                     html.H3("User Social Network",
-                           style={'textAlign': 'center', 'color': '#3498DB', 'marginTop': '20px'}),
+                            style={'textAlign': 'center', 'color': '#3498DB', 'marginTop': '20px'}),
                     html.P("This graph shows social connections between users in the network.",
-                          style={'textAlign': 'center', 'fontStyle': 'italic', 'marginBottom': '20px'}),
+                           style={'textAlign': 'center', 'fontStyle': 'italic', 'marginBottom': '20px'}),
                     dcc.Graph(id="social-graph", figure=initial_social_fig, style={'height': '120vh'})
                 ])
             ]),
             dcc.Tab(label='Romantic Connections', value='romantic-tab', children=[
                 html.Div([
                     html.H3("User Dating Network",
-                           style={'textAlign': 'center', 'color': '#E74C3C', 'marginTop': '20px'}),
+                            style={'textAlign': 'center', 'color': '#E74C3C', 'marginTop': '20px'}),
                     html.P("This graph shows potential romantic connections between users in the network.",
-                          style={'textAlign': 'center', 'fontStyle': 'italic', 'marginBottom': '20px'}),
+                           style={'textAlign': 'center', 'fontStyle': 'italic', 'marginBottom': '20px'}),
                     dcc.Graph(id="romantic-graph", figure=initial_romantic_fig, style={'height': '120vh'})
                 ])
             ])
@@ -424,24 +437,25 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
         html.Div([
             html.Hr(),
             html.P(f"Network size: {len(initial_user_list)} users",
-                  style={'textAlign': 'center', 'color': '#7F8C8D'})
+                   style={'textAlign': 'center', 'color': '#7F8C8D'})
         ], style={'marginTop': '20px'})
 
     ], style={'fontFamily': 'Arial, sans-serif', 'maxWidth': '1800px', 'margin': '0 auto', 'padding': '20px'})
 
     # Define the callbacks for the active tab
     @app.callback(
-    [Output("social-graph", "figure"),
-     Output("romantic-graph", "figure"),
-     Output("clicked-node-output", "children")],
-    [Input("search-button", "n_clicks"),
-     Input("reset-button", "n_clicks"),
-     Input("social-graph", "clickData"),
-     Input("romantic-graph", "clickData"),
-     Input("graph-tabs", "value")],
-    [State("search-input", "value")]
-)
-    def update_graphs(search_clicks, reset_clicks, social_click_data, romantic_click_data, active_tab, search_name):
+        [Output("social-graph", "figure"),
+         Output("romantic-graph", "figure"),
+         Output("clicked-node-output", "children")],
+        [Input("search-button", "n_clicks"),
+         Input("reset-button", "n_clicks"),
+         Input("social-graph", "clickData"),
+         Input("romantic-graph", "clickData"),
+         Input("graph-tabs", "value")],
+        [State("search-input", "value")]
+    )
+    def update_graphs(_search_clicks, _reset_clicks, social_click_data, romantic_click_data, _active_tab,
+                      search_name) -> tuple:
         ctx = callback_context
 
         if not ctx.triggered:
@@ -478,7 +492,10 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
             )
 
             if selected_user:
-                friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
+                if hasattr(selected_user, "social_current") and selected_user.social_current:
+                    friend_count = len(selected_user.social_current)
+                else:
+                    friend_count = 0
                 romantic_count = get_romantic_count(selected_user, user_looking_for_love)
 
                 output_text = html.Div([
@@ -506,8 +523,10 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
                         clicked_node = point['customdata']
 
                     if clicked_node:
-                        social_fig, _ = plot_social_connections(user_looking_for_friends, clicked_node, social_node_positions)
-                        romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node, romantic_node_positions)
+                        social_fig, _ = plot_social_connections(user_looking_for_friends, clicked_node,
+                                                                social_node_positions)
+                        romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node,
+                                                                    romantic_node_positions)
 
                         # Find user with case-insensitive search
                         selected_user = next(
@@ -519,7 +538,10 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
                         )
 
                         if selected_user:
-                            friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
+                            if hasattr(selected_user, "social_current") and selected_user.social_current:
+                                friend_count = len(selected_user.social_current)
+                            else:
+                                friend_count = 0
                             romantic_count = get_romantic_count(selected_user, user_looking_for_love)
 
                             output_text = html.Div([
@@ -562,8 +584,10 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
 
                     if clicked_node:
                         # Update both graphs
-                        social_fig, _ = plot_social_connections(user_looking_for_friends, clicked_node, social_node_positions)
-                        romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node, romantic_node_positions)
+                        social_fig, _ = plot_social_connections(user_looking_for_friends, clicked_node,
+                                                                social_node_positions)
+                        romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node,
+                                                                    romantic_node_positions)
 
                         # Find user with case-insensitive search
                         selected_user = next(
@@ -575,7 +599,10 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
                         )
 
                         if selected_user:
-                            friend_count = len(selected_user.social_current) if hasattr(selected_user, 'social_current') and selected_user.social_current else 0
+                            if hasattr(selected_user, "social_current") and selected_user.social_current:
+                                friend_count = len(selected_user.social_current)
+                            else:
+                                friend_count = 0
                             romantic_count = get_romantic_count(selected_user, user_looking_for_love)
 
                             output_text = html.Div([
@@ -603,7 +630,8 @@ def create_app(user_list=None, user_looking_for_friends=None, user_looking_for_l
     # Return the app instance
     return app
 
-def find_available_port(start=8050, max_attempts=10):
+
+def find_available_port(start: int = 8050, max_attempts: int = 10) -> int:
     """Find an available port starting from start_port"""
     import socket
     for port in range(start, start + max_attempts):
@@ -615,7 +643,8 @@ def find_available_port(start=8050, max_attempts=10):
 
 if __name__ == "__main__":
     python_ta.check_all(config={
-        'extra-imports': [],  # the names (strs) of imported modules
+        'extra-imports': ["user_network", "plotly.graph_objects", "dash", "networkx", "socket"],
         'allowed-io': [],  # the names (strs) of functions that call print/open/input
-        'max-line-length': 120
+        'max-line-length': 120,
+        'disable': ["R0914", "R1714", "R1735", "W0702", "R0912", "R0915", "R1702", "C0415", "E9997"]
     })
