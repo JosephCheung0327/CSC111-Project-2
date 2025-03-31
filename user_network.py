@@ -93,8 +93,6 @@ def simulate_connections(user_list_2: list[User]) -> tuple:
                                     "religion", "major", "year", "language", "likes_pets",
                                     "likes_outdoor_activities", "enjoys_watching_movies"]
 
-    print(f"Processing {len(users_looking_for_friends)} friend seekers")
-
     for user in users_looking_for_friends:
         try:
             data_wrangling(user, characteristics_default_rank, users_looking_for_friends, "friends.csv")
@@ -111,8 +109,6 @@ def simulate_connections(user_list_2: list[User]) -> tuple:
                     print(f"Warning: User '{namestring}' not found for {user.name}")
         except Exception as e:
             print(f"Error generating friends for {user.name}: {e}")
-
-    print(f"Processing {len(users_looking_for_love)} romantic seekers")
 
     for user in users_looking_for_love:
         try:
@@ -236,17 +232,14 @@ class User:
     interested_romantic: list
     romantic_current: Optional[User]
     characteristics: Characteristics
-    romantic_ex: list[User]
     social_current: list[User]
-    social_ex: list[User]
     romantic_degree: int
     social_degree: int
 
     def __init__(self, name: str, age: int, gender: str, pronouns: str, dating_goal: str,
                  characteristics: Characteristics,
                  interested_friend: list, interested_romantic: list, romantic_current: Optional[User] = None,
-                 romantic_ex: list[User] = [], social_current: Optional[list[User]] = None, social_ex: list[User] =[],
-                 romantic_degree: int = 0,
+                 social_current: Optional[list[User]] = None, romantic_degree: int = 0,
                  social_degree: int = 0) -> None:
         self.name = name
         self.age = age
@@ -259,9 +252,7 @@ class User:
         self.interested_romantic = interested_romantic
 
         self.romantic_current = romantic_current
-        self.romantic_ex = romantic_ex
         self.social_current = social_current
-        self.social_ex = social_ex
         self.romantic_degree = romantic_degree
         self.social_degree = social_degree
 

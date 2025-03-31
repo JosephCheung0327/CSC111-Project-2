@@ -201,7 +201,9 @@ def plot_social_connections(users_social: list, search_name: str = None,
 
 def plot_romantic_connections(users_love: list, search_name: str = None,
                               positions: dict[str, tuple[float, float]] = None) -> tuple:
-    """Create a graph visualization showing romantic connections between users"""
+    """
+    Create a graph visualization showing romantic connections between users.
+    """
     graph_romantic = nx.Graph()
 
     # Add all users as nodes with default size
