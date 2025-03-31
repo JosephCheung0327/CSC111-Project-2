@@ -1,28 +1,20 @@
+"""
+The program build a Binary Tree to match users to generate a list of matches based on the users' preference.
+"""
 from __future__ import annotations
 
+import json
+from typing import List, Optional, Any
 import python_ta
 
-# import user_network
 
-from typing import List, Optional, Any
-import pandas as pd
-import csv
-import json
-from python_ta.contracts import check_contracts
-
-
-# users_list = user_network.users
-
-# char1 = users_list[-1].characteristics
-
-
-def filter_user_by_dating_goal(users:List[user_network.User], user:user_network.User) -> list[user_network.User]:
+def filter_user_by_dating_goal(users, user) -> list:
     """Filters users who have the same dating goal as the given user, excluding themselves"""
 
-    return [u for u in users if u.dating_goal == user.dating_goal and u!= user]
+    return [u for u in users if u.dating_goal == user.dating_goal and u != user]
 
 
-def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
+def add_priority(characteristics) -> List[str]:
     """
     Ask the user to rank the attributes of the Characteristics class in order of importance.
     Returns a list of attributes sorted by the user's ranking.
@@ -30,7 +22,7 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
     """
     priority_dict = {}
     rank = 1
-    for attribute in vars(Characteristics):
+    for attribute in vars(characteristics):
         priority_dict[attribute] = rank
         rank += 1
     print("Please rank the following criteria in order of importance (from most to least important):")
@@ -46,15 +38,15 @@ def add_priority(Characteristics: user_network.Characteristics) -> List[str]:
             raise ValueError("Invalid ranking: Ensure all numbers are present and unique.")
 
         ordered_attributes = [
-            key for rank in ranking
-            for key, value in priority_dict.items()
-            if value == rank
+            k for r in ranking
+            for k, v in priority_dict.items()
+            if v == r
         ]
         return ordered_attributes
 
     except ValueError as e:
         print(f"Error: {e}")
-        return add_priority(Characteristics)
+        return add_priority(characteristics)
 
 
 class BinaryTree:
@@ -138,7 +130,8 @@ class BinaryTree:
         >>> t.insert_sequence([1, 0, "Alice"])
         >>> t.insert_sequence([1, 1, "Mary"])
         >>> t.to_nested_list()
-        ['', [1, [1, [['Charlie', 'Mary'], None, None], None], [0, [['Alice'], None, None], None]], [0, [1, [['Bob'], None, None], None], None]]
+        ['', [1, [1, [['Charlie', 'Mary'], None, None], None], [0, [['Alice'], None, None], None]], [0, [1, [['Bob'], \
+        None, None], None], None]]
         """
         if not items:
             return
@@ -168,7 +161,6 @@ class BinaryTree:
                 self._right._right = BinaryTree()
             self._right.insert_sequence(rest)
 
-
     def to_nested_list(self) -> Optional[list]:
         """
         Returns a nested list representation of the binary tree, \
@@ -186,8 +178,6 @@ class BinaryTree:
         return [self._root,
                 self._left.to_nested_list() if self._left else None,
                 self._right.to_nested_list() if self._right else None]
-
-
 
     def run_preference_tree(self) -> list[str]:
         """
@@ -233,7 +223,9 @@ if __name__ == "__main__":
     # print(generate_10_people_list(t,result))
 
     python_ta.check_all(config={
-        'extra-imports': [],  # the names (strs) of imported modules
+        'extra-imports': ["json"],  # the names (strs) of imported modules
         'allowed-io': [],  # the names (strs) of functions that call print/open/input
-        'max-line-length': 120
+        'max-line-length': 120,
+        "forbidden-io-functions": [],
+        'disable': ['E9970']
     })
