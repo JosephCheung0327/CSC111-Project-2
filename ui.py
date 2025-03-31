@@ -619,6 +619,9 @@ class DestinyApp:
         button_frame.pack(side="left", padx=10)
 
         def move_up() -> None:
+            """
+            Move the selected item up in the listbox.
+            """
             selected_idx = priority_listbox.curselection()
             if not selected_idx or selected_idx[0] == 0:
                 return
@@ -631,6 +634,9 @@ class DestinyApp:
             priority_listbox.activate(idx - 1)
 
         def move_down() -> None:
+            """
+            Move the selected item down in the listbox.
+            """
             selected_idx = priority_listbox.curselection()
             if not selected_idx or selected_idx[0] == priority_listbox.size() - 1:
                 return
@@ -698,8 +704,7 @@ class DestinyApp:
         """
         Add the newly created user to the existing user network.
         """
-        # Add the user to the list
-        user_list.append(new_user)
+        user_list.append(new_user)  # Add the user to the list
 
         for friend in new_user.social_current:
             # Add test to friend's social_current list (make bidirectional)
@@ -725,8 +730,7 @@ class DestinyApp:
         Collect all the input values and create a new user.
         """
         try:
-            # Get values from the inputs
-            name = self.username
+            name = self.username  # Get values from the inputs
 
             # Validate and process age
             try:
@@ -804,7 +808,6 @@ class DestinyApp:
                 romantic_current=None
             )
 
-            # DIRECTLY import the global lists
             from user_network import user_list as global_user_list
             from user_network import user_looking_for_friends
             from user_network import user_looking_for_love
@@ -813,7 +816,6 @@ class DestinyApp:
             global_user_list.append(user)
             self.user_list = global_user_list  # Update local reference
 
-            # Make sure user is added to the correct GLOBAL list
             if user.dating_goal == "Meeting new friends":
                 if user not in user_looking_for_friends:
                     user_looking_for_friends.append(user)
@@ -824,10 +826,7 @@ class DestinyApp:
             # Display success message
             self.status_label.config(text=f"Profile created successfully for {name}!", fg="white")
 
-            # Store the user object for later use
             self.current_user = user
-
-            # Show success page after a short delay
             self.root.after(200, self.show_success_page)
 
         except Exception as e:
@@ -886,11 +885,9 @@ class DestinyApp:
         dating_goal = self.current_user.dating_goal
         connection_type = "friendship" if dating_goal == "Meeting new friends" else "romantic"
 
-        # Main frame
         main_frame = tk.Frame(self.root, bg="#7A8B9C")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Header
         header = tk.Label(main_frame, text="Find Your Matches",
                           font=("Arial", 28, "bold"), fg="white", bg="#7A8B9C")
         header.pack(pady=(30, 10))
@@ -916,17 +913,6 @@ class DestinyApp:
         for name in recommendation_names:
             if name in user_keypair:
                 user = user_keypair[name]
-
-                # # Skip users who already have a romantic partner if we're looking for a romantic partner
-                # if dating_goal != "Meeting new friends":
-                #     if hasattr(user, 'romantic_current') and user.romantic_current is not None:
-                #         print(f"Skipping {user.name} - already has a romantic partner: {user.romantic_current.name}")
-                #         continue
-
-                # self.recommendations_dict[name] = {
-                #     'user': user,
-                #     'status': 'pending'  # Can be 'pending', 'matched', 'rejected'
-                # }
                 self.recommendations.append(user)
 
         if not self.recommendations:
@@ -946,10 +932,8 @@ class DestinyApp:
                                     highlightbackground="#3A4B5C", highlightthickness=2)
         self.match_frame.pack(pady=20, fill=tk.BOTH, expand=True, padx=80)
 
-        # Initialize the match counter
         self.matches_made = 0
 
-        # Display the first recommendation
         self.display_current_recommendation()
 
         # Create the buttons frame
@@ -1026,7 +1010,7 @@ class DestinyApp:
                              wraplength=400, justify="left")
         interests.pack(pady=(0, 15), anchor="w", padx=40)
 
-        # Update the counter label - add safety check
+        # Update the counter label
         try:
             if hasattr(self, 'counter_label') and self.counter_label.winfo_exists():
                 counter_text = f"Showing match {self.recommendations.index(user) + 1} of {len(self.recommendations)}"
@@ -1047,19 +1031,21 @@ class DestinyApp:
             if current_name in self.recommendations_dict:
                 self.recommendations_dict[current_name]['status'] = 'rejected'
 
-            # Remove from list
+            # Remove user from list
             self.recommendations.pop(0)
 
             if not self.recommendations:
-                # No more recommendations, go to the summary page
+                # No more recommendations
                 self.show_matching_summary()
                 return
 
             self.display_current_recommendation()
 
     def show_blocking_error(self, message: str) -> None:
-        """Show a very visible blocking error message that can't be missed"""
-        # Create a full-screen semi-transparent overlay
+        """
+        Show a very visible blocking error message that can't be missed.
+        """
+        # Create overlay
         overlay = tk.Frame(self.root, bg="#000000")
         overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
 
@@ -1067,7 +1053,6 @@ class DestinyApp:
         error_frame = tk.Frame(overlay, bg="#E74C3C", padx=30, pady=30)
         error_frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        # Error title
         title = tk.Label(error_frame, text="CANNOT MATCH",
                          font=("Arial", 24, "bold"), fg="white", bg="#E74C3C")
         title.pack(pady=(0, 20))
@@ -1099,14 +1084,13 @@ class DestinyApp:
         candidate = self.recommendations[0]
         dating_goal = self.current_user.dating_goal
 
-        # Get the most up-to-date version of the candidate from the global list
+        # Get the updated candidate from the global list
         candidate_updated = None
         for user in user_list:
             if user.name == candidate.name:
                 candidate_updated = user
                 break
 
-        # Use the updated version if found, otherwise use the original
         candidate = candidate_updated if candidate_updated else candidate
 
         if dating_goal != "Meeting new friends":
@@ -1145,15 +1129,6 @@ class DestinyApp:
                                   user_looking_for_love: list[User]) -> tuple[bool, str]:
         """
         Check if a user already has a romantic partner in any of the user lists.
-
-        Args:
-            candidate: The user to check for existing partnerships
-            user_list: The main list of all users
-            user_looking_for_friends: Users looking for friendship
-            user_looking_for_love: Users looking for romantic relationships
-
-        Returns:
-            Tuple containing (has_partner, partner_name)
         """
         has_partner = False
         partner_name = None
@@ -1192,10 +1167,8 @@ class DestinyApp:
         """
         Match the current user with another user and update the network visualization.
         """
-        # Create the match between users using the User's match method
         self.current_user.match(other_user)
 
-        # Update the global lists to ensure graph consistency
         from user_network import user_looking_for_love, user_list
 
         # Make sure both users exist in the global user list and update their romantic connections
@@ -1207,7 +1180,6 @@ class DestinyApp:
                 user.romantic_current = other_user.romantic_current
                 user.romantic_degree = other_user.romantic_degree
 
-        # Make sure both users are in user_looking_for_love if they should be
         found_current = False
         found_other = False
 
@@ -1227,21 +1199,18 @@ class DestinyApp:
         if not found_other and other_user.dating_goal != "Meeting new friends":
             user_looking_for_love.append(other_user)
 
-        # Force refresh the visualization
         self.update_network_graph()
 
-        # Force refresh of the recommendations
         self.show_next()
 
     def show_temporary_message(self, message: str, color: str = "#2ECC71") -> None:
         """
         Show a temporary message overlay on the match frame.
         """
-        # Create a semi-transparent overlay
+        # Create overlay
         overlay = tk.Frame(self.match_frame, bg="#5A6B7C")
         overlay.place(relx=0.5, rely=0.5, anchor=tk.CENTER, relwidth=1, relheight=1)
 
-        # Message
         msg = tk.Label(overlay, text=message,
                        font=("Arial", 24, "bold"), fg=color, bg="#5A6B7C")
         msg.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
@@ -1338,13 +1307,14 @@ class DestinyApp:
         continue_button.pack(pady=30)
 
     def launch_main_app(self) -> None:
-        """Launch the main app (graph visualization or other main functionality)."""
+        """
+        Launch the main app (graph visualization or other main functionality).
+        """
         # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
 
-        # Re-get the global user list
         from user_network import user_list as global_user_list
-        self.user_list = global_user_list  # Refresh local reference
+        self.user_list = global_user_list
 
         # Clear existing widgets
         for widget in self.root.winfo_children():
@@ -1353,14 +1323,13 @@ class DestinyApp:
         frame = tk.Frame(self.root, bg="#7A8B9C")
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        # Show info about the user list - now using the refreshed global list
+        # Show info about the user list
         label = tk.Label(frame, text=f"User network has {len(self.user_list)} users",
                          font=("Arial", 24), fg="white", bg="#7A8B9C")
         label.pack(pady=20)
 
         # Show social connections
         social_count = len(self.current_user.social_current)
-        # Fix this line - romantic_current is not a list
         romantic_count = 1 if self.current_user.romantic_current is not None else 0
         connections_text = f"You have {social_count} friends. You have {romantic_count} romantic partner."
 
@@ -1385,7 +1354,9 @@ class DestinyApp:
         close_button.pack(side=tk.LEFT, padx=10)
 
     def view_network_graph(self) -> None:
-        """Show the network graph visualization."""
+        """
+        Show the network graph visualization.
+        """
         try:
             import graph
             import webbrowser
@@ -1413,7 +1384,6 @@ class DestinyApp:
 
             # Define a function to run the Dash app in a separate thread
             def run_dash_app() -> None:
-                # Add this import statement
                 import user_network
 
                 destiny_app = graph.create_app(
@@ -1426,7 +1396,7 @@ class DestinyApp:
 
             # Define a function to open the browser after a short delay
             def open_browser() -> None:
-                time.sleep(3)  # Wait for the server to start
+                time.sleep(3)
                 url = f'http://127.0.0.1:{port}/'
                 print(f"Opening browser to {url}")
                 webbrowser.open(url)
@@ -1442,10 +1412,7 @@ class DestinyApp:
             browser_thread = threading.Thread(target=open_browser, daemon=True)
             browser_thread.start()
 
-            # Remove the temporary message after a delay
             self.root.after(1500, lambda: temp_label.destroy())
-
-            # Keep the main window responsive
             self.update_status_message("Graph launching in browser. Close browser tab when done.")
 
         except Exception as e:
@@ -1458,10 +1425,8 @@ class DestinyApp:
         """
         Refresh the network graph display by recalculating the subset of romantic users.
         """
-        # Import the global user_list from the user_network module.
         from user_network import user_list
 
-        # Recompute the list of users looking for romantic connections based on current state.
         updated_user_looking_for_love = [
             user for user in user_list if user.dating_goal != "Meeting new friends"
         ]
@@ -1488,7 +1453,6 @@ class DestinyApp:
         status_frame.status_tag = True
         status_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
-        # Add the status message
         status_label = tk.Label(status_frame, text=message,
                                 font=("Arial", 14), fg="white", bg="#5A6B7C",
                                 padx=10, pady=5)
