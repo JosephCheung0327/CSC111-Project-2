@@ -1,0 +1,10 @@
+# Testing and Code Checking
+python-ta
+
+# Others
+faker
+plotly
+networkx
+dash
+tkinter
+pillow
