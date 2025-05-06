@@ -75,12 +75,13 @@ class DestinyApp:
     matches_made: list[str]
     counter_label: tk.Label
     network_graph: Dash
+    background_color: str = "#7A8B9C"
 
     def __init__(self, image_path: str, window_width: int = 720, window_height: int = 720) -> None:
         self.root = tk.Tk()
         self.root.title("Destiny App")
         self.root.geometry(f"{window_width}x{window_height}")
-        self.root.configure(bg="#7A8B9C")
+        self.root.configure(bg=self.background_color)
 
         self.window_width = window_width
         self.window_height = window_height
@@ -110,14 +111,16 @@ class DestinyApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.root.configure(bg="#7A8B9C")  # Set background color
+        self.root.configure(bg=self.background_color)  # Set background color
 
         # Create two frames, one for the image (top half) and one for username input (bottom half)
-        top_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height // 2, bg="#7A8B9C")
+        top_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height // 2,
+                             bg=self.background_color)
         top_frame.pack(side=tk.TOP, fill=tk.BOTH)
         top_frame.pack_propagate(False)  # Prevent frame from shrinking
 
-        bottom_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height // 2, bg="#7A8B9C")
+        bottom_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height // 2,
+                                bg=self.background_color)
         bottom_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
         # Load and display the image in the top half
@@ -144,33 +147,34 @@ class DestinyApp:
             photo = ImageTk.PhotoImage(img)  # Convert the image to PhotoImage format
 
             # Create a label to display the image in the top frame
-            image_label = tk.Label(top_frame, image=photo, bg="#7A8B9C")
+            image_label = tk.Label(top_frame, image=photo, bg=self.background_color)
             image_label.image = photo  # Keep a reference to prevent garbage collection
 
             image_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)  # Center the image in the top frame
 
         except Exception as e:
             # Show error message instead
-            error_label = tk.Label(top_frame, text=f"Error loading image: {e}", fg="white", bg="#7A8B9C", padx=20,
+            error_label = tk.Label(top_frame, text=f"Error loading image: {e}", fg="white", bg=self.background_color,
+                                   padx=20,
                                    pady=20, font=("Arial", 16))
             error_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # Add heading and create the username input field in the bottom frame
         heading = tk.Label(bottom_frame, text="Welcome to Destiny",
-                           font=("Arial", 36, "bold"), fg="white", bg="#7A8B9C")
+                           font=("Arial", 36, "bold"), fg="white", bg=self.background_color)
         heading.pack(pady=(50, 20))
 
         # Add description
         description = tk.Label(bottom_frame, text="Please enter your name to continue", font=("Arial", 18), fg="white",
-                               bg="#7A8B9C")
+                               bg=self.background_color)
         description.pack(pady=(0, 40))
 
         # Create a frame for the input field to control its width
-        input_frame = tk.Frame(bottom_frame, bg="#7A8B9C")
+        input_frame = tk.Frame(bottom_frame, bg=self.background_color)
         input_frame.pack(pady=20, padx=(0, 62.5))  # Add right padding to shift everything to the left
 
         # Create username label, input field, and submit button
-        username_label = tk.Label(input_frame, text="Name:", font=("Arial", 16), fg="white", bg="#7A8B9C")
+        username_label = tk.Label(input_frame, text="Name:", font=("Arial", 16), fg="white", bg=self.background_color)
         username_label.pack(side=tk.LEFT, padx=(0, 10))
 
         self.username_entry = tk.Entry(input_frame, font=("Arial", 16), width=20)
@@ -182,7 +186,7 @@ class DestinyApp:
         submit_button.pack(pady=20)
 
         # Result label to show feedback
-        self.result_label = tk.Label(bottom_frame, text="", font=("Arial", 14), fg="white", bg="#7A8B9C")
+        self.result_label = tk.Label(bottom_frame, text="", font=("Arial", 14), fg="white", bg=self.background_color)
         self.result_label.pack(pady=10)
 
         self.root.bind('<Return>', lambda event: self.handle_username_submit())  # Handle Enter key press to advance
@@ -215,23 +219,23 @@ class DestinyApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.root.configure(bg="#7A8B9C")  # Set background color
+        self.root.configure(bg=self.background_color)  # Set background color
 
         # Create main frame
-        frame = tk.Frame(self.root, bg="#7A8B9C")
+        frame = tk.Frame(self.root, bg=self.background_color)
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # Description
         admin_label = tk.Label(frame, text="ADMIN MODE",
-                               font=("Arial", 36, "bold"), fg="white", bg="#7A8B9C")
+                               font=("Arial", 36, "bold"), fg="white", bg=self.background_color)
         admin_label.pack(pady=20)
 
         users_label = tk.Label(frame, text=f"The user network has {len(self.user_list)} users",
-                               font=("Arial", 24), fg="white", bg="#7A8B9C")
+                               font=("Arial", 24), fg="white", bg=self.background_color)
         users_label.pack(pady=20)
 
         description = tk.Label(frame, text="You have direct access to the network visualization",
-                               font=("Arial", 18), fg="white", bg="#7A8B9C")
+                               font=("Arial", 18), fg="white", bg=self.background_color)
         description.pack(pady=(20, 40))
 
         # Buttons
@@ -258,7 +262,7 @@ class DestinyApp:
         dropdown.config(
             font=("Arial", 14),
             width=width,
-            bg="#7A8B9C",
+            bg=self.background_color,
             fg="black",
             highlightbackground="black",
             activebackground="black",
@@ -282,16 +286,16 @@ class DestinyApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.root.configure(bg="#7A8B9C")  # Set background color
+        self.root.configure(bg=self.background_color)  # Set background color
 
         # Create a main frame with scrolling capability
-        main_frame = tk.Frame(self.root, bg="#7A8B9C")
+        main_frame = tk.Frame(self.root, bg=self.background_color)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Add a canvas with scrollbar
-        canvas = tk.Canvas(main_frame, bg="#7A8B9C", highlightthickness=0)
+        canvas = tk.Canvas(main_frame, bg=self.background_color, highlightthickness=0)
         scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
-        scroll_frame = tk.Frame(canvas, bg="#7A8B9C")
+        scroll_frame = tk.Frame(canvas, bg=self.background_color)
 
         scroll_frame.bind(
             "<Configure>",
@@ -345,17 +349,17 @@ class DestinyApp:
 
         # Add heading
         heading = tk.Label(scroll_frame, text=f"Create Profile for {self.username}",
-                           font=("Arial", 24, "bold"), fg="white", bg="#7A8B9C")
+                           font=("Arial", 24, "bold"), fg="white", bg=self.background_color)
         heading.pack(pady=(20, 30))
 
         self.attributes = {}
 
         # Age input (numeric)
-        age_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        age_frame = tk.Frame(scroll_frame, bg=self.background_color)
         age_frame.pack(fill="x", padx=20, pady=10)
 
         age_label = tk.Label(age_frame, text="Age:", width=20, anchor="e",
-                             font=("Arial", 14), fg="white", bg="#7A8B9C")
+                             font=("Arial", 14), fg="white", bg=self.background_color)
         age_label.pack(side="left", padx=(0, 10))
 
         age_var = tk.StringVar()
@@ -364,11 +368,11 @@ class DestinyApp:
         self.attributes["age"] = age_var
 
         # Gender dropdown
-        gender_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        gender_frame = tk.Frame(scroll_frame, bg=self.background_color)
         gender_frame.pack(fill="x", padx=20, pady=10)
 
         gender_label = tk.Label(gender_frame, text="Gender:", width=20, anchor="e",
-                                font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                font=("Arial", 14), fg="white", bg=self.background_color)
         gender_label.pack(side="left", padx=(0, 10))
 
         gender_var = tk.StringVar()
@@ -379,11 +383,11 @@ class DestinyApp:
         self.attributes["gender"] = gender_var
 
         # Pronouns input
-        pronouns_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        pronouns_frame = tk.Frame(scroll_frame, bg=self.background_color)
         pronouns_frame.pack(fill="x", padx=20, pady=10)
 
         pronouns_label = tk.Label(pronouns_frame, text="Pronouns:", width=20, anchor="e",
-                                  font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                  font=("Arial", 14), fg="white", bg=self.background_color)
         pronouns_label.pack(side="left", padx=(0, 10))
 
         pronouns_var = tk.StringVar()
@@ -392,11 +396,11 @@ class DestinyApp:
         self.attributes["pronouns"] = pronouns_var
 
         # Ethnicity dropdown
-        ethnicity_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        ethnicity_frame = tk.Frame(scroll_frame, bg=self.background_color)
         ethnicity_frame.pack(fill="x", padx=20, pady=10)
 
         ethnicity_label = tk.Label(ethnicity_frame, text="Ethnicity:", width=20, anchor="e",
-                                   font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                   font=("Arial", 14), fg="white", bg=self.background_color)
         ethnicity_label.pack(side="left", padx=(0, 10))
 
         ethnicity_var = tk.StringVar()
@@ -407,14 +411,14 @@ class DestinyApp:
         self.attributes["ethnicity"] = ethnicity_var
 
         # Interests multi-select
-        interests_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        interests_frame = tk.Frame(scroll_frame, bg=self.background_color)
         interests_frame.pack(fill="x", padx=20, pady=10)
 
         interests_label = tk.Label(interests_frame, text="Interests:", width=20, anchor="e",
-                                   font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                   font=("Arial", 14), fg="white", bg=self.background_color)
         interests_label.pack(side="left", anchor="n", padx=(0, 10))
 
-        interests_options_frame = tk.Frame(interests_frame, bg="#7A8B9C")
+        interests_options_frame = tk.Frame(interests_frame, bg=self.background_color)
         interests_options_frame.pack(side="left", fill="x")
 
         interests_options = ["Reading", "Dancing", "Singing", "Playing instruments", "Running", "Coding", "Doing math"]
@@ -422,18 +426,18 @@ class DestinyApp:
 
         for i, interest in enumerate(interests_options):
             cb = tk.Checkbutton(interests_options_frame, text=interest, variable=interests_vars[interest],
-                                font=("Arial", 14), fg="white", bg="#7A8B9C", selectcolor="#7A8B9C",
+                                font=("Arial", 14), fg="white", bg=self.background_color, selectcolor="#7A8B9C",
                                 activebackground="#7A8B9C", activeforeground="white")
             cb.pack(anchor="w")
 
         self.attributes["interests"] = interests_vars
 
         # MBTI input
-        mbti_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        mbti_frame = tk.Frame(scroll_frame, bg=self.background_color)
         mbti_frame.pack(fill="x", padx=20, pady=10)
 
         mbti_label = tk.Label(mbti_frame, text="MBTI:", width=20, anchor="e",
-                              font=("Arial", 14), fg="white", bg="#7A8B9C")
+                              font=("Arial", 14), fg="white", bg=self.background_color)
         mbti_label.pack(side="left", padx=(0, 10))
 
         mbti_var = tk.StringVar()
@@ -442,11 +446,11 @@ class DestinyApp:
         self.attributes["mbti"] = mbti_var
 
         # Communication Type
-        comm_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        comm_frame = tk.Frame(scroll_frame, bg=self.background_color)
         comm_frame.pack(fill="x", padx=20, pady=10)
 
         comm_label = tk.Label(comm_frame, text="Communication Type:", width=20, anchor="e",
-                              font=("Arial", 14), fg="white", bg="#7A8B9C")
+                              font=("Arial", 14), fg="white", bg=self.background_color)
         comm_label.pack(side="left", padx=(0, 10))
 
         comm_var = tk.StringVar()
@@ -457,11 +461,11 @@ class DestinyApp:
         self.attributes["communication_type"] = comm_var
 
         # Political Interests
-        politics_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        politics_frame = tk.Frame(scroll_frame, bg=self.background_color)
         politics_frame.pack(fill="x", padx=20, pady=10)
 
         politics_label = tk.Label(politics_frame, text="Political Interests:", width=20, anchor="e",
-                                  font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                  font=("Arial", 14), fg="white", bg=self.background_color)
         politics_label.pack(side="left", padx=(0, 10))
 
         politics_var = tk.StringVar()
@@ -472,11 +476,11 @@ class DestinyApp:
         self.attributes["political_interests"] = politics_var
 
         # Religion
-        religion_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        religion_frame = tk.Frame(scroll_frame, bg=self.background_color)
         religion_frame.pack(fill="x", padx=20, pady=10)
 
         religion_label = tk.Label(religion_frame, text="Religion:", width=20, anchor="e",
-                                  font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                  font=("Arial", 14), fg="white", bg=self.background_color)
         religion_label.pack(side="left", padx=(0, 10))
 
         religion_var = tk.StringVar()
@@ -488,11 +492,11 @@ class DestinyApp:
         self.attributes["religion"] = religion_var
 
         # Major
-        major_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        major_frame = tk.Frame(scroll_frame, bg=self.background_color)
         major_frame.pack(fill="x", padx=20, pady=10)
 
         major_label = tk.Label(major_frame, text="Major:", width=20, anchor="e",
-                               font=("Arial", 14), fg="white", bg="#7A8B9C")
+                               font=("Arial", 14), fg="white", bg=self.background_color)
         major_label.pack(side="left", padx=(0, 10))
 
         major_var = tk.StringVar()
@@ -506,11 +510,11 @@ class DestinyApp:
         self.attributes["major"] = major_var
 
         # Year
-        year_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        year_frame = tk.Frame(scroll_frame, bg=self.background_color)
         year_frame.pack(fill="x", padx=20, pady=10)
 
         year_label = tk.Label(year_frame, text="Year:", width=20, anchor="e",
-                              font=("Arial", 14), fg="white", bg="#7A8B9C")
+                              font=("Arial", 14), fg="white", bg=self.background_color)
         year_label.pack(side="left", padx=(0, 10))
 
         year_var = tk.StringVar()
@@ -521,11 +525,11 @@ class DestinyApp:
         self.attributes["year"] = year_var
 
         # Language
-        language_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        language_frame = tk.Frame(scroll_frame, bg=self.background_color)
         language_frame.pack(fill="x", padx=20, pady=10)
 
         language_label = tk.Label(language_frame, text="Language:", width=20, anchor="e",
-                                  font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                  font=("Arial", 14), fg="white", bg=self.background_color)
         language_label.pack(side="left", padx=(0, 10))
 
         language_var = tk.StringVar()
@@ -536,11 +540,11 @@ class DestinyApp:
         self.attributes["language"] = language_var
 
         # Dating Goal
-        goal_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        goal_frame = tk.Frame(scroll_frame, bg=self.background_color)
         goal_frame.pack(fill="x", padx=20, pady=10)
 
         goal_label = tk.Label(goal_frame, text="Dating Goal:", width=20, anchor="e",
-                              font=("Arial", 14), fg="white", bg="#7A8B9C")
+                              font=("Arial", 14), fg="white", bg=self.background_color)
         goal_label.pack(side="left", padx=(0, 10))
 
         goal_var = tk.StringVar()
@@ -556,22 +560,22 @@ class DestinyApp:
             ("likes_outdoor_activities", "Likes Outdoor Activities"),
             ("enjoys_watching_movies", "Enjoys Watching Movies")
         ]:
-            bool_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+            bool_frame = tk.Frame(scroll_frame, bg=self.background_color)
             bool_frame.pack(fill="x", padx=20, pady=10)
 
             bool_label = tk.Label(bool_frame, text=f"{text}:", width=20, anchor="e",
-                                  font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                  font=("Arial", 14), fg="white", bg=self.background_color)
             bool_label.pack(side="left", padx=(0, 10))
 
             bool_var = tk.BooleanVar()
             bool_true = tk.Radiobutton(bool_frame, text="True", variable=bool_var, value=True,
-                                       font=("Arial", 14), fg="white", bg="#7A8B9C",
+                                       font=("Arial", 14), fg="white", bg=self.background_color,
                                        selectcolor="#5A6B7C", activebackground="#7A8B9C",
                                        activeforeground="white")
             bool_true.pack(side="left", padx=(0, 20))
 
             bool_false = tk.Radiobutton(bool_frame, text="False", variable=bool_var, value=False,
-                                        font=("Arial", 14), fg="white", bg="#7A8B9C",
+                                        font=("Arial", 14), fg="white", bg=self.background_color,
                                         selectcolor="#5A6B7C", activebackground="#7A8B9C",
                                         activeforeground="white")
             bool_false.pack(side="left")
@@ -580,17 +584,17 @@ class DestinyApp:
 
         # Attribute priority ranking section
         priority_heading = tk.Label(scroll_frame, text="Rank Attribute Importance",
-                                    font=("Arial", 18, "bold"), fg="white", bg="#7A8B9C")
+                                    font=("Arial", 18, "bold"), fg="white", bg=self.background_color)
         priority_heading.pack(pady=(30, 10))
 
         priority_description = tk.Label(scroll_frame,
                                         text="Select attributes and use the buttons to rank them by importance "
                                              "(top = most important)",
-                                        font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                        font=("Arial", 14), fg="white", bg=self.background_color)
         priority_description.pack(pady=(0, 20))
 
         # Create a listbox with attribute names that can be reordered
-        priority_frame = tk.Frame(scroll_frame, bg="#7A8B9C")
+        priority_frame = tk.Frame(scroll_frame, bg=self.background_color)
         priority_frame.pack(fill="x", padx=20, pady=10)
 
         # Define the attributes to rank
@@ -615,7 +619,7 @@ class DestinyApp:
         priority_listbox.pack(side="left", padx=(50, 0))
 
         # Add up/down buttons for reordering
-        button_frame = tk.Frame(priority_frame, bg="#7A8B9C")
+        button_frame = tk.Frame(priority_frame, bg=self.background_color)
         button_frame.pack(side="left", padx=10)
 
         def move_up() -> None:
@@ -682,12 +686,12 @@ class DestinyApp:
                                     for attribute in self.priority_attributes]
 
         # Add some space
-        spacer = tk.Label(scroll_frame, text="", bg="#7A8B9C")
+        spacer = tk.Label(scroll_frame, text="", bg=self.background_color)
         spacer.pack(pady=20)
 
         # Add status label for validation messages
         self.status_label = tk.Label(scroll_frame, text="", font=("Arial", 14, "bold"),
-                                     fg="#E74C3C", bg="#7A8B9C")
+                                     fg="#E74C3C", bg=self.background_color)
         self.status_label.pack(pady=10)
 
         # Add submit button
@@ -697,7 +701,7 @@ class DestinyApp:
         submit_button.pack(pady=(20, 40))
 
         # Add another spacer at the bottom for better scrolling
-        bottom_spacer = tk.Label(scroll_frame, text="", bg="#7A8B9C")
+        bottom_spacer = tk.Label(scroll_frame, text="", bg=self.background_color)
         bottom_spacer.pack(pady=50)
 
     def add_user_to_network(self, new_user: User, user_list: list[User]) -> list[User]:
@@ -845,19 +849,19 @@ class DestinyApp:
             widget.destroy()
 
         # Success message
-        frame = tk.Frame(self.root, bg="#7A8B9C")
+        frame = tk.Frame(self.root, bg=self.background_color)
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         success_label = tk.Label(frame, text="Profile Created Successfully!",
-                                 font=("Arial", 24, "bold"), fg="white", bg="#7A8B9C")
+                                 font=("Arial", 24, "bold"), fg="white", bg=self.background_color)
         success_label.pack(pady=20)
 
         name_label = tk.Label(frame, text=f"Welcome, {self.username}!",
-                              font=("Arial", 18), fg="white", bg="#7A8B9C")
+                              font=("Arial", 18), fg="white", bg=self.background_color)
         name_label.pack(pady=10)
 
         message = tk.Label(frame, text="Your profile has been created and added to the system.",
-                           font=("Arial", 14), fg="white", bg="#7A8B9C")
+                           font=("Arial", 14), fg="white", bg=self.background_color)
         message.pack(pady=10)
 
         # Add a button to launch the matching page
@@ -879,17 +883,17 @@ class DestinyApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.root.configure(bg="#7A8B9C")
+        self.root.configure(bg=self.background_color)
 
         # Get the dating goal of the current user
         dating_goal = self.current_user.dating_goal
         connection_type = "friendship" if dating_goal == "Meeting new friends" else "romantic"
 
-        main_frame = tk.Frame(self.root, bg="#7A8B9C")
+        main_frame = tk.Frame(self.root, bg=self.background_color)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         header = tk.Label(main_frame, text="Find Your Matches",
-                          font=("Arial", 28, "bold"), fg="white", bg="#7A8B9C")
+                          font=("Arial", 28, "bold"), fg="white", bg=self.background_color)
         header.pack(pady=(30, 10))
 
         # Description
@@ -899,7 +903,7 @@ class DestinyApp:
             desc = "Find a romantic partner based on your preferences"
 
         description = tk.Label(main_frame, text=desc,
-                               font=("Arial", 16), fg="white", bg="#7A8B9C")
+                               font=("Arial", 16), fg="white", bg=self.background_color)
         description.pack(pady=(0, 20))
 
         common.data_wrangling(current_user=self.current_user, user_characteristics=self.priority_attributes,
@@ -918,7 +922,7 @@ class DestinyApp:
         if not self.recommendations:
             # No recommendations
             no_matches = tk.Label(main_frame, text="No potential matches found!",
-                                  font=("Arial", 20), fg="#E74C3C", bg="#7A8B9C")
+                                  font=("Arial", 20), fg="#E74C3C", bg=self.background_color)
             no_matches.pack(pady=40)
 
             back_button = tk.Button(main_frame, text="Return to Home", font=("Arial", 16),
@@ -937,7 +941,7 @@ class DestinyApp:
         self.display_current_recommendation()
 
         # Create the buttons frame
-        button_frame = tk.Frame(main_frame, bg="#7A8B9C")
+        button_frame = tk.Frame(main_frame, bg=self.background_color)
         button_frame.pack(pady=30)
 
         # Pass button
@@ -961,7 +965,7 @@ class DestinyApp:
         # Display counter
         counter_text = f"Showing match 1 of {len(self.recommendations)}"
         self.counter_label = tk.Label(main_frame, text=counter_text,
-                                      font=("Arial", 14), fg="white", bg="#7A8B9C")
+                                      font=("Arial", 14), fg="white", bg=self.background_color)
         self.counter_label.pack(pady=(20, 0))
 
     def display_current_recommendation(self) -> None:
@@ -1029,7 +1033,7 @@ class DestinyApp:
 
             # Update recommendation status in dictionary
             if current_name in self.recommendations_dict:
-                self.recommendations_dict[current_name]['status'] = 'rejected'
+                self.recommendations_dict[current_name]["status"] = "rejected"
 
             # Remove user from list
             self.recommendations.pop(0)
@@ -1229,12 +1233,12 @@ class DestinyApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        frame = tk.Frame(self.root, bg="#7A8B9C")
+        frame = tk.Frame(self.root, bg=self.background_color)
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # Header
         header = tk.Label(frame, text="Matching Complete!",
-                          font=("Arial", 28, "bold"), fg="white", bg="#7A8B9C")
+                          font=("Arial", 28, "bold"), fg="white", bg=self.background_color)
         header.pack(pady=20)
 
         # Results
@@ -1245,32 +1249,32 @@ class DestinyApp:
             results_text = f"You've made {self.matches_made} new friends!"
 
             results = tk.Label(frame, text=results_text,
-                               font=("Arial", 20), fg="white", bg="#7A8B9C")
+                               font=("Arial", 20), fg="white", bg=self.background_color)
             results.pack(pady=20)
 
             if self.matches_made > 0:
                 connections = tk.Label(frame, text=f"Total social connections: {social_count}",
-                                       font=("Arial", 16), fg="white", bg="#7A8B9C")
+                                       font=("Arial", 16), fg="white", bg=self.background_color)
                 connections.pack(pady=10)
 
                 # List new connections
                 if self.matches_made > 0:
                     new_connections_label = tk.Label(frame, text="Your new connections:",
-                                                     font=("Arial", 16, "bold"), fg="white", bg="#7A8B9C")
+                                                     font=("Arial", 16, "bold"), fg="white", bg=self.background_color)
                     new_connections_label.pack(pady=(20, 10))
 
                     # Create a scrollable frame for connections
-                    connections_canvas = tk.Canvas(frame, bg="#7A8B9C", highlightthickness=0,
+                    connections_canvas = tk.Canvas(frame, bg=self.background_color, highlightthickness=0,
                                                    width=300, height=min(200, self.matches_made * 30))
                     connections_canvas.pack()
 
-                    scrollable_frame = tk.Frame(connections_canvas, bg="#7A8B9C")
+                    scrollable_frame = tk.Frame(connections_canvas, bg=self.background_color)
                     connections_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
                     # Add connections to the scrollable frame
                     for i, user in enumerate(self.current_user.social_current[-self.matches_made:]):
                         connection = tk.Label(scrollable_frame, text=f"{i + 1}. {user.name}",
-                                              font=("Arial", 14), fg="white", bg="#7A8B9C",
+                                              font=("Arial", 14), fg="white", bg=self.background_color,
                                               anchor="w", padx=10)
                         connection.pack(fill="x", pady=2)
 
@@ -1284,20 +1288,20 @@ class DestinyApp:
                 results_text = f"Congratulations! You've matched with {matched_user.name}!"
 
                 results = tk.Label(frame, text=results_text,
-                                   font=("Arial", 20), fg="white", bg="#7A8B9C")
+                                   font=("Arial", 20), fg="white", bg=self.background_color)
                 results.pack(pady=20)
 
                 match_details = tk.Label(frame,
                                          text=f"{matched_user.age} • {matched_user.gender} • "
                                               f"{matched_user.characteristics.mbti}",
-                                         font=("Arial", 16), fg="white", bg="#7A8B9C")
+                                         font=("Arial", 16), fg="white", bg=self.background_color)
                 match_details.pack(pady=10)
 
             else:
                 results_text = "You didn't make any romantic connections."
 
                 results = tk.Label(frame, text=results_text,
-                                   font=("Arial", 20), fg="white", bg="#7A8B9C")
+                                   font=("Arial", 20), fg="white", bg=self.background_color)
                 results.pack(pady=20)
 
         # Add button to continue to main app
@@ -1320,12 +1324,12 @@ class DestinyApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        frame = tk.Frame(self.root, bg="#7A8B9C")
+        frame = tk.Frame(self.root, bg=self.background_color)
         frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         # Show info about the user list
         label = tk.Label(frame, text=f"User network has {len(self.user_list)} users",
-                         font=("Arial", 24), fg="white", bg="#7A8B9C")
+                         font=("Arial", 24), fg="white", bg=self.background_color)
         label.pack(pady=20)
 
         # Show social connections
@@ -1334,11 +1338,11 @@ class DestinyApp:
         connections_text = f"You have {social_count} friends. You have {romantic_count} romantic partner."
 
         connections_label = tk.Label(frame, text=connections_text,
-                                     font=("Arial", 18), fg="white", bg="#7A8B9C")
+                                     font=("Arial", 18), fg="white", bg=self.background_color)
         connections_label.pack(pady=10)
 
         # Create button frame for better layout
-        button_frame = tk.Frame(frame, bg="#7A8B9C")
+        button_frame = tk.Frame(frame, bg=self.background_color)
         button_frame.pack(pady=20)
 
         # Add a button to return to home page
@@ -1368,7 +1372,7 @@ class DestinyApp:
 
             # Create a temporary message
             temp_label = tk.Label(self.root, text="Loading network graph...",
-                                  font=("Arial", 24), fg="white", bg="#7A8B9C")
+                                  font=("Arial", 24), fg="white", bg=self.background_color)
             temp_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
             self.root.update()
 
@@ -1418,7 +1422,7 @@ class DestinyApp:
         except Exception as e:
             traceback.print_exc()
             error_label = tk.Label(self.root, text=f"Error: {str(e)}",
-                                   font=("Arial", 16), fg="white", bg="#7A8B9C")
+                                   font=("Arial", 16), fg="white", bg=self.background_color)
             error_label.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
 
     def update_network_graph(self) -> None:
