@@ -573,7 +573,7 @@ def add_user(users: list[dict]) -> None:
     print("User added successfully!")
 
 
-users = generate_users_with_class(200,  1234)
+users = generate_users_with_class(2000,  1234)
 add_fixed_users(users)
 user_looking_for_friends, user_looking_for_love = simulate_connections(users)
 
