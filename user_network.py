@@ -96,7 +96,7 @@ def simulate_connections(user_list_2: list[User]) -> tuple:
             result = t.run_preference_tree()
             name_list = generate_10_people_list(result)
 
-            # Convert name strings to User objects with error checking
+            # Convert name strings to User objects
             user.interested_friend = []
             for namestring in name_list:
                 if namestring in user_keypair_local:

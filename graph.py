@@ -580,7 +580,7 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
                         romantic_fig, _ = plot_romantic_connections(user_looking_for_love, clicked_node,
                                                                     romantic_node_positions)
 
-                        # Find user with case-insensitive search
+                        # Find user
                         selected_user = next(
                             (u for u in user_looking_for_friends if u.name == clicked_node),
                             next(

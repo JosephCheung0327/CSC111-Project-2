@@ -114,7 +114,6 @@ class DestinyApp:
         """
         Create the initial welcome page with image and username input.
         """
-        # Clear any existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
 

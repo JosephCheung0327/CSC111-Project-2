@@ -1,6 +1,5 @@
 """
-This module provides functions for processing and analyzing user data
-in a dating or recommendation system.
+This module provides functions for processing and analyzing user data.
 """
 from __future__ import annotations
 from typing import Optional
