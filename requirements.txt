@@ -2,10 +2,10 @@
 python-ta
 
 # Others
+pandas
 faker
 plotly
 networkx
 dash
 tkinter
 pillow
-pandas
