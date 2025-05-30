@@ -3,11 +3,14 @@ This program handles the generation of graphs for all users in the network.
 Generative AI was used for generating sample templates of implementing visual elements in the web interface.
 We modified the generated templates to complete this program.
 """
-import python_ta
-import plotly.graph_objects as go
-import networkx as nx
+import socket
 
-from user_network import User
+import networkx as nx
+import plotly.graph_objects as go
+import python_ta
+from dash import Dash, html, dcc, Input, Output, State, callback_context
+
+from user_network import User, generate_users_with_class, add_fixed_users
 
 
 def get_romantic_count(user: User, user_looking_for_love: list[User]) -> int:
@@ -33,12 +36,11 @@ def plot_social_connections(users_social: list, search_name: str = None,
     """
     graph = nx.Graph()
 
-    # First create a mapping of all users by name
     user_dict = {user_object.name: user_object for user_object in users_social}
 
     # Add all users from user_looking_for_friends as nodes
     for user in users_social:
-        # Get size based on actual social connections that exist
+        # Get size based on social connections
         if hasattr(user, 'social_current') and user.social_current:
             valid_friends = [f for f in user.social_current
                              if hasattr(f, 'name') and f.name in user_dict]
@@ -105,7 +107,7 @@ def plot_social_connections(users_social: list, search_name: str = None,
     hover_text = []
     node_color = []
 
-    # Add nodes to traces with safe access to size attribute
+    # Add nodes to traces
     for node in graph.nodes():
         x, y = pos[node]
         node_x.append(x)
@@ -180,7 +182,7 @@ def plot_social_connections(users_social: list, search_name: str = None,
             x_min, x_max = min(x_coords), max(x_coords)
             y_min, y_max = min(y_coords), max(y_coords)
 
-            padding = 0.2  # More padding for better view
+            padding = 0.2
             x_range = [x_min - padding, x_max + padding]
             y_range = [y_min - padding, y_max + padding]
 
@@ -211,7 +213,7 @@ def plot_romantic_connections(users_love: list, search_name: str = None,
 
         try:
             if hasattr(user, 'romantic_current') and user.romantic_current is not None:
-                if user.romantic_current.name in graph_romantic.nodes:  # Safety check
+                if user.romantic_current.name in graph_romantic.nodes:
                     graph_romantic.add_edge(user.name, user.romantic_current.name)
         except:
             pass
@@ -347,7 +349,6 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
     """
     Create and return a Dash app instance with multiple tabs for different network views.
     """
-    from dash import Dash, html, dcc, Input, Output, State, callback_context
 
     global initial_user_list, node_positions, initial_fig
 
@@ -355,7 +356,6 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
     if user_list is not None:
         initial_user_list = user_list
     else:
-        from user_network import generate_users_with_class, add_fixed_users
         initial_user_list = generate_users_with_class(200, 1234)
         add_fixed_users(initial_user_list)
 
@@ -363,7 +363,7 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
     initial_social_fig, social_node_positions = plot_social_connections(user_looking_for_friends)
     initial_romantic_fig, romantic_node_positions = plot_romantic_connections(user_looking_for_love)
 
-    app = Dash(__name__)  # Create the Dash app
+    app = Dash(__name__)
 
     # Define the layout with tabs
     app.layout = html.Div([
@@ -624,7 +624,6 @@ def create_app(user_list: list[User] = None, user_looking_for_friends: list[User
 
 def find_available_port(start: int = 8050, max_attempts: int = 10) -> int:
     """Find an available port starting from start_port"""
-    import socket
     for port in range(start, start + max_attempts):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if s.connect_ex(('localhost', port)) != 0:

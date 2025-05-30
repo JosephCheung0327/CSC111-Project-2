@@ -8,10 +8,6 @@ import python_ta
 from faker import Faker
 
 
-# user_list = []
-# user_keypair = {}
-
-
 def generate_users_with_class(list_size: int, seed: int = 1234) -> list[User]:
     """Return a list of list_size number of users with randomly generated attributes, and randomly simulate
     interested_friend_sim_size number of users in the interested_friend list
@@ -572,10 +568,6 @@ def add_user(users: list[dict]) -> None:
     users.append(user)
     print("User added successfully!")
 
-
-# users = generate_users_with_class(2000,  1234)
-# add_fixed_users(users)
-# user_looking_for_friends, user_looking_for_love = simulate_connections(users)
 
 if __name__ == "__main__":
     python_ta.check_all(config={

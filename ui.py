@@ -101,7 +101,7 @@ class DestinyApp:
         self.recommendations = []
 
         # Generate users locally
-        self.user_list = generate_users_with_class(200, 1234)
+        self.user_list = generate_users_with_class(2000, 1234)
 
         add_fixed_users(self.user_list)
 
@@ -784,8 +784,6 @@ class DestinyApp:
             else:
                 if user not in self.user_list_love:
                     self.user_list_love.append(user)
-
-            self.update_user_count_display()
 
             # Display success message
             self.status_label.config(text=f"Profile created successfully for {name}!", fg="white")

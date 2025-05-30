@@ -40,7 +40,6 @@ def data_wrangling(current_user, user_characteristics, users_list,
     for attribute in heading:
         answer = []
         for person in potential_users:
-            # print(current_user.characteristics.religion)
             current_user_value = getattr(current_user.characteristics, attribute)
             potential_user_value = getattr(person.characteristics, attribute)
 
@@ -50,7 +49,6 @@ def data_wrangling(current_user, user_characteristics, users_list,
                 answer.append(0)
         data[attribute] = answer
 
-    # print(data)
     df = pd.DataFrame(data)
     csv_file_path = file_name
 
@@ -74,7 +72,6 @@ def generate_10_people_list(full_list: list) -> list:
     return new_list
 
 
-# @check_contracts
 def build_preference_tree(file: str) -> BinaryTree():
     """
     Builds a preference tree from a CSV file.
@@ -92,7 +89,6 @@ def build_preference_tree(file: str) -> BinaryTree():
             match = [int(item) for item in row[1:]]
             match.append(name)
             tree.insert_sequence(match)
-    # print(tree)
     return tree
 
 
