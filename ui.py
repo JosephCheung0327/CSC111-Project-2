@@ -3,18 +3,24 @@ The program handling the GUI for the dating app.
 Generative AI was used for generating sample templates of implementing visual elements across the GUI.
 We modified the generated templates to complete this program.
 """
-
 import tkinter as tk
-
 import sys
-from typing import Union
+import threading
+import time
+import socket
+import webbrowser
 import traceback
+from typing import Union
+
 from PIL import Image, ImageTk
 from dash import Dash
 import python_ta
 
-from user_network import User, Characteristics, generate_users_with_class, add_fixed_users, user_looking_for_friends, \
-    user_looking_for_love
+from user_network import User, Characteristics, generate_users_with_class, add_fixed_users
+import user_network
+import tree
+import common
+import graph
 
 
 class DestinyApp:
@@ -38,9 +44,10 @@ class DestinyApp:
         - recommendations_dict: A dictionary mapping attribute names to lists of recommended users
         - recommendations: A list of User objects representing recommended matches for the current user
         - match_frame: A tkinter Frame widget for displaying match results
-        - matches_made: A list of usernames for matches already displayed
+        - matches_made: An integer counter for the number of matches made
         - counter_label: A tkinter Label widget for displaying the number of matches made
-        - network_graph: A Dash object for displaying the user network graph
+        - background_color: The background color of the application window
+        - users_label: A tkinter Label widget for displaying the number of users in the network
 
     Representation Invariants:
         - self.window_width > 0
@@ -72,10 +79,10 @@ class DestinyApp:
     recommendations_dict: dict[str, list[User]]
     recommendations: list[User]
     match_frame: tk.Frame
-    matches_made: list[str]
+    matches_made: int
     counter_label: tk.Label
-    network_graph: Dash
     background_color: str = "#7A8B9C"
+    users_label: tk.Label
 
     def __init__(self, image_path: str, window_width: int = 720, window_height: int = 720) -> None:
         self.root = tk.Tk()
@@ -94,14 +101,14 @@ class DestinyApp:
         self.recommendations = []
 
         # Generate users locally
-        self.user_list = generate_users_with_class(2000, 1234)
-
-        import user_network
-        user_network.user_list = self.user_list  # Make sure global list has all users
+        self.user_list = generate_users_with_class(200, 1234)
 
         add_fixed_users(self.user_list)
-        add_fixed_users(user_looking_for_friends)
-        add_fixed_users(user_looking_for_love)
+
+        self.user_list_friends, self.user_list_love = user_network.simulate_connections(self.user_list)
+
+        add_fixed_users(self.user_list_friends)
+        add_fixed_users(self.user_list_love)
 
     def create_welcome_page(self, image_path: str) -> None:
         """
@@ -111,7 +118,7 @@ class DestinyApp:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.root.configure(bg=self.background_color)  # Set background color
+        self.root.configure(bg=self.background_color)
 
         # Create two frames, one for the image (top half) and one for username input (bottom half)
         top_frame = tk.Frame(self.root, width=self.window_width, height=self.window_height // 2,
@@ -128,68 +135,59 @@ class DestinyApp:
             img = Image.open(image_path)
             img_width, img_height = img.size
 
-            # Get the display area dimensions for the top half, and account for some padding
             horizontal_padding = 40
             vertical_padding = 60
             display_width = self.window_width - horizontal_padding
             display_height = (self.window_height // 2) - vertical_padding
 
-            # Calculate scale factors
             width_ratio = display_width / img_width
             height_ratio = display_height / img_height
-            scale_factor = min(width_ratio, height_ratio)  # Use the smaller ratio to ensure the image fits
+            scale_factor = min(width_ratio, height_ratio)
 
-            # Always resize to fit the top half
             new_width = int(img_width * scale_factor)
             new_height = int(img_height * scale_factor)
             img = img.resize((new_width, new_height))
 
-            photo = ImageTk.PhotoImage(img)  # Convert the image to PhotoImage format
+            photo = ImageTk.PhotoImage(img)
 
-            # Create a label to display the image in the top frame
             image_label = tk.Label(top_frame, image=photo, bg=self.background_color)
-            image_label.image = photo  # Keep a reference to prevent garbage collection
+            image_label.image = photo
 
-            image_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)  # Center the image in the top frame
+            image_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
         except Exception as e:
-            # Show error message instead
             error_label = tk.Label(top_frame, text=f"Error loading image: {e}", fg="white", bg=self.background_color,
                                    padx=20,
                                    pady=20, font=("Arial", 16))
             error_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-        # Add heading and create the username input field in the bottom frame
+        # Create the bottom half for username input
         heading = tk.Label(bottom_frame, text="Welcome to Destiny",
                            font=("Arial", 36, "bold"), fg="white", bg=self.background_color)
         heading.pack(pady=(50, 20))
 
-        # Add description
         description = tk.Label(bottom_frame, text="Please enter your name to continue", font=("Arial", 18), fg="white",
                                bg=self.background_color)
         description.pack(pady=(0, 40))
 
-        # Create a frame for the input field to control its width
         input_frame = tk.Frame(bottom_frame, bg=self.background_color)
-        input_frame.pack(pady=20, padx=(0, 62.5))  # Add right padding to shift everything to the left
+        input_frame.pack(pady=20, padx=(0, 62.5))
 
-        # Create username label, input field, and submit button
         username_label = tk.Label(input_frame, text="Name:", font=("Arial", 16), fg="white", bg=self.background_color)
         username_label.pack(side=tk.LEFT, padx=(0, 10))
 
         self.username_entry = tk.Entry(input_frame, font=("Arial", 16), width=20)
         self.username_entry.pack(side=tk.LEFT)
-        self.username_entry.focus_set()  # Set cursor focus to this field
+        self.username_entry.focus_set()
 
         submit_button = tk.Button(bottom_frame, text="Continue", font=("Arial", 16), bg="#4CAF50", fg="black", padx=20,
                                   pady=10, command=self.handle_username_submit)
         submit_button.pack(pady=20)
 
-        # Result label to show feedback
         self.result_label = tk.Label(bottom_frame, text="", font=("Arial", 14), fg="white", bg=self.background_color)
         self.result_label.pack(pady=10)
 
-        self.root.bind('<Return>', lambda event: self.handle_username_submit())  # Handle Enter key press to advance
+        self.root.bind('<Return>', lambda event: self.handle_username_submit())
 
     def handle_username_submit(self) -> None:
         """
@@ -202,24 +200,21 @@ class DestinyApp:
 
         self.username = username
 
-        # Check if this is the admin user
         if username.lower() == "admin":
-            self.create_admin_page()  # Admin user, proceed to admin page
+            self.create_admin_page() 
         else:
-            self.create_attributes_page()  # Regular user, proceed to attributes page
+            self.create_attributes_page()
 
     def create_admin_page(self) -> None:
         """
         Create the admin page with direct access to the network graph.
         """
-        # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
 
-        # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.root.configure(bg=self.background_color)  # Set background color
+        self.root.configure(bg=self.background_color) 
 
         # Create main frame
         frame = tk.Frame(self.root, bg=self.background_color)
@@ -230,9 +225,9 @@ class DestinyApp:
                                font=("Arial", 36, "bold"), fg="white", bg=self.background_color)
         admin_label.pack(pady=20)
 
-        users_label = tk.Label(frame, text=f"The user network has {len(self.user_list)} users",
-                               font=("Arial", 24), fg="white", bg=self.background_color)
-        users_label.pack(pady=20)
+        self.users_label = tk.Label(frame, text=f"The user network has {len(self.user_list)} users", font=("Arial", 24),
+                                    fg="white", bg=self.background_color)
+        self.users_label.pack(pady=20)
 
         description = tk.Label(frame, text="You have direct access to the network visualization",
                                font=("Arial", 18), fg="white", bg=self.background_color)
@@ -253,6 +248,13 @@ class DestinyApp:
                                   bg="#E74C3C", fg="black", padx=20, pady=10,
                                   command=lambda: self.create_welcome_page(self.image_path))
         logout_button.pack(pady=20)
+
+    def update_user_count_display(self) -> None:
+        """
+        Update the displayed user count on the admin page.
+        """
+        if hasattr(self, "users_label"):
+            self.users_label.config(text=f"The user network has {len(self.user_list)} users")
 
     def configure_dropdown(self, dropdown: tk.OptionMenu, width: int = 29) -> None:
         """
@@ -282,17 +284,14 @@ class DestinyApp:
         """
         Create the page with input fields for all user attributes.
         """
-        # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.root.configure(bg=self.background_color)  # Set background color
+        self.root.configure(bg=self.background_color)
 
-        # Create a main frame with scrolling capability
         main_frame = tk.Frame(self.root, bg=self.background_color)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Add a canvas with scrollbar
         canvas = tk.Canvas(main_frame, bg=self.background_color, highlightthickness=0)
         scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scroll_frame = tk.Frame(canvas, bg=self.background_color)
@@ -308,9 +307,8 @@ class DestinyApp:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Define mousewheel event handlers first before using them
+        # Define mousewheel event handlers
         def _bound_to_mousewheel(event: tk.Event) -> None:
-            # Bind scrolling when mouse enters the canvas
             if sys.platform == 'darwin':  # macOS
                 canvas.bind_all("<MouseWheel>", _on_scrollwheel)
             else:  # Windows and others
@@ -325,7 +323,6 @@ class DestinyApp:
 
         # Enable mousewheel/trackpad scrolling
         def _on_mousewheel(event: tk.Event) -> None:
-            # For Windows and macOS
             try:
                 canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
             except (tk.TclError, RuntimeError):
@@ -354,7 +351,7 @@ class DestinyApp:
 
         self.attributes = {}
 
-        # Age input (numeric)
+        # Age input
         age_frame = tk.Frame(scroll_frame, bg=self.background_color)
         age_frame.pack(fill="x", padx=20, pady=10)
 
@@ -593,16 +590,14 @@ class DestinyApp:
                                         font=("Arial", 14), fg="white", bg=self.background_color)
         priority_description.pack(pady=(0, 20))
 
-        # Create a listbox with attribute names that can be reordered
+        # Attribute priority frame
         priority_frame = tk.Frame(scroll_frame, bg=self.background_color)
         priority_frame.pack(fill="x", padx=20, pady=10)
 
-        # Define the attributes to rank
         attribute_list = ["Ethnicity", "Interests", "MBTI", "Communication Type", "Political Interests",
                           "Religion", "Major", "Year", "Language", "Likes Pets",
                           "Likes Outdoor Activities", "Enjoys Watching Movies"]
 
-        # Create a listbox for drag and drop
         priority_listbox = tk.Listbox(priority_frame,
                                       font=("Arial", 14),
                                       bg="#5A6B7C",
@@ -612,13 +607,12 @@ class DestinyApp:
                                       height=len(attribute_list),
                                       width=40)
 
-        # Add attributes to the listbox
         for attr in attribute_list:
             priority_listbox.insert(tk.END, attr)
 
         priority_listbox.pack(side="left", padx=(50, 0))
 
-        # Add up/down buttons for reordering
+        # Add up/down buttons
         button_frame = tk.Frame(priority_frame, bg=self.background_color)
         button_frame.pack(side="left", padx=10)
 
@@ -681,60 +675,30 @@ class DestinyApp:
             "Enjoys Watching Movies": "enjoys_watching_movies"
         }
 
-        # Convert user-friendly names to internal attribute keys
         self.priority_attributes = [priority_mapping.get(attribute, attribute.lower())
                                     for attribute in self.priority_attributes]
 
-        # Add some space
         spacer = tk.Label(scroll_frame, text="", bg=self.background_color)
         spacer.pack(pady=20)
 
-        # Add status label for validation messages
         self.status_label = tk.Label(scroll_frame, text="", font=("Arial", 14, "bold"),
                                      fg="#E74C3C", bg=self.background_color)
         self.status_label.pack(pady=10)
 
-        # Add submit button
         submit_button = tk.Button(scroll_frame, text="Create Profile", font=("Arial", 18, "bold"),
                                   bg="#2ECC71", fg="black", padx=30, pady=15,
                                   command=self.submit_user_profile)
         submit_button.pack(pady=(20, 40))
 
-        # Add another spacer at the bottom for better scrolling
         bottom_spacer = tk.Label(scroll_frame, text="", bg=self.background_color)
         bottom_spacer.pack(pady=50)
-
-    def add_user_to_network(self, new_user: User, user_list: list[User]) -> list[User]:
-        """
-        Add the newly created user to the existing user network.
-        """
-        user_list.append(new_user)  # Add the user to the list
-
-        for friend in new_user.social_current:
-            # Add test to friend's social_current list (make bidirectional)
-            if new_user not in friend.social_current:
-                friend.social_current.append(new_user)
-                print(f"Added bidirectional connection from {friend.name} to {new_user.name}")
-
-            # Ensure friend is in the correct user list
-            if friend.dating_goal == "Meeting new friends" and friend not in user_looking_for_friends:
-                user_looking_for_friends.append(friend)
-                print(f"Added {friend.name} to user_looking_for_friends")
-
-            elif friend.dating_goal != "Meeting new friends" and friend not in user_looking_for_love:
-                user_looking_for_love.append(friend)
-                print(f"Added {friend.name} to user_looking_for_love")
-
-        print(f"Added user {new_user.name}.")
-
-        return user_list
 
     def submit_user_profile(self) -> None:
         """
         Collect all the input values and create a new user.
         """
         try:
-            name = self.username  # Get values from the inputs
+            name = self.username 
 
             # Validate and process age
             try:
@@ -812,20 +776,16 @@ class DestinyApp:
                 romantic_current=None
             )
 
-            from user_network import user_list as global_user_list
-            from user_network import user_looking_for_friends
-            from user_network import user_looking_for_love
-
-            # Add the user to the GLOBAL network list
-            global_user_list.append(user)
-            self.user_list = global_user_list  # Update local reference
+            self.user_list.append(user)
 
             if user.dating_goal == "Meeting new friends":
-                if user not in user_looking_for_friends:
-                    user_looking_for_friends.append(user)
+                if user not in self.user_list_friends:
+                    self.user_list_friends.append(user)
             else:
-                if user not in user_looking_for_love:
-                    user_looking_for_love.append(user)
+                if user not in self.user_list_love:
+                    self.user_list_love.append(user)
+
+            self.update_user_count_display()
 
             # Display success message
             self.status_label.config(text=f"Profile created successfully for {name}!", fg="white")
@@ -841,10 +801,8 @@ class DestinyApp:
         """
         Show a success page after profile creation.
         """
-        # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
 
-        # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
 
@@ -864,7 +822,6 @@ class DestinyApp:
                            font=("Arial", 14), fg="white", bg=self.background_color)
         message.pack(pady=10)
 
-        # Add a button to launch the matching page
         continue_button = tk.Button(frame, text="Find Matches", font=("Arial", 16),
                                     bg="#4CAF50", fg="black", padx=20, pady=10,
                                     command=self.show_matching_page)
@@ -874,12 +831,8 @@ class DestinyApp:
         """
         Show a page where users can swipe through recommended matches and connect with them.
         """
-        import tree
-        import common
-        # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
 
-        # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
 
@@ -940,29 +893,24 @@ class DestinyApp:
 
         self.display_current_recommendation()
 
-        # Create the buttons frame
         button_frame = tk.Frame(main_frame, bg=self.background_color)
         button_frame.pack(pady=30)
 
-        # Pass button
         pass_button = tk.Button(button_frame, text="Pass", font=("Arial", 16),
                                 bg="#E74C3C", fg="black", padx=30, pady=15,
                                 command=self.pass_current_recommendation)
         pass_button.pack(side=tk.LEFT, padx=15)
 
-        # Match button
         match_button = tk.Button(button_frame, text="Match!", font=("Arial", 16, "bold"),
                                  bg="#2ECC71", fg="black", padx=30, pady=15,
                                  command=self.match_current_recommendation)
         match_button.pack(side=tk.LEFT, padx=15)
 
-        # Exit button
         exit_button = tk.Button(button_frame, text="Exit", font=("Arial", 16),
                                 bg="#95A5A6", fg="black", padx=30, pady=15,
                                 command=lambda: self.create_welcome_page(self.image_path))
         exit_button.pack(side=tk.LEFT, padx=15)
 
-        # Display counter
         counter_text = f"Showing match 1 of {len(self.recommendations)}"
         self.counter_label = tk.Label(main_frame, text=counter_text,
                                       font=("Arial", 14), fg="white", bg=self.background_color)
@@ -972,13 +920,11 @@ class DestinyApp:
         """
         Display the current recommendation in the match frame.
         """
-        # Clear the match frame
         for widget in self.match_frame.winfo_children():
             widget.destroy()
 
         # Get the current recommendation
         if not self.recommendations:
-            # No more recommendations
             no_more = tk.Label(self.match_frame, text="No more matches!",
                                font=("Arial", 20), fg="white", bg="#5A6B7C")
             no_more.pack(pady=40)
@@ -991,19 +937,16 @@ class DestinyApp:
                         font=("Arial", 24, "bold"), fg="white", bg="#5A6B7C")
         name.pack(pady=(0, 20))
 
-        # Basic info
         basic_info = tk.Label(self.match_frame,
                               text=f"{user.age} • {user.gender} • {user.characteristics.mbti}",
                               font=("Arial", 16), fg="white", bg="#5A6B7C")
         basic_info.pack(pady=(0, 15))
 
-        # Major & Year
         major_year = tk.Label(self.match_frame,
                               text=f"{user.characteristics.major}, Year {user.characteristics.year}",
                               font=("Arial", 16), fg="white", bg="#5A6B7C")
         major_year.pack(pady=(0, 15))
 
-        # Interests
         interests_label = tk.Label(self.match_frame, text="Interests:",
                                    font=("Arial", 16, "bold"), fg="white", bg="#5A6B7C")
         interests_label.pack(pady=(15, 5), anchor="w", padx=40)
@@ -1020,7 +963,6 @@ class DestinyApp:
                 counter_text = f"Showing match {self.recommendations.index(user) + 1} of {len(self.recommendations)}"
                 self.counter_label.config(text=counter_text)
         except (tk.TclError, AttributeError):
-            # If counter_label doesn't exist or has been destroyed, create a new one
             pass
 
     def pass_current_recommendation(self) -> None:
@@ -1035,11 +977,9 @@ class DestinyApp:
             if current_name in self.recommendations_dict:
                 self.recommendations_dict[current_name]["status"] = "rejected"
 
-            # Remove user from list
             self.recommendations.pop(0)
 
             if not self.recommendations:
-                # No more recommendations
                 self.show_matching_summary()
                 return
 
@@ -1061,7 +1001,6 @@ class DestinyApp:
                          font=("Arial", 24, "bold"), fg="white", bg="#E74C3C")
         title.pack(pady=(0, 20))
 
-        # Error message
         msg = tk.Label(error_frame, text=message,
                        font=("Arial", 18), fg="white", bg="#E74C3C",
                        wraplength=400)
@@ -1080,17 +1019,14 @@ class DestinyApp:
         """
         Match with the current recommendation and show the next one.
         """
-        from user_network import user_list, user_looking_for_friends, user_looking_for_love
-
         if not self.recommendations:
             return
 
         candidate = self.recommendations[0]
         dating_goal = self.current_user.dating_goal
 
-        # Get the updated candidate from the global list
         candidate_updated = None
-        for user in user_list:
+        for user in self.user_list:
             if user.name == candidate.name:
                 candidate_updated = user
                 break
@@ -1100,7 +1036,7 @@ class DestinyApp:
         if dating_goal != "Meeting new friends":
             # Check if candidate has a romantic partner
             has_partner, partner_name = self.check_if_user_has_partner(
-                candidate, user_list, user_looking_for_friends, user_looking_for_love)
+                candidate, self.user_list, self.user_list_friends, self.user_list_love)
 
             if has_partner:
                 error_text = f"{candidate.name} is already in a relationship with {partner_name}!"
@@ -1173,10 +1109,8 @@ class DestinyApp:
         """
         self.current_user.match(other_user)
 
-        from user_network import user_looking_for_love, user_list
-
         # Make sure both users exist in the global user list and update their romantic connections
-        for user in user_list:
+        for user in self.user_list:
             if user.name == self.current_user.name:
                 user.romantic_current = self.current_user.romantic_current
                 user.romantic_degree = self.current_user.romantic_degree
@@ -1187,7 +1121,7 @@ class DestinyApp:
         found_current = False
         found_other = False
 
-        for user in user_looking_for_love:
+        for user in self.user_list_love:
             if user.name == self.current_user.name:
                 user.romantic_current = self.current_user.romantic_current
                 user.romantic_degree = self.current_user.romantic_degree
@@ -1197,13 +1131,11 @@ class DestinyApp:
                 user.romantic_degree = other_user.romantic_degree
                 found_other = True
 
-        # Add users to user_looking_for_love if they're not there but should be
+        # Add users to self.user_list_love if they're not there but should be
         if not found_current and self.current_user.dating_goal != "Meeting new friends":
-            user_looking_for_love.append(self.current_user)
+            self.user_list_love.append(self.current_user)
         if not found_other and other_user.dating_goal != "Meeting new friends":
-            user_looking_for_love.append(other_user)
-
-        self.update_network_graph()
+            self.user_list_love.append(other_user)
 
         self.show_next()
 
@@ -1226,10 +1158,8 @@ class DestinyApp:
         """
         Show a summary of the user's matches.
         """
-        # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
 
-        # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
 
@@ -1278,7 +1208,6 @@ class DestinyApp:
                                               anchor="w", padx=10)
                         connection.pack(fill="x", pady=2)
 
-                    # Configure the scrollregion
                     scrollable_frame.bind("<Configure>", lambda e: connections_canvas.configure(
                         scrollregion=connections_canvas.bbox("all")))
         else:
@@ -1314,13 +1243,8 @@ class DestinyApp:
         """
         Launch the main app (graph visualization or other main functionality).
         """
-        # Unbind any mousewheel events first
         self.root.unbind_all("<MouseWheel>")
 
-        from user_network import user_list as global_user_list
-        self.user_list = global_user_list
-
-        # Clear existing widgets
         for widget in self.root.winfo_children():
             widget.destroy()
 
@@ -1341,11 +1265,10 @@ class DestinyApp:
                                      font=("Arial", 18), fg="white", bg=self.background_color)
         connections_label.pack(pady=10)
 
-        # Create button frame for better layout
+        # Create button frame
         button_frame = tk.Frame(frame, bg=self.background_color)
         button_frame.pack(pady=20)
 
-        # Add a button to return to home page
         home_button = tk.Button(button_frame, text="Return to Home", font=("Arial", 16),
                                 bg="#3498DB", fg="black", padx=20, pady=10,
                                 command=lambda: self.create_welcome_page(self.image_path))
@@ -1362,14 +1285,6 @@ class DestinyApp:
         Show the network graph visualization.
         """
         try:
-            import graph
-            import webbrowser
-            import threading
-            import time
-            import socket
-
-            self.update_network_graph()
-
             # Create a temporary message
             temp_label = tk.Label(self.root, text="Loading network graph...",
                                   font=("Arial", 24), fg="white", bg=self.background_color)
@@ -1388,12 +1303,10 @@ class DestinyApp:
 
             # Define a function to run the Dash app in a separate thread
             def run_dash_app() -> None:
-                import user_network
-
                 destiny_app = graph.create_app(
-                    user_list=user_network.user_list,
-                    user_looking_for_friends=user_network.user_looking_for_friends,
-                    user_looking_for_love=user_network.user_looking_for_love
+                    user_list=self.user_list,
+                    user_looking_for_friends=self.user_list_friends,
+                    user_looking_for_love=self.user_list_love
                 )
 
                 destiny_app.run(debug=False, port=port)
@@ -1405,7 +1318,6 @@ class DestinyApp:
                 print(f"Opening browser to {url}")
                 webbrowser.open(url)
 
-                # Update the original window to indicate graph is open
                 self.root.after(0, lambda: self.update_status_message("Graph visualization opened in browser"))
 
             # Create and start the thread for running the Dash app
@@ -1424,24 +1336,6 @@ class DestinyApp:
             error_label = tk.Label(self.root, text=f"Error: {str(e)}",
                                    font=("Arial", 16), fg="white", bg=self.background_color)
             error_label.place(relx=0.5, rely=0.6, anchor=tk.CENTER)
-
-    def update_network_graph(self) -> None:
-        """
-        Refresh the network graph display by recalculating the subset of romantic users.
-        """
-        from user_network import user_list
-
-        updated_user_looking_for_love = [
-            user for user in user_list if user.dating_goal != "Meeting new friends"
-        ]
-
-        # Rebuild the graph using the updated lists.
-        from graph import create_app
-        self.network_graph = create_app(
-            user_list=user_list,
-            user_looking_for_friends=[user for user in user_list if user.dating_goal == "Meeting new friends"],
-            user_looking_for_love=updated_user_looking_for_love
-        )
 
     def update_status_message(self, message: str) -> None:
         """
@@ -1523,5 +1417,5 @@ if __name__ == "__main__":
         'max-module-lines': 2000,
         'max-attributes': 20,
         'max-locals': 100,
-        'disable': ["C0415", "W0718", "W0613", "R0915", "W0621", "W0404", "W0611", "R1702", "W0108"]
+        'disable': ["W0718", "W0613", "R0915", "W0621", "W0404", "W0611", "R1702", "W0108"]
     })
