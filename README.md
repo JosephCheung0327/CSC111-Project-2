@@ -4,4 +4,4 @@ This is our course project for CSC111 (Winter 2025). Users can make social and r
 ## How to run the program
 - Install the necessary modules as listed in requirements.txt
 - Run main.py
-- Enter any name and complete your profile (Enter "admin" to access the connection graph networks)
+- Enter any name and complete your profile (Enter "admin" to view connection graphs)
